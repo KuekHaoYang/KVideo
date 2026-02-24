@@ -21,8 +21,8 @@ export function useSettingsPage() {
 
     // Display settings
     const [realtimeLatency, setRealtimeLatency] = useState(false);
-    const [searchDisplayMode, setSearchDisplayMode] = useState<SearchDisplayMode>('grouped');
-    const [fullscreenType, setFullscreenType] = useState<'auto' | 'native' | 'window'>('native');
+    const [searchDisplayMode, setSearchDisplayMode] = useState<SearchDisplayMode>('normal');
+    const [fullscreenType, setFullscreenType] = useState<'auto' | 'native' | 'window'>('auto');
     const [proxyMode, setProxyMode] = useState<ProxyMode>('retry');
     const [rememberScrollPosition, setRememberScrollPosition] = useState(true);
 
