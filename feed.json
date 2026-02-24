@@ -616,6 +616,22 @@
         "priority": 21
     },
     {
+        "id": "danaizi",
+        "name": "大奶子",
+        "baseUrl": "https://apidanaizi.com/api.php/provide/vod",
+        "group": "premium",
+        "enabled": true,
+        "priority": 23
+    },
+    {
+        "id": "apilj",
+        "name": "辣椒资源",
+        "baseUrl": "https://apilj.com/api.php/provide/vod",
+        "group": "premium",
+        "enabled": true,
+        "priority": 24
+    },
+    {
         "id": "xibao",
         "name": "细胞采集",
         "baseUrl": "https://www.xxibaozyw.com/api.php/provide/vod",
