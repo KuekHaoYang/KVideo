@@ -632,6 +632,14 @@
         "priority": 24
     },
     {
+        "id": "souavzyw",
+        "name": "搜AV资源",
+        "baseUrl": "https://api.souavzyw.net/api.php/provide/vod",
+        "group": "premium",
+        "enabled": true,
+        "priority": 24
+    },
+    {
         "id": "xibao",
         "name": "细胞采集",
         "baseUrl": "https://www.xxibaozyw.com/api.php/provide/vod",
