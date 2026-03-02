@@ -8,6 +8,7 @@ import { NextRequest } from 'next/server';
 import { searchVideos } from '@/lib/api/client';
 import { getSourceById } from '@/lib/api/video-sources';
 import { getSourceName } from '@/lib/utils/source-names';
+import { traditionalToSimplified } from '@/lib/utils/chinese-convert';
 
 export const runtime = 'edge';
 
@@ -29,6 +30,9 @@ export async function POST(request: NextRequest) {
           controller.close();
           return;
         }
+
+        // Convert Traditional Chinese to Simplified Chinese for broader search compatibility
+        const normalizedQuery = traditionalToSimplified(query.trim());
 
         // Use provided sources or fallback to empty (client should provide them)
         const sources = Array.isArray(sourceConfigs) && sourceConfigs.length > 0
@@ -63,7 +67,7 @@ export async function POST(request: NextRequest) {
           try {
 
             // Search page 1 for this source
-            const result = await searchVideos(query.trim(), [source], 1);
+            const result = await searchVideos(normalizedQuery, [source], 1);
             const endTime = performance.now(); // Track end time
             const latency = Math.round(endTime - startTime); // Calculate latency in ms
             const videos = result[0]?.results || [];
@@ -101,7 +105,7 @@ export async function POST(request: NextRequest) {
               const remainingPages = Array.from({ length: pagecount - 1 }, (_, i) => i + 2);
               const pagePromises = remainingPages.map(async (pg) => {
                 try {
-                  const pageResult = await searchVideos(query.trim(), [source], pg);
+                  const pageResult = await searchVideos(normalizedQuery, [source], pg);
                   const pageVideos = pageResult[0]?.results || [];
 
                   totalVideosFound += pageVideos.length;

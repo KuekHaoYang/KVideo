@@ -87,7 +87,10 @@ export function useDesktopShortcuts({
                     e.preventDefault();
                     const newVolUp = Math.min(1, volume + 0.1);
                     setVolume(newVolUp);
-                    if (videoRef.current) videoRef.current.volume = newVolUp;
+                    if (videoRef.current) {
+                        videoRef.current.volume = newVolUp;
+                        videoRef.current.muted = newVolUp === 0;
+                    }
                     setIsMuted(newVolUp === 0);
                     localStorage.setItem('kvideo-volume', String(newVolUp));
                     localStorage.setItem('kvideo-muted', String(newVolUp === 0));
@@ -97,7 +100,10 @@ export function useDesktopShortcuts({
                     e.preventDefault();
                     const newVolDown = Math.max(0, volume - 0.1);
                     setVolume(newVolDown);
-                    if (videoRef.current) videoRef.current.volume = newVolDown;
+                    if (videoRef.current) {
+                        videoRef.current.volume = newVolDown;
+                        videoRef.current.muted = newVolDown === 0;
+                    }
                     setIsMuted(newVolDown === 0);
                     localStorage.setItem('kvideo-volume', String(newVolDown));
                     localStorage.setItem('kvideo-muted', String(newVolDown === 0));

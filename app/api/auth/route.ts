@@ -10,8 +10,11 @@ export const runtime = 'edge';
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || '';
 const ACCESS_PASSWORD = process.env.ACCESS_PASSWORD || '';
 const ACCOUNTS = process.env.ACCOUNTS || '';
+const PREMIUM_PASSWORD = process.env.PREMIUM_PASSWORD || '';
 const PERSIST_SESSION = process.env.PERSIST_SESSION !== 'false'; // default true
 const SUBSCRIPTION_SOURCES = process.env.SUBSCRIPTION_SOURCES || process.env.NEXT_PUBLIC_SUBSCRIPTION_SOURCES || '';
+const IPTV_SOURCES = process.env.IPTV_SOURCES || process.env.NEXT_PUBLIC_IPTV_SOURCES || '';
+const MERGE_SOURCES = process.env.MERGE_SOURCES || process.env.NEXT_PUBLIC_MERGE_SOURCES || '';
 
 // Backward compat: ACCESS_PASSWORD acts as ADMIN_PASSWORD if ADMIN_PASSWORD is not set
 const effectiveAdminPassword = ADMIN_PASSWORD || ACCESS_PASSWORD;
@@ -65,17 +68,43 @@ export async function GET() {
 
   return NextResponse.json({
     hasAuth,
+    hasPremiumAuth: !!PREMIUM_PASSWORD,
     persistSession: PERSIST_SESSION,
     subscriptionSources: SUBSCRIPTION_SOURCES,
+    iptvSources: IPTV_SOURCES,
+    mergeSources: MERGE_SOURCES,
   });
 }
 
 export async function POST(request: NextRequest) {
   try {
-    const { password } = await request.json();
+    const { password, type } = await request.json();
 
     if (!password || typeof password !== 'string') {
       return NextResponse.json({ valid: false, message: 'Password required' }, { status: 400 });
+    }
+
+    // Premium password check (separate from main auth)
+    if (type === 'premium') {
+      if (!PREMIUM_PASSWORD) {
+        // No premium password configured = open access
+        return NextResponse.json({ valid: true });
+      }
+      if (password === PREMIUM_PASSWORD) {
+        return NextResponse.json({ valid: true });
+      }
+      // Also allow admin password to unlock premium
+      if (effectiveAdminPassword && password === effectiveAdminPassword) {
+        return NextResponse.json({ valid: true });
+      }
+      // Check ACCOUNTS super_admin/admin
+      const accounts = parseAccounts();
+      for (const account of accounts) {
+        if (password === account.password && (account.role === 'super_admin' || account.role === 'admin')) {
+          return NextResponse.json({ valid: true });
+        }
+      }
+      return NextResponse.json({ valid: false });
     }
 
     // 1. Check admin password

@@ -93,6 +93,7 @@ export function usePlaybackControls({
 
         // Apply saved volume and mute state when new source loads
         videoRef.current.volume = isMuted ? 0 : volume;
+        videoRef.current.muted = isMuted;
 
         videoRef.current.play().catch((err: Error) => {
             console.warn('Autoplay was prevented:', err);

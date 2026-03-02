@@ -33,6 +33,8 @@ export default function PremiumSettingsPage() {
         handleFullscreenTypeChange,
         handleProxyModeChange,
         handleRememberScrollPositionChange,
+        locale,
+        handleLocaleChange,
         // Danmaku settings
         danmakuApiUrl,
         handleDanmakuApiUrlChange,
@@ -93,6 +95,8 @@ export default function PremiumSettingsPage() {
                     onRealtimeLatencyChange={handleRealtimeLatencyChange}
                     onSearchDisplayModeChange={handleSearchDisplayModeChange}
                     onRememberScrollPositionChange={handleRememberScrollPositionChange}
+                    locale={locale}
+                    onLocaleChange={handleLocaleChange}
                 />
 
                 {/* Premium Source Management */}

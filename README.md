@@ -55,6 +55,8 @@
 - **搜索历史**：自动保存搜索历史，支持快速重新搜索
 - **搜索结果显示**：支持默认显示和合并同名源两种模式
 - **实时延迟监测**：可选实时显示各源的网络延迟
+- **清晰度标签**：自动解析并显示视频清晰度（4K/蓝光/1080P/720P/HD 等），方便快速分辨源质量
+- **繁体中文搜索**：自动将繁体中文转换为简体中文进行搜索，确保繁体输入也能搜到结果
 - **源过滤**：支持按源和类型筛选搜索结果，源标签支持按类型分组显示，智能合并同名分类标签，展开/折叠状态持久化记忆
 - **多级标签**：搜索结果和播放器中显示源名称和内容类型双重标签
 
@@ -281,7 +283,27 @@ docker run -d -p 3000:3000 \
 
 这些数据按用户 profileId 隔离存储，切换账户后自动加载对应的个人配置。
 
-### 方式三：会话持久化设置
+### 方式三：高级内容独立密码
+
+通过 `PREMIUM_PASSWORD` 环境变量为高级内容（`/premium`）设置独立的访问密码，实现与主密码的分离控制。
+
+适合场景：给家人分享普通密码，但高级内容需要额外密码才能访问。
+
+```bash
+# Docker
+docker run -d -p 3000:3000 \
+  -e ADMIN_PASSWORD="admin123" \
+  -e PREMIUM_PASSWORD="premium456" \
+  --name kvideo kuekhaoyang/kvideo:latest
+```
+
+**特点：**
+- 访问 `/premium` 页面时需输入此专用密码
+- 管理员密码和 admin/super_admin 账号也可以解锁高级内容
+- 密码仅在当前浏览器会话有效，关闭浏览器后需重新输入
+- 不设置此变量时，高级内容无额外密码保护
+
+### 方式四：会话持久化设置
 
 通过 `PERSIST_SESSION` 环境变量控制用户登录后是否在设备上记住会话：
 
@@ -415,6 +437,59 @@ docker run -d -p 3000:3000 \
 
 > 用户还可以在设置页面的「弹幕 API」区域添加多个 API 端点并选择当前使用的，用户选择的 API 优先于系统默认配置。
 
+## IPTV 直播源配置
+
+通过环境变量预设 IPTV 直播源，应用启动时会自动添加到直播源列表中。
+
+| 变量名 | 说明 | 默认值 |
+|--------|------|--------|
+| `IPTV_SOURCES` | IPTV 直播源配置（服务端） | - |
+| `NEXT_PUBLIC_IPTV_SOURCES` | IPTV 直播源配置（客户端） | - |
+
+**格式：** JSON 数组字符串，包含 `name` 和 `url` 字段；或直接提供 M3U 链接（逗号分隔多个）。
+
+**示例：**
+
+```bash
+# JSON 格式
+IPTV_SOURCES='[{"name":"央视","url":"https://example.com/cctv.m3u"},{"name":"地方台","url":"https://example.com/local.m3u"}]'
+
+# 简单 URL 格式
+IPTV_SOURCES='https://example.com/cctv.m3u,https://example.com/local.m3u'
+```
+
+## 合并同名源配置
+
+通过环境变量设置默认启用搜索结果的合并同名源显示模式。
+
+| 变量名 | 说明 | 默认值 |
+|--------|------|--------|
+| `MERGE_SOURCES` | 启用合并同名源（`true` 或 `1`） | - |
+| `NEXT_PUBLIC_MERGE_SOURCES` | 启用合并同名源（客户端） | - |
+
+**示例：**
+
+```bash
+MERGE_SOURCES=true
+```
+
+设置后搜索结果会自动以合并模式显示，将来自不同源的同名视频合并为一个卡片。用户仍可在设置页面中手动切换显示模式。
+
+## 自定义端口
+
+通过 `PORT` 环境变量自定义应用端口，默认为 3000。
+
+```bash
+# 开发模式
+PORT=8080 npm run dev
+
+# 生产模式
+PORT=8080 npm run start
+
+# Docker
+docker run -e PORT=8080 -p 8080:8080 --name kvideo kuekhaoyang/kvideo:latest
+```
+
 ## 自定义源 JSON 格式
 
 如果你想创建自己的订阅源或批量导入源，可以使用以下 JSON 格式。
@@ -488,12 +563,16 @@ docker run -d -p 3000:3000 \
 | `ADMIN_PASSWORD` | 管理员密码 | - |
 | `ACCESS_PASSWORD` | 访问密码（向后兼容，等同于 `ADMIN_PASSWORD`） | - |
 | `ACCOUNTS` | 多账户配置，格式：`密码:名称[:角色[:权限1\|权限2]]`，逗号分隔 | - |
+| `PREMIUM_PASSWORD` | 高级内容独立密码，访问 `/premium` 时需输入 | - |
 | `PERSIST_SESSION` | 是否持久化登录会话 | `true` |
+| `PORT` | 自定义应用端口 | `3000` |
 | `NEXT_PUBLIC_SITE_TITLE` | 浏览器标签页标题 | `KVideo - 视频聚合平台` |
 | `NEXT_PUBLIC_SITE_DESCRIPTION` | 站点描述 | `视频聚合平台` |
 | `NEXT_PUBLIC_SITE_NAME` | 站点头部名称 | `KVideo` |
 | `SUBSCRIPTION_SOURCES` | 自动订阅源配置（服务端） | - |
 | `NEXT_PUBLIC_SUBSCRIPTION_SOURCES` | 自动订阅源配置（客户端） | - |
+| `IPTV_SOURCES` / `NEXT_PUBLIC_IPTV_SOURCES` | IPTV 直播源配置 | - |
+| `MERGE_SOURCES` / `NEXT_PUBLIC_MERGE_SOURCES` | 启用合并同名源显示（`true`/`1`） | - |
 | `AD_KEYWORDS` / `NEXT_PUBLIC_AD_KEYWORDS` | 广告过滤关键词 | - |
 | `AD_KEYWORDS_FILE` | 广告关键词文件路径 | - |
 | `NEXT_PUBLIC_DANMAKU_API_URL` | 弹幕聚合 API 地址 | - |
@@ -605,10 +684,13 @@ docker-compose up -d
 ```bash
 docker run -d -p 3000:3000 \
   -e ADMIN_PASSWORD="admin123" \
+  -e PREMIUM_PASSWORD="premium456" \
   -e ACCOUNTS="user1:用户一:admin,user2:用户二:viewer:iptv_access" \
   -e NEXT_PUBLIC_SITE_NAME="我的视频" \
   -e NEXT_PUBLIC_DANMAKU_API_URL="https://danmaku.example.com" \
   -e SUBSCRIPTION_SOURCES='[{"name":"默认源","url":"https://example.com/sources.json"}]' \
+  -e IPTV_SOURCES='[{"name":"央视","url":"https://example.com/cctv.m3u"}]' \
+  -e MERGE_SOURCES=true \
   --name kvideo kuekhaoyang/kvideo:latest
 ```
 

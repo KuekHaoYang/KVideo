@@ -56,6 +56,8 @@ export default function SettingsPage() {
     handleProxyModeChange,
     rememberScrollPosition,
     handleRememberScrollPositionChange,
+    locale,
+    handleLocaleChange,
     danmakuApiUrl,
     handleDanmakuApiUrlChange,
     danmakuOpacity,
@@ -102,6 +104,8 @@ export default function SettingsPage() {
           onRealtimeLatencyChange={handleRealtimeLatencyChange}
           onSearchDisplayModeChange={handleSearchDisplayModeChange}
           onRememberScrollPositionChange={handleRememberScrollPositionChange}
+          locale={locale}
+          onLocaleChange={handleLocaleChange}
         />
 
         {/* Per-User Source Settings (visible to all logged-in users) */}

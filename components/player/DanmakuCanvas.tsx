@@ -76,7 +76,8 @@ export function DanmakuCanvas({ comments, currentTime, isPlaying, duration }: Da
     const timeDiff = Math.abs(currentTime - lastTimeRef.current);
     if (timeDiff > 2) {
       activeRef.current = [];
-      lastSpawnTimeRef.current = -1;
+      // Set to currentTime so only comments from the new position forward are spawned
+      lastSpawnTimeRef.current = currentTime;
       laneSlotsRef.current = new Array(MAX_LANES).fill(0);
     }
     lastTimeRef.current = currentTime;

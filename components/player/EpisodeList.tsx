@@ -9,6 +9,7 @@ import { LatencyBadge } from '@/components/ui/LatencyBadge';
 import { Button } from '@/components/ui/Button';
 import { useKeyboardNavigation } from '@/lib/hooks/useKeyboardNavigation';
 import { settingsStore } from '@/lib/store/settings-store';
+import { extractQualityLabel } from '@/lib/utils/video';
 
 interface Episode {
   name?: string;
@@ -22,6 +23,7 @@ export interface SourceInfo {
   latency?: number;
   pic?: string;
   typeName?: string;
+  remarks?: string;
 }
 
 interface EpisodeListProps {
@@ -317,9 +319,20 @@ export function EpisodeList({
                                     </div>
                                   )}
                                   <div className="flex-1 min-w-0">
-                                    <div className="font-medium text-sm truncate">
+                                    <div className="font-medium text-sm truncate flex items-center gap-1.5">
                                       {source.sourceName || source.source}
+                                      {(() => {
+                                        const qb = extractQualityLabel(source.remarks);
+                                        return qb ? (
+                                          <span className={`inline-flex items-center px-1 py-0 rounded text-[9px] font-bold text-white ${qb.color}`}>
+                                            {qb.label}
+                                          </span>
+                                        ) : null;
+                                      })()}
                                     </div>
+                                    {source.remarks && !extractQualityLabel(source.remarks) && (
+                                      <div className="text-[10px] text-[var(--text-color-secondary)] truncate mt-0.5">{source.remarks}</div>
+                                    )}
                                     {latency !== undefined && (
                                       <div className="mt-0.5">
                                         <LatencyBadge latency={latency} />
@@ -386,9 +399,20 @@ export function EpisodeList({
                                 </div>
                               )}
                               <div className="flex-1 min-w-0">
-                                <div className="font-medium text-sm truncate">
+                                <div className="font-medium text-sm truncate flex items-center gap-1.5">
                                   {source.sourceName || source.source}
+                                  {(() => {
+                                    const qb = extractQualityLabel(source.remarks);
+                                    return qb ? (
+                                      <span className={`inline-flex items-center px-1 py-0 rounded text-[9px] font-bold text-white ${qb.color}`}>
+                                        {qb.label}
+                                      </span>
+                                    ) : null;
+                                  })()}
                                 </div>
+                                {source.remarks && !extractQualityLabel(source.remarks) && (
+                                  <div className="text-[10px] text-[var(--text-color-secondary)] truncate mt-0.5">{source.remarks}</div>
+                                )}
                                 {latency !== undefined && (
                                   <div className="mt-0.5">
                                     <LatencyBadge latency={latency} />

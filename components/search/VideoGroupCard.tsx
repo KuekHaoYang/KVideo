@@ -67,6 +67,7 @@ export const VideoGroupCard = memo<VideoGroupCardProps>(({
                 latency: v.latency,
                 pic: v.vod_pic,
                 typeName: v.type_name,
+                remarks: v.vod_remarks,
             }));
             params.set('groupedSources', JSON.stringify(groupData));
         }

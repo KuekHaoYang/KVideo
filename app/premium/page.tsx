@@ -8,6 +8,7 @@ import { SearchResults } from '@/components/home/SearchResults';
 import { usePremiumHomePage } from '@/lib/hooks/usePremiumHomePage';
 import { PremiumContent } from '@/components/premium/PremiumContent';
 import { FavoritesSidebar } from '@/components/favorites/FavoritesSidebar';
+import { PremiumPasswordGate } from '@/components/PremiumPasswordGate';
 
 function PremiumHomePage() {
     const {
@@ -83,7 +84,9 @@ export default function PremiumPage() {
                 <div className="animate-spin rounded-full h-16 w-16 border-4 border-[var(--accent-color)] border-t-transparent"></div>
             </div>
         }>
-            <PremiumHomePage />
+            <PremiumPasswordGate>
+                <PremiumHomePage />
+            </PremiumPasswordGate>
         </Suspense>
     );
 }

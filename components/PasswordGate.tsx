@@ -4,7 +4,60 @@ import { useState, useEffect } from 'react';
 import { getSession, setSession } from '@/lib/store/auth-store';
 import { useSubscriptionSync } from '@/lib/hooks/useSubscriptionSync';
 import { settingsStore } from '@/lib/store/settings-store';
+import { useIPTVStore } from '@/lib/store/iptv-store';
 import { Lock } from 'lucide-react';
+
+/**
+ * Sync IPTV sources from environment variable.
+ * Format: JSON array [{name, url}] or comma-separated URLs.
+ */
+function syncIPTVSources(rawValue: string) {
+    const iptvStore = useIPTVStore.getState();
+    const existingUrls = new Set(iptvStore.sources.map(s => s.url));
+
+    let entries: { name: string; url: string }[] = [];
+
+    // Try JSON
+    try {
+        const parsed = JSON.parse(rawValue);
+        if (Array.isArray(parsed)) {
+            entries = parsed.filter((item: any) => item && typeof item.url === 'string');
+        }
+    } catch {
+        // Try comma-separated URLs
+        if (rawValue.includes('http')) {
+            const urls = rawValue.split(',').map(u => u.trim()).filter(u => u.startsWith('http'));
+            entries = urls.map((url, i) => ({
+                name: urls.length > 1 ? `直播源 ${i + 1}` : '直播源',
+                url,
+            }));
+        }
+    }
+
+    // Add new sources that don't already exist
+    for (const entry of entries) {
+        if (!existingUrls.has(entry.url)) {
+            iptvStore.addSource(entry.name || '直播源', entry.url);
+        }
+    }
+}
+
+/**
+ * Sync merge sources setting from environment variable.
+ * Value: 'true' or '1' to enable grouped display mode.
+ */
+function syncMergeSources(rawValue: string) {
+    const enabled = rawValue === 'true' || rawValue === '1';
+    if (!enabled) return;
+
+    const settings = settingsStore.getSettings();
+    if (settings.searchDisplayMode !== 'grouped') {
+        settingsStore.saveSettings({
+            ...settings,
+            searchDisplayMode: 'grouped',
+        });
+    }
+}
 
 export function PasswordGate({ children, hasAuth: initialHasAuth }: { children: React.ReactNode, hasAuth: boolean }) {
     // Enable background subscription syncing globally
@@ -47,6 +100,16 @@ export function PasswordGate({ children, hasAuth: initialHasAuth }: { children: 
                     // Sync subscriptions
                     if (data.subscriptionSources) {
                         settingsStore.syncEnvSubscriptions(data.subscriptionSources);
+                    }
+
+                    // Sync IPTV sources from env
+                    if (data.iptvSources) {
+                        syncIPTVSources(data.iptvSources);
+                    }
+
+                    // Sync merge sources setting from env
+                    if (data.mergeSources) {
+                        syncMergeSources(data.mergeSources);
                     }
 
                     // Re-evaluate lock status with confirmed server state

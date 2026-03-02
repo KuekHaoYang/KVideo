@@ -10,7 +10,7 @@ import { LatencyBadge } from '@/components/ui/LatencyBadge';
 import { FavoriteButton } from '@/components/favorites/FavoriteButton';
 
 import { Video } from '@/lib/types';
-import { parseVideoTitle } from '@/lib/utils/video';
+import { parseVideoTitle, extractQualityLabel } from '@/lib/utils/video';
 
 interface VideoCardProps {
     video: Video;
@@ -160,17 +160,25 @@ export const VideoCard = memo<VideoCardProps>(({
                             const { cleanTitle, quality } = parseVideoTitle(video.vod_name);
                             // Visual priority: Quality from title tag, then vod_remarks
                             const displayQuality = quality || video.vod_remarks;
+                            const qualityBadge = extractQualityLabel(video.vod_remarks, quality);
 
                             return (
                                 <>
                                     <h4 className="font-semibold text-sm text-[var(--text-color)] line-clamp-2 min-h-[2.5rem] mb-1">
                                         {cleanTitle}
                                     </h4>
-                                    {displayQuality && (
-                                        <p className="text-xs text-[var(--text-color-secondary)] font-medium">
-                                            {displayQuality}
-                                        </p>
-                                    )}
+                                    <div className="flex items-center gap-1.5 flex-wrap">
+                                        {qualityBadge && (
+                                            <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold text-white ${qualityBadge.color}`}>
+                                                {qualityBadge.label}
+                                            </span>
+                                        )}
+                                        {displayQuality && (
+                                            <p className="text-xs text-[var(--text-color-secondary)] font-medium truncate">
+                                                {displayQuality}
+                                            </p>
+                                        )}
+                                    </div>
                                     {/* Hide remarks if it was used as quality to avoid duplication */}
                                     {video.vod_remarks && video.vod_remarks !== displayQuality && (
                                         <p className="text-xs text-[var(--text-color-secondary)] mt-1 line-clamp-1">

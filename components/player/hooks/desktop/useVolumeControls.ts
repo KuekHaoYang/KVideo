@@ -26,11 +26,12 @@ export function useVolumeControls({
     const toggleMute = useCallback(() => {
         if (!videoRef.current) return;
         if (isMuted) {
-            videoRef.current.volume = volume;
+            videoRef.current.muted = false;
+            videoRef.current.volume = volume || 0.5;
             setIsMuted(false);
             localStorage.setItem('kvideo-muted', 'false');
         } else {
-            videoRef.current.volume = 0;
+            videoRef.current.muted = true;
             setIsMuted(true);
             localStorage.setItem('kvideo-muted', 'true');
         }
@@ -52,6 +53,7 @@ export function useVolumeControls({
         const pos = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
         setVolume(pos);
         videoRef.current.volume = pos;
+        videoRef.current.muted = pos === 0;
         setIsMuted(pos === 0);
         localStorage.setItem('kvideo-volume', String(pos));
         localStorage.setItem('kvideo-muted', String(pos === 0));
@@ -71,6 +73,7 @@ export function useVolumeControls({
             const pos = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
             setVolume(pos);
             videoRef.current.volume = pos;
+            videoRef.current.muted = pos === 0;
             setIsMuted(pos === 0);
             localStorage.setItem('kvideo-volume', String(pos));
             localStorage.setItem('kvideo-muted', String(pos === 0));
