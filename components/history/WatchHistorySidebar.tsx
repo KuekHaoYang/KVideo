@@ -114,6 +114,7 @@ export function WatchHistorySidebar({ isPremium = false }: { isPremium?: boolean
         <HistoryList
           history={viewingHistory}
           onRemove={handleDeleteItem}
+          isPremium={isPremium}
         />
 
         <HistoryFooter

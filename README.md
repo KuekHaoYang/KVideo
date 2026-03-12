@@ -1,5 +1,7 @@
 [![Upstream Sync](https://github.com/sky06walker/KVideo/actions/workflows/Github_Upstream_Sync.yml/badge.svg)](https://github.com/sky06walker/KVideo/actions/workflows/Github_Upstream_Sync.yml)
 
+[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/KuekHaoYang/KVideo)
+
 # 视频聚合平台 (KVideo)
 
 ![KVideo Banner](public/icon.png)
@@ -56,6 +58,7 @@
 - **搜索结果显示**：支持默认显示和合并同名源两种模式
 - **实时延迟监测**：可选实时显示各源的网络延迟
 - **清晰度标签**：自动解析并显示视频清晰度（4K/蓝光/1080P/720P/HD 等），方便快速分辨源质量
+- **实际分辨率检测**：播放视频时自动检测并显示实际视频分辨率（如 1920x1080），不依赖源标签，显示真实清晰度
 - **繁体中文搜索**：自动将繁体中文转换为简体中文进行搜索，确保繁体输入也能搜到结果
 - **源过滤**：支持按源和类型筛选搜索结果，源标签支持按类型分组显示，智能合并同名分类标签，展开/折叠状态持久化记忆
 - **多级标签**：搜索结果和播放器中显示源名称和内容类型双重标签
@@ -68,11 +71,13 @@
 - **延迟排序**：线路按网络延迟自动排序，最快的源排在前面
 - **源切换**：在线路列表中快速切换到其他源，支持断点续播
 - **自动切源**：当当前源不可用时，自动切换到延迟最低的可用源
+- **短链接优化**：使用 sessionStorage 缓存源数据，避免 URL 过长导致 CDN 414 错误
 
 ### IPTV 直播
 
 - **M3U 播放列表**：支持导入和管理 M3U/M3U8 格式的 IPTV 源
 - **JSON 频道列表**：支持导入 JSON 格式的频道列表（数组或对象格式，自动识别）
+- **HEVC 智能兼容**：自动检测 HEVC/H.265 编码流，优先选择 H.264 级别以避免音画不同步或仅有声音问题
 - **频道网格**：按分组展示频道，支持分页浏览，大列表搜索优化
 - **多级频道列表**：播放器内按源分组 → 按分类分组 → 频道的三级列表导航
 - **多线路折叠**：频道多线路默认显示前 3 条，可点击展开查看全部
@@ -845,6 +850,20 @@ Android 7.0 (API 24) 的 WebView 基于 Chrome 51，不支持本项目使用的�
 - 需要特定客户端验证的流
 
 KVideo 已内置代理服务器自动处理 CORS 问题和 HLS URL 重写，大部分 HLS 直播流应能正常播放。
+
+### IPTV CCTV 等频道只有声音没有画面
+
+部分 CCTV 和卫视频道使用 HEVC (H.265) 编码，某些浏览器不支持硬件解码 HEVC。KVideo v4.5.0+ 已自动检测 HEVC 流并优先选择 H.264 级别以提高兼容性。如果问题仍存在，建议使用 Chrome 或 Edge 浏览器。
+
+### 部分浏览器无法播放视频
+
+一些内置浏览器（如 vivo 浏览器、QQ 浏览器等）的 WebView 可能不完整支持 MSE (Media Source Extensions) 和 HLS.js。建议使用以下浏览器：
+- Chrome（推荐）
+- Edge
+- Safari（iOS/macOS）
+- Firefox
+
+KVideo v4.5.0+ 已增加多级回退机制，会依次尝试 HLS.js、原生 HLS、代理播放等方式。
 
 ## 贡献代码
 

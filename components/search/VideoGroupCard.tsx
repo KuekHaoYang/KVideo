@@ -15,6 +15,8 @@ import { LatencyBadge } from '@/components/ui/LatencyBadge';
 import { FavoriteButton } from '@/components/favorites/FavoriteButton';
 import { Video } from '@/lib/types';
 import { parseVideoTitle } from '@/lib/utils/video';
+import { storeGroupedSources } from '@/lib/utils/grouped-sources-cache';
+import type { ResolutionInfo } from '@/lib/hooks/useResolutionProbe';
 
 export interface GroupedVideo {
     /** Representative video (lowest latency) */
@@ -32,6 +34,8 @@ interface VideoGroupCardProps {
     onCardClick: (e: React.MouseEvent, cardId: string, videoUrl: string) => void;
     isPremium?: boolean;
     latencies?: Record<string, number>;
+    resolution?: ResolutionInfo | null;
+    isProbing?: boolean;
 }
 
 export const VideoGroupCard = memo<VideoGroupCardProps>(({
@@ -40,7 +44,9 @@ export const VideoGroupCard = memo<VideoGroupCardProps>(({
     isActive,
     onCardClick,
     isPremium = false,
-    latencies = {}
+    latencies = {},
+    resolution,
+    isProbing = false,
 }) => {
     const { representative, videos, name } = group;
 
@@ -50,7 +56,7 @@ export const VideoGroupCard = memo<VideoGroupCardProps>(({
         return currentLatencies.length > 0 ? Math.min(...currentLatencies) : undefined;
     }, [videos, latencies]);
 
-    // Generate URL with grouped sources data
+    // Generate URL with grouped sources stored in sessionStorage (avoids long URLs / 414 errors)
     const videoUrl = useMemo(() => {
         const params = new URLSearchParams({
             id: String(representative.vod_id),
@@ -58,7 +64,7 @@ export const VideoGroupCard = memo<VideoGroupCardProps>(({
             title: representative.vod_name,
         });
 
-        // Add group data if multiple sources
+        // Store group data in sessionStorage and pass short key in URL
         if (videos.length > 1) {
             const groupData = videos.map(v => ({
                 id: v.vod_id,
@@ -69,11 +75,18 @@ export const VideoGroupCard = memo<VideoGroupCardProps>(({
                 typeName: v.type_name,
                 remarks: v.vod_remarks,
             }));
-            params.set('groupedSources', JSON.stringify(groupData));
+            const cacheKey = storeGroupedSources(groupData);
+            if (cacheKey) {
+                params.set('gs', cacheKey);
+            }
+        }
+
+        if (isPremium) {
+            params.set('premium', '1');
         }
 
         return `/player?${params.toString()}`;
-    }, [representative, videos]);
+    }, [representative, videos, isPremium]);
 
     return (
         <div
@@ -193,19 +206,24 @@ export const VideoGroupCard = memo<VideoGroupCardProps>(({
                     {/* Info */}
                     <div className="p-3 flex-1 flex flex-col">
                         {(() => {
-                            const { cleanTitle, quality } = parseVideoTitle(name);
-                            const displayQuality = quality || representative.vod_remarks;
+                            const { cleanTitle } = parseVideoTitle(name);
 
                             return (
                                 <>
                                     <h4 className="font-semibold text-sm text-[var(--text-color)] line-clamp-2 min-h-[2.5rem] mb-1">
                                         {cleanTitle}
                                     </h4>
-                                    {displayQuality && (
-                                        <p className="text-xs text-[var(--text-color-secondary)] font-medium">
-                                            {displayQuality}
-                                        </p>
-                                    )}
+                                    <div className="flex items-center gap-1.5 flex-wrap">
+                                        {resolution ? (
+                                            <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold text-white ${resolution.color}`}>
+                                                {resolution.label}
+                                            </span>
+                                        ) : isProbing ? (
+                                            <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold text-white/50 bg-gray-500/50 animate-pulse">
+                                                ...
+                                            </span>
+                                        ) : null}
+                                    </div>
                                     {representative.vod_lang && (
                                         <p className="text-xs text-[var(--text-color-secondary)] mt-1">
                                             {representative.vod_lang}

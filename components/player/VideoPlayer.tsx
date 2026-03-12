@@ -25,6 +25,8 @@ interface VideoPlayerProps {
   episodeName?: string;
   // Expose current time to parent
   externalTimeRef?: React.MutableRefObject<number>;
+  // Resolution callback
+  onResolutionDetected?: (info: import('./hooks/useVideoResolution').VideoResolutionInfo) => void;
 }
 
 export function VideoPlayer({
@@ -39,6 +41,7 @@ export function VideoPlayer({
   videoTitle,
   episodeName,
   externalTimeRef,
+  onResolutionDetected,
 }: VideoPlayerProps) {
   const [videoError, setVideoError] = useState<string>('');
   const [useProxy, setUseProxy] = useState(false);
@@ -244,6 +247,7 @@ export function VideoPlayer({
           isReversed={isReversed}
           videoTitle={videoTitle}
           episodeName={episodeName}
+          onResolutionDetected={onResolutionDetected}
         />
       )}
     </Card>

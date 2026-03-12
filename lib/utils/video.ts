@@ -32,10 +32,10 @@ export function parseVideoTitle(title: string): { cleanTitle: string, quality?: 
 const QUALITY_PATTERNS: { pattern: RegExp; label: string; color: string }[] = [
     { pattern: /4k|2160p|uhd/i, label: '4K', color: 'bg-amber-500' },
     { pattern: /蓝光|藍光|bluray|blu-ray|remux/i, label: '蓝光', color: 'bg-blue-500' },
+    { pattern: /\bhdr\b|hdr10\+?/i, label: 'HDR', color: 'bg-violet-500' },
     { pattern: /1080p|1080i|full\s*hd|fhd/i, label: '1080P', color: 'bg-green-500' },
     { pattern: /超清|超高清/i, label: '超清', color: 'bg-green-500' },
     { pattern: /720p|hd720/i, label: '720P', color: 'bg-teal-500' },
-    { pattern: /\bhd\b|高清|hdr/i, label: 'HD', color: 'bg-teal-500' },
     { pattern: /web-?dl|webrip/i, label: 'WEB-DL', color: 'bg-indigo-500' },
     { pattern: /hdtv/i, label: 'HDTV', color: 'bg-teal-500' },
     { pattern: /dvd|dvdrip/i, label: 'DVD', color: 'bg-purple-500' },

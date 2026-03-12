@@ -21,6 +21,8 @@ const HLS_LIVE_CONFIG: Partial<Hls['config']> = {
   manifestLoadingMaxRetry: 3,
   levelLoadingTimeOut: 10000,
   fragLoadingTimeOut: 20000,
+  // Prefer H.264 (avc) over HEVC (hev/hvc) for maximum browser compatibility
+  preferManagedMediaSource: false,
 };
 
 const LOADING_TIMEOUT_MS = 30000;
@@ -275,7 +277,10 @@ export function IPTVPlayer({ channel, onClose, channels, onChannelChange, channe
         hlsRef.current = hlsProxy;
         hlsProxy.loadSource(proxiedUrl);
         hlsProxy.attachMedia(video);
-        hlsProxy.on(Hls.Events.MANIFEST_PARSED, () => {
+
+        // Filter HEVC levels for proxy attempt too
+        hlsProxy.on(Hls.Events.MANIFEST_PARSED, (_, data) => {
+          filterHEVCLevels(hlsProxy);
           markLoaded();
           video.play().catch(() => {});
         });
@@ -292,10 +297,30 @@ export function IPTVPlayer({ channel, onClose, channels, onChannelChange, channe
         });
       };
 
+      // Helper: Filter out HEVC levels that browser may not support (fixes audio-only issue)
+      const filterHEVCLevels = (hlsInstance: Hls) => {
+        if (!hlsInstance.levels || hlsInstance.levels.length <= 1) return;
+        const h264Levels = hlsInstance.levels
+          .map((level, index) => ({ level, index }))
+          .filter(({ level }) => {
+            const codec = level.videoCodec?.toLowerCase() || '';
+            // Keep levels without HEVC codec (H.264 or unknown)
+            return !codec.includes('hev') && !codec.includes('h265') && !codec.includes('hvc');
+          });
+        // If we have H.264 levels, restrict to those
+        if (h264Levels.length > 0 && h264Levels.length < hlsInstance.levels.length) {
+          console.info('[IPTV] Filtering HEVC levels, using H.264 only for compatibility');
+          // Set level to first H.264 level
+          hlsInstance.currentLevel = h264Levels[0].index;
+        }
+      };
+
       // First try direct URL with HLS.js
       hls.loadSource(url);
       hls.attachMedia(video);
-      hls.on(Hls.Events.MANIFEST_PARSED, () => {
+      hls.on(Hls.Events.MANIFEST_PARSED, (_, data) => {
+        // Filter HEVC levels to prevent audio-only playback
+        filterHEVCLevels(hls);
         markLoaded();
         video.play().catch(() => {});
       });

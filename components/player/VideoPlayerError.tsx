@@ -40,6 +40,13 @@ export function VideoPlayerError({
                 <h3>播放失败</h3>
                 <p>{error}</p>
 
+                {/* Browser compatibility hint */}
+                {(error.includes('不支持') || error.includes('格式') || error.includes('编码')) && (
+                    <p className="text-xs text-white/50 mt-1">
+                        建议使用 Chrome、Edge 或 Safari 浏览器以获得最佳兼容性
+                    </p>
+                )}
+
                 {/* Action Buttons */}
                 <div className="flex gap-3 justify-center flex-wrap">
                     <button

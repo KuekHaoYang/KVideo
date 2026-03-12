@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/Button';
 import { useKeyboardNavigation } from '@/lib/hooks/useKeyboardNavigation';
 import { settingsStore } from '@/lib/store/settings-store';
 import { extractQualityLabel } from '@/lib/utils/video';
+import type { VideoResolutionInfo } from './hooks/useVideoResolution';
 
 interface Episode {
   name?: string;
@@ -36,6 +37,8 @@ interface EpisodeListProps {
   sources?: SourceInfo[];
   currentSource?: string;
   onSourceChange?: (source: SourceInfo) => void;
+  // Actual detected resolution for the current source
+  currentResolution?: VideoResolutionInfo | null;
 }
 
 export function EpisodeList({
@@ -47,6 +50,7 @@ export function EpisodeList({
   sources,
   currentSource,
   onSourceChange,
+  currentResolution,
 }: EpisodeListProps) {
   const listRef = useRef<HTMLDivElement>(null);
   const buttonRefs = useRef<(HTMLButtonElement | null)[]>([]);
@@ -228,6 +232,11 @@ export function EpisodeList({
               <span className="text-sm font-medium text-[var(--text-color)] truncate">
                 {currentSourceInfo?.sourceName || currentSourceInfo?.source || '当前来源'}
               </span>
+              {currentResolution && (
+                <span className={`inline-flex items-center px-1 py-0 rounded text-[9px] font-bold text-white ${currentResolution.color} flex-shrink-0`}>
+                  {currentResolution.label}
+                </span>
+              )}
               <Badge variant="primary" className="flex-shrink-0">{sources!.length}</Badge>
             </div>
             <Icons.ChevronDown
@@ -322,6 +331,14 @@ export function EpisodeList({
                                     <div className="font-medium text-sm truncate flex items-center gap-1.5">
                                       {source.sourceName || source.source}
                                       {(() => {
+                                        // For the current source, prefer actual detected resolution
+                                        if (isCurrent && currentResolution) {
+                                          return (
+                                            <span className={`inline-flex items-center px-1 py-0 rounded text-[9px] font-bold text-white ${currentResolution.color}`}>
+                                              {currentResolution.label}
+                                            </span>
+                                          );
+                                        }
                                         const qb = extractQualityLabel(source.remarks);
                                         return qb ? (
                                           <span className={`inline-flex items-center px-1 py-0 rounded text-[9px] font-bold text-white ${qb.color}`}>
@@ -402,6 +419,14 @@ export function EpisodeList({
                                 <div className="font-medium text-sm truncate flex items-center gap-1.5">
                                   {source.sourceName || source.source}
                                   {(() => {
+                                    // For the current source, prefer actual detected resolution
+                                    if (isCurrent && currentResolution) {
+                                      return (
+                                        <span className={`inline-flex items-center px-1 py-0 rounded text-[9px] font-bold text-white ${currentResolution.color}`}>
+                                          {currentResolution.label}
+                                        </span>
+                                      );
+                                    }
                                     const qb = extractQualityLabel(source.remarks);
                                     return qb ? (
                                       <span className={`inline-flex items-center px-1 py-0 rounded text-[9px] font-bold text-white ${qb.color}`}>

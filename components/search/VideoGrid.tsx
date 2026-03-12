@@ -6,6 +6,7 @@ import { VideoCard } from './VideoCard';
 import { VideoGroupCard, GroupedVideo } from './VideoGroupCard';
 import { settingsStore } from '@/lib/store/settings-store';
 import { Video } from '@/lib/types';
+import { useResolutionProbe } from '@/lib/hooks/useResolutionProbe';
 
 interface VideoGridProps {
   videos: Video[];
@@ -72,6 +73,15 @@ export const VideoGrid = memo(function VideoGrid({
   if (videos.length === 0) {
     return null;
   }
+
+  // Build stable list of videos to probe for resolution
+  const videosToProbe = useMemo(() => {
+    if (displayMode === 'grouped') {
+      // For grouped mode, will probe after grouping
+      return [];
+    }
+    return videos.map(v => ({ id: String(v.vod_id), source: v.source }));
+  }, [videos, displayMode]);
 
   // Group videos by name when in grouped mode
   const groupedVideos = useMemo<GroupedVideo[]>(() => {
@@ -165,6 +175,16 @@ export const VideoGrid = memo(function VideoGrid({
     }));
   }, [groupedVideos, displayMode]);
 
+  // Build probe list for grouped mode (probe representative of each group)
+  const groupedProbeList = useMemo(() => {
+    if (displayMode !== 'grouped') return [];
+    return groupedVideos.map(g => ({ id: String(g.representative.vod_id), source: g.representative.source }));
+  }, [groupedVideos, displayMode]);
+
+  // Probe resolutions
+  const probeList = displayMode === 'grouped' ? groupedProbeList : videosToProbe;
+  const { resolutions, isProbing } = useResolutionProbe(probeList);
+
   const totalItems = displayMode === 'grouped' ? groupItems.length : videoItems.length;
 
   return (
@@ -188,6 +208,8 @@ export const VideoGrid = memo(function VideoGrid({
                 onCardClick={handleCardClick}
                 isPremium={isPremium}
                 latencies={latencies}
+                resolution={resolutions[`${group.representative.source}:${group.representative.vod_id}`]}
+                isProbing={isProbing && !resolutions[`${group.representative.source}:${group.representative.vod_id}`]}
               />
             );
           })
@@ -205,6 +227,8 @@ export const VideoGrid = memo(function VideoGrid({
                 onCardClick={handleCardClick}
                 isPremium={isPremium}
                 latencies={latencies}
+                resolution={resolutions[`${video.source}:${video.vod_id}`]}
+                isProbing={isProbing && !resolutions[`${video.source}:${video.vod_id}`]}
               />
             );
           })
