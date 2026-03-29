@@ -11,9 +11,10 @@ interface VideoCardPosterProps {
     video: Video;
     isActive: boolean;
     isPremium?: boolean;
+    displayLatency?: number;
 }
 
-export function VideoCardPoster({ video, isActive, isPremium }: VideoCardPosterProps) {
+export function VideoCardPoster({ video, isActive, isPremium, displayLatency }: VideoCardPosterProps) {
     return (
         <div className="relative aspect-[2/3] bg-[color-mix(in_srgb,var(--glass-bg)_50%,transparent)] rounded-[var(--radius-2xl)] overflow-hidden">
             {video.vod_pic ? (
@@ -37,8 +38,8 @@ export function VideoCardPoster({ video, isActive, isPremium }: VideoCardPosterP
                 </div>
             )}
 
-            {/* Fallback Icon */}
-            <div className="absolute inset-0 flex flex-col items-center justify-center -z-10 gap-2">
+            {/* Fallback Icon - visible when image fails */}
+            <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 pointer-events-none">
                 <Icons.Film size={48} className="text-[var(--text-color-secondary)] opacity-40" />
                 <span className="text-xs text-[var(--text-color-secondary)] opacity-60 px-2 text-center line-clamp-2">{video.vod_name}</span>
             </div>
@@ -46,8 +47,7 @@ export function VideoCardPoster({ video, isActive, isPremium }: VideoCardPosterP
             <VideoCardBadges
                 sourceName={video.sourceName}
                 typeName={video.type_name}
-                latency={video.latency}
-                isActive={isActive}
+                latency={displayLatency}
             />
 
             {/* Favorite Button */}

@@ -7,10 +7,9 @@ interface VideoCardBadgesProps {
     sourceName?: string;
     typeName?: string;
     latency?: number;
-    isActive: boolean;
 }
 
-export function VideoCardBadges({ sourceName, typeName, latency, isActive }: VideoCardBadgesProps) {
+export function VideoCardBadges({ sourceName, typeName, latency }: VideoCardBadgesProps) {
     return (
         <div className="absolute top-2 left-2 right-2 z-10 flex items-center justify-between gap-1">
             <div className="flex items-center gap-1 min-w-0">

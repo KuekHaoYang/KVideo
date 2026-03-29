@@ -50,7 +50,7 @@ export const VideoCard = memo<VideoCardProps>(({
                     blur={false}
                     style={{ backfaceVisibility: 'hidden' }}
                 >
-                    <VideoCardPoster video={video} isActive={isActive} isPremium={isPremium} />
+                    <VideoCardPoster video={video} isActive={isActive} isPremium={isPremium} displayLatency={displayLatency} />
                     <VideoCardInfo video={video} />
                 </Card>
             </Link>
