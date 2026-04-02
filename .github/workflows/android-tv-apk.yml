@@ -6,8 +6,6 @@ on:
       - "android-tv/**"
       - ".github/workflows/android-tv-apk.yml"
   push:
-    branches:
-      - main
     paths:
       - "android-tv/**"
       - ".github/workflows/android-tv-apk.yml"
