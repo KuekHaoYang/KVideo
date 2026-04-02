@@ -781,6 +781,11 @@ npm start
 
 项目内置了一个轻量的 Android TV WebView 壳应用，可以将 KVideo 打包成 APK 安装到 Android TV 或机顶盒上。
 
+**直接下载：**
+
+- 仓库维护者可以通过 GitHub Actions 的 `Android TV APK` 工作流直接发布预构建 APK 到 **Releases**
+- 用户下载安装后，首次启动时填写自己的 KVideo 地址即可，不需要再改源码重新编译
+
 **前置要求：**
 
 - [Android Studio](https://developer.android.com/studio)（推荐）或 Android SDK Command-line Tools
@@ -788,33 +793,41 @@ npm start
 
 **步骤：**
 
-1. **修改目标 URL**：编辑 `android-tv/app/src/main/java/com/kvideo/tv/MainActivity.kt`，将 `KVIDEO_URL` 改为你的部署地址：
-   ```kotlin
-   private const val KVIDEO_URL = "https://your-kvideo-instance.com"
-   ```
-
-2. **使用 Android Studio 构建（推荐）**：
+1. **使用 Android Studio 构建（推荐）**：
    - 用 Android Studio 打开 `android-tv/` 目录
    - 等待 Gradle 同步完成
    - 点击 **Build → Build Bundle(s) / APK(s) → Build APK(s)**
    - APK 输出在 `android-tv/app/build/outputs/apk/debug/app-debug.apk`
 
-3. **使用命令行构建**：
+2. **使用命令行构建**：
    ```bash
    cd android-tv
    ./gradlew assembleDebug
    ```
    APK 输出在 `app/build/outputs/apk/debug/app-debug.apk`
 
-4. **安装到 Android TV**：
+   如果你希望在构建时预置默认地址，可额外传入 `-PkvideoUrl`：
+   ```bash
+   cd android-tv
+   ./gradlew assembleDebug -PkvideoUrl="https://your-kvideo-instance.com"
+   ```
+
+3. **安装到 Android TV**：
    ```bash
    adb install app/build/outputs/apk/debug/app-debug.apk
    ```
    或通过 U 盘、文件管理器等方式侧载安装。
 
+4. **首次启动配置**：
+   - 首次打开 APK 时输入你的 KVideo 部署地址
+   - 保存后应用会记住该地址，后续直接打开即可
+   - 需要修改地址时，可在站点根页按返回，或使用部分遥控器的菜单键重新打开设置页
+
 > **注意**：此 APK 是一个 WebView 壳应用，需要你的 KVideo 实例已经部署并可访问。APK 本身不包含 KVideo 代码，仅作为 TV 端的浏览器入口。
 >
 > **最低系统要求**：Android 8.0 (API 26) 及以上。Android 7.0 及更低版本的 WebView 不支持本项目使用的 ES2017+ JavaScript 特性和现代 CSS，可能导致白屏。如遇白屏问题，请升级系统 WebView 或使用 Android 8.0+ 设备。
+>
+> **发布方式**：GitHub Actions 的 `Android TV APK` 工作流会持续验证壳应用可构建；如需对外发布预构建 APK，可手动触发该工作流并填写 `release_tag`，生成对应的 GitHub Release 资产。
 
 #### 选项 6：Apple TV 应用构建
 

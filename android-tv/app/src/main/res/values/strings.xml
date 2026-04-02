@@ -1,3 +1,14 @@
 <resources>
     <string name="app_name">KVideo</string>
+    <string name="setup_title">连接你的 KVideo</string>
+    <string name="setup_description">首次使用时输入你的 KVideo 部署地址。保存后，APK 会记住这个地址，后续可直接打开。</string>
+    <string name="setup_hint">https://example.com</string>
+    <string name="setup_footer">提示：如果 APK 已打开站点，按返回直到页面根目录即可回到这里；部分遥控器也可直接按菜单键打开此设置页。</string>
+    <string name="button_open_saved">打开已保存地址</string>
+    <string name="button_save">保存并重载</string>
+    <string name="button_exit">退出</string>
+    <string name="status_ready">已准备就绪</string>
+    <string name="status_first_launch">首次使用请先填写可访问的 KVideo 地址</string>
+    <string name="status_invalid_url">地址无效。请输入完整的 http:// 或 https:// 地址，或输入域名后让应用自动补全为 https://。</string>
+    <string name="status_settings_hint">你可以在这里修改服务器地址，然后重新打开 KVideo。</string>
 </resources>

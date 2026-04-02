@@ -3,16 +3,25 @@ plugins {
     id("org.jetbrains.kotlin.android") version "1.9.22"
 }
 
+val defaultKVideoUrl = providers
+    .gradleProperty("kvideoUrl")
+    .orElse("")
+    .get()
+    .replace("\\", "\\\\")
+    .replace("\"", "\\\"")
+
 android {
     namespace = "com.kvideo.tv"
     compileSdk = 34
 
     defaultConfig {
         applicationId = "com.kvideo.tv"
-        minSdk = 21
+        minSdk = 26
         targetSdk = 34
         versionCode = 1
         versionName = "1.0.0"
+
+        buildConfigField("String", "DEFAULT_KVIDEO_URL", "\"$defaultKVideoUrl\"")
     }
 
     buildTypes {
@@ -31,6 +40,10 @@ android {
 
     kotlinOptions {
         jvmTarget = "17"
+    }
+
+    buildFeatures {
+        buildConfig = true
     }
 }
 
