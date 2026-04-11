@@ -15,8 +15,15 @@ interface UseAddSourceFormProps {
     initialValues?: VideoSource | null;
 }
 
+function generateIdFromName(name: string): string {
+    const slug = name.toLowerCase().replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '');
+    return slug || `custom-${Date.now().toString(36)}`;
+}
+
 export function useAddSourceForm({ isOpen, existingIds, onAdd, onClose, initialValues }: UseAddSourceFormProps) {
     const [name, setName] = useState('');
+    const [customId, setCustomId] = useState('');
+    const [idManuallyEdited, setIdManuallyEdited] = useState(false);
     const [url, setUrl] = useState('');
     const [error, setError] = useState('');
 
@@ -24,14 +31,30 @@ export function useAddSourceForm({ isOpen, existingIds, onAdd, onClose, initialV
         if (isOpen) {
             if (initialValues) {
                 setName(initialValues.name);
+                setCustomId(initialValues.id);
                 setUrl(initialValues.baseUrl);
+                setIdManuallyEdited(true);
             } else {
                 setName('');
+                setCustomId('');
                 setUrl('');
+                setIdManuallyEdited(false);
             }
             setError('');
         }
     }, [isOpen, initialValues]);
+
+    const handleNameChange = (newName: string) => {
+        setName(newName);
+        if (!idManuallyEdited && !initialValues) {
+            setCustomId(generateIdFromName(newName));
+        }
+    };
+
+    const handleIdChange = (newId: string) => {
+        setIdManuallyEdited(true);
+        setCustomId(newId);
+    };
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
@@ -49,18 +72,11 @@ export function useAddSourceForm({ isOpen, existingIds, onAdd, onClose, initialV
             return;
         }
 
-        let id = initialValues?.id;
+        const id = customId.trim() || generateIdFromName(name);
 
-        // Only generate new ID if not editing or if name changed (optional, maybe keep ID stable?)
-        // For now, let's keep ID stable if editing, unless we want to allow re-generating ID.
-        // But if we re-generate ID, we lose history/preferences for that ID.
-        // So better to keep ID if editing.
-        if (!id) {
-            id = name.toLowerCase().replace(/[^a-z0-9]/g, '-');
-            if (existingIds.includes(id)) {
-                setError('此源名称已存在');
-                return;
-            }
+        if (!initialValues && existingIds.includes(id)) {
+            setError('此源 ID 已存在，请修改源 ID');
+            return;
         }
 
         const newSource: VideoSource = {
@@ -79,10 +95,13 @@ export function useAddSourceForm({ isOpen, existingIds, onAdd, onClose, initialV
 
     return {
         name,
-        setName,
+        setName: handleNameChange,
+        customId,
+        setCustomId: handleIdChange,
         url,
         setUrl,
         error,
         handleSubmit,
+        isEditing: !!initialValues,
     };
 }

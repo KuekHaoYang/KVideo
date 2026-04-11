@@ -5,7 +5,7 @@
  */
 
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { useSearchHistoryStore } from '@/lib/store/search-history-store';
+import { useSearchHistoryStoreSelector } from '@/lib/store/search-history-store';
 import type { SearchHistoryItem } from '@/lib/store/search-history-store';
 
 interface UseSearchHistoryReturn {
@@ -23,7 +23,8 @@ interface UseSearchHistoryReturn {
 }
 
 export function useSearchHistory(
-  onSelectHistory?: (query: string) => void
+  onSelectHistory?: (query: string) => void,
+  isPremium: boolean = false
 ): UseSearchHistoryReturn {
   const {
     searchHistory,
@@ -31,7 +32,7 @@ export function useSearchHistory(
     removeFromSearchHistory,
     clearSearchHistory,
     getRecentSearches,
-  } = useSearchHistoryStore();
+  } = useSearchHistoryStoreSelector(isPremium);
 
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [highlightedIndex, setHighlightedIndex] = useState(-1);

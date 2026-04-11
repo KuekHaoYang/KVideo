@@ -4,10 +4,10 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { Card } from '@/components/ui/Card';
 import { useHistory } from '@/lib/store/history-store';
-import { settingsStore } from '@/lib/store/settings-store';
 import { CustomVideoPlayer } from './CustomVideoPlayer';
 import { VideoPlayerError } from './VideoPlayerError';
 import { VideoPlayerEmpty } from './VideoPlayerEmpty';
+import { usePlayerSettings } from './hooks/usePlayerSettings';
 
 interface VideoPlayerProps {
   playUrl: string;
@@ -19,6 +19,13 @@ interface VideoPlayerProps {
   onNextEpisode?: () => void;
   isReversed?: boolean;
   isPremium?: boolean;
+  // Danmaku props
+  videoTitle?: string;
+  episodeName?: string;
+  // Expose current time to parent
+  externalTimeRef?: React.MutableRefObject<number>;
+  // Resolution callback
+  onResolutionDetected?: (info: import('./hooks/useVideoResolution').VideoResolutionInfo) => void;
 }
 
 export function VideoPlayer({
@@ -29,7 +36,11 @@ export function VideoPlayer({
   totalEpisodes,
   onNextEpisode,
   isReversed = false,
-  isPremium = false
+  isPremium = false,
+  videoTitle,
+  episodeName,
+  externalTimeRef,
+  onResolutionDetected,
 }: VideoPlayerProps) {
   const [videoError, setVideoError] = useState<string>('');
   const [useProxy, setUseProxy] = useState(false);
@@ -41,37 +52,8 @@ export function VideoPlayer({
   const durationRef = useRef(0);
   const SAVE_INTERVAL = 5000; // 5 seconds throttle
 
-  // Get showModeIndicator setting
-  // Get showModeIndicator and proxyMode settings
-  const [showModeIndicator, setShowModeIndicator] = useState(false);
-  const [proxyMode, setProxyMode] = useState<'retry' | 'none' | 'always'>('retry');
-
-  useEffect(() => {
-    // Initial value
-    const settings = settingsStore.getSettings();
-    setShowModeIndicator(settings.showModeIndicator);
-    setProxyMode(settings.proxyMode);
-
-    // Subscribe to changes
-    const unsubscribe = settingsStore.subscribe(() => {
-      const newSettings = settingsStore.getSettings();
-      setShowModeIndicator(newSettings.showModeIndicator);
-      setProxyMode(newSettings.proxyMode);
-    });
-
-    return () => unsubscribe();
-  }, []);
-
-  // Initialize useProxy based on proxyMode when the component mounts or proxyMode changes
-  // We use a separate effect for this to react to setting changes
-  useEffect(() => {
-    if (proxyMode === 'always') {
-      setUseProxy(true);
-    } else if (proxyMode === 'none') {
-      setUseProxy(false);
-    }
-    // For 'retry', we assume it starts as false (direct), which is the default state of useProxy
-  }, [proxyMode]);
+  const { showModeIndicator, proxyMode } = usePlayerSettings(isPremium);
+  const effectiveUseProxy = proxyMode === 'always' ? true : proxyMode === 'none' ? false : useProxy;
 
 
   // Use reactive hook to subscribe to history updates
@@ -85,17 +67,19 @@ export function VideoPlayer({
 
   // Get saved progress for this video
   const getSavedProgress = () => {
+    // Check for explicit time parameter (from source switch)
+    const timeParam = searchParams.get('t');
+    if (timeParam) {
+      const t = parseFloat(timeParam);
+      if (t > 0 && isFinite(t)) return t;
+    }
+
     if (!videoId) return 0;
 
-    // Directly check HistoryStore for progress
-    // We prioritize a strict match (including source), but fall back to any match for this video/episode
-    // This fixes issues where the source parameter might be missing or different
+    // Match by normalized title + episode index (source-agnostic)
+    const normalizedTitle = title.toLowerCase().trim();
     const historyItem = viewingHistory.find(item =>
-      item.videoId.toString() === videoId?.toString() &&
-      item.episodeIndex === currentEpisode &&
-      (source ? item.source === source : true)
-    ) || viewingHistory.find(item =>
-      item.videoId.toString() === videoId?.toString() &&
+      item.title.toLowerCase().trim() === normalizedTitle &&
       item.episodeIndex === currentEpisode
     );
 
@@ -123,6 +107,8 @@ export function VideoPlayer({
     // Always track current time for beforeunload
     currentTimeRef.current = currentTime;
     durationRef.current = duration;
+    // Expose to parent for source switching
+    if (externalTimeRef) externalTimeRef.current = currentTime;
 
     if (!videoId || !playUrl || duration === 0) return;
 
@@ -157,7 +143,7 @@ export function VideoPlayer({
     // 3. Proxy mode is 'retry' (specifically for the auto-switch logic)
     // Note: If mode is 'always', we are already using proxy. If it fails, we show error.
 
-    if (!useProxy && proxyMode === 'retry') {
+    if (!effectiveUseProxy && proxyMode === 'retry') {
       setUseProxy(true);
       setShouldAutoPlay(true); // Force autoplay after proxy retry
       setVideoError('');
@@ -183,10 +169,10 @@ export function VideoPlayer({
     // Let's toggle it to give best chance.
     // Actually requirement says "try no proxy and proxy and same as before".
     // So simple toggle is fine.
-    setUseProxy(prev => !prev);
+    setUseProxy(prev => proxyMode === 'none' ? false : !prev);
   };
 
-  const finalPlayUrl = useProxy || proxyMode === 'always'
+  const finalPlayUrl = effectiveUseProxy
     ? `/api/proxy?url=${encodeURIComponent(playUrl)}&retry=${retryCount}` // Add retry param to force fresh request
     : playUrl;
 
@@ -195,15 +181,16 @@ export function VideoPlayer({
   }
 
   return (
+    <div data-no-spatial>
     <Card hover={false} className="p-0 relative">
       {/* Mode Indicator Badge - controlled by settings */}
       {showModeIndicator && (
         <div className="absolute top-3 right-3 z-30">
-          <span className={`px-2 py-1 text-xs font-medium rounded-full backdrop-blur-md transition-all duration-300 ${useProxy
+          <span className={`px-2 py-1 text-xs font-medium rounded-full backdrop-blur-md transition-all duration-300 ${effectiveUseProxy
             ? 'bg-orange-500/80 text-white'
             : 'bg-green-500/80 text-white'
             }`}>
-            {useProxy ? '代理模式' : '直连模式'}
+            {effectiveUseProxy ? '代理模式' : '直连模式'}
           </span>
         </div>
       )}
@@ -217,7 +204,7 @@ export function VideoPlayer({
         />
       ) : (
         <CustomVideoPlayer
-          key={`${useProxy ? 'proxy' : 'direct'}-${retryCount}-${source}`} // Remount when switching sources, modes, or retrying
+          key={`${effectiveUseProxy ? 'proxy' : 'direct'}-${retryCount}-${source}`} // Remount when switching sources, modes, or retrying
           src={finalPlayUrl}
           onError={handleVideoError}
           onTimeUpdate={handleTimeUpdate}
@@ -227,8 +214,13 @@ export function VideoPlayer({
           currentEpisodeIndex={currentEpisode}
           onNextEpisode={onNextEpisode}
           isReversed={isReversed}
+          videoTitle={videoTitle}
+          episodeName={episodeName}
+          isPremium={isPremium}
+          onResolutionDetected={onResolutionDetected}
         />
       )}
     </Card>
+    </div>
   );
 }

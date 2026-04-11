@@ -31,6 +31,7 @@ export function SourceBadgeItem({
 
   return (
     <button
+      type="button"
       ref={innerRef}
       onClick={handleClick}
       onFocus={onFocus}
@@ -41,6 +42,7 @@ export function SourceBadgeItem({
         }
       }}
       tabIndex={0}
+      data-focusable
       aria-pressed={isSelected}
       aria-label={`${name} 视频源，${count} 个视频${isSelected ? '，已选中' : ''}`}
       className={`

@@ -7,6 +7,8 @@ import { DEFAULT_SOURCES } from '@/lib/api/default-sources';
 import { PREMIUM_SOURCES } from '@/lib/api/premium-sources';
 import { createSubscription } from '@/lib/utils/source-import-utils';
 
+export type LocaleOption = 'zh-CN' | 'zh-TW';
+
 export type SortOption =
   | 'default'
   | 'relevance'
@@ -21,6 +23,18 @@ export type SearchDisplayMode = 'normal' | 'grouped';
 export type AdFilterMode = 'off' | 'keyword' | 'heuristic' | 'aggressive';
 export type ProxyMode = 'retry' | 'none' | 'always';
 
+export const DEFAULT_SEEK_STEP_SECONDS = 10;
+export const MIN_SEEK_STEP_SECONDS = 1;
+export const MAX_SEEK_STEP_SECONDS = 120;
+
+export function normalizeSeekStepSeconds(value: unknown): number {
+  if (typeof value !== 'number' || !Number.isFinite(value)) {
+    return DEFAULT_SEEK_STEP_SECONDS;
+  }
+
+  return Math.min(MAX_SEEK_STEP_SECONDS, Math.max(MIN_SEEK_STEP_SECONDS, Math.round(value)));
+}
+
 export interface AppSettings {
   sources: VideoSource[];
   premiumSources: VideoSource[];
@@ -28,14 +42,13 @@ export interface AppSettings {
   sortBy: SortOption;
   searchHistory: boolean;
   watchHistory: boolean;
-  passwordAccess: boolean;
-  accessPasswords: string[];
   // Player settings
   autoNextEpisode: boolean;
   autoSkipIntro: boolean;
   skipIntroSeconds: number;
   autoSkipOutro: boolean;
   skipOutroSeconds: number;
+  seekStepSeconds: number;
   showModeIndicator: boolean; // Show '直连模式'/'代理模式' badge on player
   adFilter: boolean; // Filter ad tags from m3u8 (legacy, kept for compatibility)
   adFilterMode: AdFilterMode; // 'off' | 'keyword' | 'heuristic' | 'aggressive'
@@ -44,9 +57,19 @@ export interface AppSettings {
   realtimeLatency: boolean; // Enable real-time latency ping updates
   searchDisplayMode: SearchDisplayMode; // 'normal' = individual cards, 'grouped' = group same-name videos
   episodeReverseOrder: boolean; // Persist episode list reverse state
-  fullscreenType: 'native' | 'window'; // Fullscreen mode preference
+  fullscreenType: 'auto' | 'native' | 'window'; // Fullscreen mode preference: 'auto' (native on desktop, window on mobile) | 'native' | 'window'
   proxyMode: ProxyMode; // Proxy behavior: 'retry' | 'none' | 'always'
   rememberScrollPosition: boolean; // Remember scroll position when navigating back or refreshing
+  personalizedRecommendations: boolean; // Show personalized recommendations based on watch history
+  videoTogetherEnabled: boolean; // Show VideoTogether entry on supported player pages
+  // Danmaku settings
+  danmakuEnabled: boolean; // Show danmaku overlay on video
+  danmakuApiUrl: string; // Self-hosted danmaku API endpoint
+  danmakuOpacity: number; // 0.1 - 1.0
+  danmakuFontSize: number; // px
+  danmakuDisplayArea: number; // 0.25 | 0.5 | 0.75 | 1.0
+  locale: LocaleOption; // 'zh-CN' (Simplified) or 'zh-TW' (Traditional)
+  blockedCategories: string[]; // Category keywords to hide from search results (e.g. '伦理')
 }
 
 import { exportSettings, importSettings, SEARCH_HISTORY_KEY, WATCH_HISTORY_KEY } from './settings-helpers';
@@ -104,13 +127,12 @@ function getDefaultAppSettings(): AppSettings {
     sortBy: 'default',
     searchHistory: true,
     watchHistory: true,
-    passwordAccess: false,
-    accessPasswords: [],
     autoNextEpisode: true,
     autoSkipIntro: false,
     skipIntroSeconds: 0,
     autoSkipOutro: false,
     skipOutroSeconds: 0,
+    seekStepSeconds: DEFAULT_SEEK_STEP_SECONDS,
     showModeIndicator: false,
     adFilter: false,
     adFilterMode: 'heuristic',
@@ -118,10 +140,37 @@ function getDefaultAppSettings(): AppSettings {
     realtimeLatency: false,
     searchDisplayMode: 'normal',
     episodeReverseOrder: false,
-    fullscreenType: 'native',
+    fullscreenType: 'auto',
     proxyMode: 'retry',
     rememberScrollPosition: true,
+    personalizedRecommendations: true,
+    videoTogetherEnabled: false,
+    danmakuEnabled: false,
+    danmakuApiUrl: process.env.NEXT_PUBLIC_DANMAKU_API_URL || '',
+    danmakuOpacity: 0.7,
+    danmakuFontSize: 20,
+    danmakuDisplayArea: 0.5,
+    locale: 'zh-CN',
+    blockedCategories: [],
   };
+}
+
+export function hasStoredAppSetting(key: keyof AppSettings): boolean {
+  if (typeof window === 'undefined') {
+    return false;
+  }
+
+  const stored = localStorage.getItem(SETTINGS_KEY);
+  if (!stored) {
+    return false;
+  }
+
+  try {
+    const parsed = JSON.parse(stored);
+    return Object.prototype.hasOwnProperty.call(parsed, key);
+  } catch {
+    return false;
+  }
 }
 
 export const settingsStore = {
@@ -182,13 +231,12 @@ export const settingsStore = {
         sortBy: parsed.sortBy || 'default',
         searchHistory: parsed.searchHistory !== undefined ? parsed.searchHistory : true,
         watchHistory: parsed.watchHistory !== undefined ? parsed.watchHistory : true,
-        passwordAccess: parsed.passwordAccess !== undefined ? parsed.passwordAccess : false,
-        accessPasswords: Array.isArray(parsed.accessPasswords) ? parsed.accessPasswords : [],
         autoNextEpisode: parsed.autoNextEpisode !== undefined ? parsed.autoNextEpisode : true,
         autoSkipIntro: parsed.autoSkipIntro !== undefined ? parsed.autoSkipIntro : false,
         skipIntroSeconds: typeof parsed.skipIntroSeconds === 'number' ? parsed.skipIntroSeconds : 0,
         autoSkipOutro: parsed.autoSkipOutro !== undefined ? parsed.autoSkipOutro : false,
         skipOutroSeconds: typeof parsed.skipOutroSeconds === 'number' ? parsed.skipOutroSeconds : 0,
+        seekStepSeconds: normalizeSeekStepSeconds(parsed.seekStepSeconds),
         showModeIndicator: parsed.showModeIndicator !== undefined ? parsed.showModeIndicator : false,
         adFilter: parsed.adFilter !== undefined ? parsed.adFilter : false,
         adFilterMode: parsed.adFilterMode || 'heuristic',
@@ -196,9 +244,18 @@ export const settingsStore = {
         realtimeLatency: parsed.realtimeLatency !== undefined ? parsed.realtimeLatency : false,
         searchDisplayMode: parsed.searchDisplayMode === 'grouped' ? 'grouped' : 'normal',
         episodeReverseOrder: parsed.episodeReverseOrder !== undefined ? parsed.episodeReverseOrder : false,
-        fullscreenType: parsed.fullscreenType === 'window' ? 'window' : 'native',
+        fullscreenType: (parsed.fullscreenType === 'window' || parsed.fullscreenType === 'native' || parsed.fullscreenType === 'auto') ? parsed.fullscreenType : 'auto',
         proxyMode: (parsed.proxyMode === 'retry' || parsed.proxyMode === 'none' || parsed.proxyMode === 'always') ? parsed.proxyMode : 'retry',
         rememberScrollPosition: parsed.rememberScrollPosition !== undefined ? parsed.rememberScrollPosition : true,
+        personalizedRecommendations: parsed.personalizedRecommendations !== undefined ? parsed.personalizedRecommendations : true,
+        videoTogetherEnabled: parsed.videoTogetherEnabled !== undefined ? parsed.videoTogetherEnabled : false,
+        danmakuEnabled: parsed.danmakuEnabled !== undefined ? parsed.danmakuEnabled : false,
+        danmakuApiUrl: typeof parsed.danmakuApiUrl === 'string' ? (parsed.danmakuApiUrl || process.env.NEXT_PUBLIC_DANMAKU_API_URL || '') : (process.env.NEXT_PUBLIC_DANMAKU_API_URL || ''),
+        danmakuOpacity: typeof parsed.danmakuOpacity === 'number' ? parsed.danmakuOpacity : 0.7,
+        danmakuFontSize: typeof parsed.danmakuFontSize === 'number' ? parsed.danmakuFontSize : 20,
+        danmakuDisplayArea: typeof parsed.danmakuDisplayArea === 'number' ? parsed.danmakuDisplayArea : 0.5,
+        locale: parsed.locale === 'zh-TW' ? 'zh-TW' : 'zh-CN',
+        blockedCategories: Array.isArray(parsed.blockedCategories) ? parsed.blockedCategories : [],
       };
     } catch {
       // Even if localStorage fails, we should return defaults + ENV subscriptions

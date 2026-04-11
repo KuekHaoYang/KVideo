@@ -62,7 +62,7 @@
 
 | 工具 | 最低版本 | 推荐版本 | 检查命令 |
 |------|----------|----------|----------|
-| **Node.js** | 20.0.0 | 20.x LTS | `node --version` |
+| **Node.js** | 20.0.0 | 22.x LTS | `node --version` |
 | **npm** | 9.0.0 | 10.x | `npm --version` |
 | **Git** | 2.30.0 | 最新版本 | `git --version` |
 
@@ -846,10 +846,6 @@ find . -type f -not -path "*/node_modules/*" -not -path "*/.next/*" -not -path "
 - 模块化
 
 注：系统文件（如 README.md、CONTRIBUTING.md 等文档）不受此限制。
-- 提取组件
-- 提取 Hook
-- 提取工具函数
-- 模块化
 
 ### Q3: 我的 PR 多久会被审查？
 

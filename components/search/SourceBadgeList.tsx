@@ -6,15 +6,18 @@
 
 'use client';
 
-import { useState, useRef, useCallback, useEffect } from 'react';
+import { useState, useRef, useCallback, useEffect, useMemo } from 'react';
 import { Icons } from '@/components/ui/Icon';
 import { SourceBadgeItem } from './SourceBadgeItem';
 import { useKeyboardNavigation } from '@/lib/hooks/useKeyboardNavigation';
+
+const EXPAND_KEY = 'kvideo_source_badges_expanded';
 
 interface Source {
   id: string;
   name: string;
   count: number;
+  typeName?: string;
 }
 
 interface SourceBadgeListProps {
@@ -24,12 +27,37 @@ interface SourceBadgeListProps {
 }
 
 export function SourceBadgeList({ sources, selectedSources, onToggleSource }: SourceBadgeListProps) {
-  const [isExpanded, setIsExpanded] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(() => {
+    if (typeof window === 'undefined') return true;
+    const saved = localStorage.getItem(EXPAND_KEY);
+    return saved !== 'false'; // default to expanded
+  });
   const [focusedIndex, setFocusedIndex] = useState(-1);
   const [hasOverflow, setHasOverflow] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const badgeContainerRef = useRef<HTMLDivElement>(null);
   const badgeRefs = useRef<(HTMLButtonElement | null)[]>([]);
+
+  // Group sources by typeName if type info is available
+  const typeGroups = useMemo(() => {
+    const groups = new Map<string, Source[]>();
+    for (const source of sources) {
+      const type = source.typeName || '';
+      if (!groups.has(type)) groups.set(type, []);
+      groups.get(type)!.push(source);
+    }
+    // Only use grouping if there are meaningful type names
+    const hasTypes = groups.size > 1 || (groups.size === 1 && !groups.has(''));
+    return hasTypes ? groups : null;
+  }, [sources]);
+
+  const toggleExpanded = useCallback(() => {
+    setIsExpanded(prev => {
+      const next = !prev;
+      localStorage.setItem(EXPAND_KEY, String(next));
+      return next;
+    });
+  }, []);
 
   // Keyboard navigation
   useKeyboardNavigation({
@@ -53,7 +81,8 @@ export function SourceBadgeList({ sources, selectedSources, onToggleSource }: So
     }, [sources, onToggleSource]),
   });
 
-  // Check if content has overflow on mount and when sources change
+  // Check if content has overflow on mount and when source count changes
+  const hasCheckedOverflow = useRef(false);
   useEffect(() => {
     const checkOverflow = () => {
       if (badgeContainerRef.current) {
@@ -63,10 +92,13 @@ export function SourceBadgeList({ sources, selectedSources, onToggleSource }: So
     };
 
     checkOverflow();
-    // Recheck after a short delay to account for animations
-    const timeout = setTimeout(checkOverflow, 100);
-    return () => clearTimeout(timeout);
-  }, [sources]);
+    // Only do delayed recheck on first measurement
+    if (!hasCheckedOverflow.current) {
+      hasCheckedOverflow.current = true;
+      const timeout = setTimeout(checkOverflow, 100);
+      return () => clearTimeout(timeout);
+    }
+  }, [sources.length]);
 
   return (
     <>
@@ -77,31 +109,60 @@ export function SourceBadgeList({ sources, selectedSources, onToggleSource }: So
         role="group"
         aria-label="视频源筛选"
       >
-        <div className={`relative transition-all duration-300 z-10 ${!isExpanded ? 'max-h-[50px] overflow-hidden' : 'overflow-visible'
+        <div className={`relative transition-[max-height] duration-300 z-10 ${!isExpanded ? 'max-h-[50px] overflow-hidden' : 'overflow-visible'
           }`}>
           <div
             ref={badgeContainerRef}
             className="flex items-center gap-2 flex-wrap p-1"
           >
-            {sources.map((source, index) => (
-              <SourceBadgeItem
-                key={source.id}
-                id={source.id}
-                name={source.name}
-                count={source.count}
-                isSelected={selectedSources.has(source.id)}
-                onToggle={() => onToggleSource(source.id)}
-                isFocused={focusedIndex === index}
-                onFocus={() => setFocusedIndex(index)}
-                innerRef={(el: HTMLButtonElement | null) => { badgeRefs.current[index] = el; }}
-              />
-            ))}
+            {typeGroups ? (
+              Array.from(typeGroups.entries()).map(([typeName, typeSources]) => (
+                <div key={typeName || '__default'} className="flex items-center gap-2 flex-wrap">
+                  {typeName && (
+                    <span className="text-[10px] font-medium text-[var(--text-color-secondary)] uppercase tracking-wider px-1 select-none">
+                      {typeName}:
+                    </span>
+                  )}
+                  {typeSources.map((source) => {
+                    const globalIndex = sources.indexOf(source);
+                    return (
+                      <SourceBadgeItem
+                        key={source.id}
+                        id={source.id}
+                        name={source.name}
+                        count={source.count}
+                        isSelected={selectedSources.has(source.id)}
+                        onToggle={() => onToggleSource(source.id)}
+                        isFocused={focusedIndex === globalIndex}
+                        onFocus={() => setFocusedIndex(globalIndex)}
+                        innerRef={(el: HTMLButtonElement | null) => { badgeRefs.current[globalIndex] = el; }}
+                      />
+                    );
+                  })}
+                </div>
+              ))
+            ) : (
+              sources.map((source, index) => (
+                <SourceBadgeItem
+                  key={source.id}
+                  id={source.id}
+                  name={source.name}
+                  count={source.count}
+                  isSelected={selectedSources.has(source.id)}
+                  onToggle={() => onToggleSource(source.id)}
+                  isFocused={focusedIndex === index}
+                  onFocus={() => setFocusedIndex(index)}
+                  innerRef={(el: HTMLButtonElement | null) => { badgeRefs.current[index] = el; }}
+                />
+              ))
+            )}
           </div>
         </div>
 
         {hasOverflow && (
           <button
-            onClick={() => setIsExpanded(!isExpanded)}
+            type="button"
+            onClick={toggleExpanded}
             className="mt-2 text-xs text-[var(--text-color-secondary)] hover:text-[var(--accent-color)]
                      flex items-center gap-1 transition-colors self-start cursor-pointer"
           >

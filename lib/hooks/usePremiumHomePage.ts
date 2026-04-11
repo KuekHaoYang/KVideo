@@ -34,8 +34,12 @@ export function usePremiumHomePage() {
         totalSources,
         performSearch,
         resetSearch,
+        cancelSearch,
         loadCachedResults,
         applySorting,
+        loadMore,
+        hasMore,
+        loadingMore,
     } = useParallelSearch(
         saveToCache,
         onUrlUpdate
@@ -140,5 +144,9 @@ export function usePremiumHomePage() {
         totalSources,
         handleSearch,
         handleReset,
+        handleCancelSearch: cancelSearch,
+        loadMore,
+        hasMore,
+        loadingMore,
     };
 }

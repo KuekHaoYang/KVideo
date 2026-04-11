@@ -3,16 +3,28 @@
     position: fixed !important;
     top: 0 !important;
     left: 0 !important;
-    width: 100vw !important;
-    height: 100vh !important;
-    height: 100dvh !important;
+    width: var(--kvideo-viewport-width, 100vw) !important;
+    height: var(--kvideo-viewport-height, 100vh) !important;
+    height: var(--kvideo-viewport-height, 100dvh) !important;
     /* Fallback for browsers supporting dvh */
     z-index: 2147483647 !important;
     background: black !important;
     border-radius: 0 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    --kvideo-web-scale: 1;
 }
 
-/* Ensure controls and video take up full space in web fullscreen */
+.kvideo-container.is-web-fullscreen .kvideo-web-fullscreen-stage {
+    position: relative !important;
+    width: min(calc(var(--kvideo-stage-viewport-width, var(--kvideo-viewport-width, 100vw)) * var(--kvideo-web-scale)), calc(var(--kvideo-stage-viewport-height, var(--kvideo-viewport-height, 100vh)) * var(--kvideo-web-scale) * 16 / 9)) !important;
+    height: min(calc(var(--kvideo-stage-viewport-height, var(--kvideo-viewport-height, 100vh)) * var(--kvideo-web-scale)), calc(var(--kvideo-stage-viewport-width, var(--kvideo-viewport-width, 100vw)) * var(--kvideo-web-scale) * 9 / 16)) !important;
+    max-width: var(--kvideo-stage-viewport-width, var(--kvideo-viewport-width, 100vw)) !important;
+    max-height: var(--kvideo-stage-viewport-height, var(--kvideo-viewport-height, 100vh)) !important;
+}
+
+/* Ensure video takes up full space in web fullscreen */
 .kvideo-container.is-web-fullscreen video {
     width: 100% !important;
     height: 100% !important;
@@ -21,9 +33,9 @@
 
 /* Force Landscape Mode for Mobile (iOS mainly) */
 .kvideo-container.is-web-fullscreen.force-landscape {
-    width: 100vh !important;
-    width: 100dvh !important;
-    height: 100vw !important;
+    width: var(--kvideo-viewport-height, 100vh) !important;
+    width: var(--kvideo-viewport-height, 100dvh) !important;
+    height: var(--kvideo-viewport-width, 100vw) !important;
     top: 50% !important;
     left: 50% !important;
     transform: translate(-50%, -50%) rotate(90deg) !important;

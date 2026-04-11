@@ -1,5 +1,14 @@
 import { useState, useEffect } from 'react';
-import { settingsStore, getDefaultSources, type SortOption, type SearchDisplayMode, type ProxyMode } from '@/lib/store/settings-store';
+import {
+    settingsStore,
+    getDefaultSources,
+    type SortOption,
+    type SearchDisplayMode,
+    type ProxyMode,
+    type LocaleOption,
+    DEFAULT_SEEK_STEP_SECONDS,
+    normalizeSeekStepSeconds,
+} from '@/lib/store/settings-store';
 import type { VideoSource, SourceSubscription } from '@/lib/types';
 import {
     type ImportResult,
@@ -19,35 +28,48 @@ export function useSettingsPage() {
     const [isRestoreDefaultsDialogOpen, setIsRestoreDefaultsDialogOpen] = useState(false);
     const [editingSource, setEditingSource] = useState<VideoSource | null>(null);
 
-    const [passwordAccess, setPasswordAccess] = useState(false);
-    const [accessPasswords, setAccessPasswords] = useState<string[]>([]);
-    const [envPasswordSet, setEnvPasswordSet] = useState(false);
-
     // Display settings
     const [realtimeLatency, setRealtimeLatency] = useState(false);
     const [searchDisplayMode, setSearchDisplayMode] = useState<SearchDisplayMode>('normal');
-    const [fullscreenType, setFullscreenType] = useState<'native' | 'window'>('native');
+    const [fullscreenType, setFullscreenType] = useState<'auto' | 'native' | 'window'>('auto');
     const [proxyMode, setProxyMode] = useState<ProxyMode>('retry');
+    const [seekStepSeconds, setSeekStepSeconds] = useState(DEFAULT_SEEK_STEP_SECONDS);
     const [rememberScrollPosition, setRememberScrollPosition] = useState(true);
+    const [locale, setLocale] = useState<LocaleOption>('zh-CN');
+    const [videoTogetherEnabled, setVideoTogetherEnabled] = useState(false);
+
+    // Danmaku settings
+    const [danmakuApiUrl, setDanmakuApiUrl] = useState('');
+    const [danmakuOpacity, setDanmakuOpacity] = useState(0.7);
+    const [danmakuFontSize, setDanmakuFontSize] = useState(20);
+    const [danmakuDisplayArea, setDanmakuDisplayArea] = useState(0.5);
+
+    // Content filter
+    const [blockedCategories, setBlockedCategories] = useState<string[]>([]);
 
     useEffect(() => {
-        const settings = settingsStore.getSettings();
-        setSources(settings.sources || []);
-        setSubscriptions(settings.subscriptions || []);
-        setSortBy(settings.sortBy);
-        setPasswordAccess(settings.passwordAccess);
-        setAccessPasswords(settings.accessPasswords);
-        setRealtimeLatency(settings.realtimeLatency);
-        setSearchDisplayMode(settings.searchDisplayMode);
-        setFullscreenType(settings.fullscreenType);
-        setProxyMode(settings.proxyMode);
-        setRememberScrollPosition(settings.rememberScrollPosition);
+        const syncFromStore = () => {
+            const settings = settingsStore.getSettings();
+            setSources(settings.sources || []);
+            setSubscriptions(settings.subscriptions || []);
+            setSortBy(settings.sortBy);
+            setRealtimeLatency(settings.realtimeLatency);
+            setSearchDisplayMode(settings.searchDisplayMode);
+            setFullscreenType(settings.fullscreenType);
+            setProxyMode(settings.proxyMode);
+            setSeekStepSeconds(settings.seekStepSeconds);
+            setRememberScrollPosition(settings.rememberScrollPosition);
+            setLocale(settings.locale);
+            setVideoTogetherEnabled(settings.videoTogetherEnabled);
+            setDanmakuApiUrl(settings.danmakuApiUrl);
+            setDanmakuOpacity(settings.danmakuOpacity);
+            setDanmakuFontSize(settings.danmakuFontSize);
+            setDanmakuDisplayArea(settings.danmakuDisplayArea);
+            setBlockedCategories(settings.blockedCategories || []);
+        };
 
-        // Fetch env password status
-        fetch('/api/config')
-            .then(res => res.json())
-            .then(data => setEnvPasswordSet(data.hasEnvPassword))
-            .catch(() => setEnvPasswordSet(false));
+        syncFromStore();
+        return settingsStore.subscribe(syncFromStore);
     }, []);
 
     const handleSourcesChange = (newSources: VideoSource[]) => {
@@ -58,10 +80,6 @@ export function useSettingsPage() {
             sources: newSources,
             sortBy,
             subscriptions,
-            searchHistory: true,
-            watchHistory: true,
-            passwordAccess,
-            accessPasswords
         });
     };
 
@@ -86,54 +104,6 @@ export function useSettingsPage() {
             ...currentSettings,
             sources,
             sortBy: newSort,
-            searchHistory: true,
-            watchHistory: true,
-            passwordAccess,
-            accessPasswords
-        });
-    };
-
-    const handlePasswordToggle = (enabled: boolean) => {
-        setPasswordAccess(enabled);
-        const currentSettings = settingsStore.getSettings();
-        settingsStore.saveSettings({
-            ...currentSettings,
-            sources,
-            sortBy,
-            searchHistory: true,
-            watchHistory: true,
-            passwordAccess: enabled,
-            accessPasswords
-        });
-    };
-
-    const handleAddPassword = (password: string) => {
-        const updated = [...accessPasswords, password];
-        setAccessPasswords(updated);
-        const currentSettings = settingsStore.getSettings();
-        settingsStore.saveSettings({
-            ...currentSettings,
-            sources,
-            sortBy,
-            searchHistory: true,
-            watchHistory: true,
-            passwordAccess,
-            accessPasswords: updated
-        });
-    };
-
-    const handleRemovePassword = (password: string) => {
-        const updated = accessPasswords.filter(p => p !== password);
-        setAccessPasswords(updated);
-        const currentSettings = settingsStore.getSettings();
-        settingsStore.saveSettings({
-            ...currentSettings,
-            sources,
-            sortBy,
-            searchHistory: true,
-            watchHistory: true,
-            passwordAccess,
-            accessPasswords: updated
         });
     };
 
@@ -156,8 +126,6 @@ export function useSettingsPage() {
             setSources(settings.sources);
             setSortBy(settings.sortBy);
             setSubscriptions(settings.subscriptions || []);
-            setPasswordAccess(settings.passwordAccess);
-            setAccessPasswords(settings.accessPasswords);
 
             // Reload to apply changes
             setTimeout(() => window.location.reload(), 1000);
@@ -181,11 +149,11 @@ export function useSettingsPage() {
     const handleImportLink = (result: ImportResult, isSync: boolean = false): boolean => {
         try {
             // Merge normal sources
-            let updatedSources = mergeSources(sources, result.normalSources);
+            const updatedSources = mergeSources(sources, result.normalSources);
 
             // Merge premium sources if needed
             const currentSettings = settingsStore.getSettings();
-            let updatedPremiumSources = mergeSources(currentSettings.premiumSources, result.premiumSources);
+            const updatedPremiumSources = mergeSources(currentSettings.premiumSources, result.premiumSources);
 
             // Save everything
             settingsStore.saveSettings({
@@ -285,7 +253,7 @@ export function useSettingsPage() {
         });
     };
 
-    const handleFullscreenTypeChange = (type: 'native' | 'window') => {
+    const handleFullscreenTypeChange = (type: 'auto' | 'native' | 'window') => {
         setFullscreenType(type);
         const currentSettings = settingsStore.getSettings();
         settingsStore.saveSettings({
@@ -303,12 +271,86 @@ export function useSettingsPage() {
         });
     };
 
+    const handleSeekStepSecondsChange = (value: number) => {
+        const normalized = normalizeSeekStepSeconds(value);
+        setSeekStepSeconds(normalized);
+        const currentSettings = settingsStore.getSettings();
+        settingsStore.saveSettings({
+            ...currentSettings,
+            seekStepSeconds: normalized,
+        });
+    };
+
     const handleRememberScrollPositionChange = (enabled: boolean) => {
         setRememberScrollPosition(enabled);
         const currentSettings = settingsStore.getSettings();
         settingsStore.saveSettings({
             ...currentSettings,
             rememberScrollPosition: enabled,
+        });
+    };
+
+    const handleVideoTogetherEnabledChange = (enabled: boolean) => {
+        setVideoTogetherEnabled(enabled);
+        const currentSettings = settingsStore.getSettings();
+        settingsStore.saveSettings({
+            ...currentSettings,
+            videoTogetherEnabled: enabled,
+        });
+    };
+
+    const handleLocaleChange = (newLocale: LocaleOption) => {
+        setLocale(newLocale);
+        const currentSettings = settingsStore.getSettings();
+        settingsStore.saveSettings({
+            ...currentSettings,
+            locale: newLocale,
+        });
+    };
+
+    const handleDanmakuApiUrlChange = (url: string) => {
+        setDanmakuApiUrl(url);
+        const currentSettings = settingsStore.getSettings();
+        settingsStore.saveSettings({
+            ...currentSettings,
+            danmakuApiUrl: url,
+        });
+    };
+
+    const handleDanmakuOpacityChange = (value: number) => {
+        const clamped = Math.max(0.1, Math.min(1, value));
+        setDanmakuOpacity(clamped);
+        const currentSettings = settingsStore.getSettings();
+        settingsStore.saveSettings({
+            ...currentSettings,
+            danmakuOpacity: clamped,
+        });
+    };
+
+    const handleDanmakuFontSizeChange = (value: number) => {
+        setDanmakuFontSize(value);
+        const currentSettings = settingsStore.getSettings();
+        settingsStore.saveSettings({
+            ...currentSettings,
+            danmakuFontSize: value,
+        });
+    };
+
+    const handleDanmakuDisplayAreaChange = (value: number) => {
+        setDanmakuDisplayArea(value);
+        const currentSettings = settingsStore.getSettings();
+        settingsStore.saveSettings({
+            ...currentSettings,
+            danmakuDisplayArea: value,
+        });
+    };
+
+    const handleBlockedCategoriesChange = (categories: string[]) => {
+        setBlockedCategories(categories);
+        const currentSettings = settingsStore.getSettings();
+        settingsStore.saveSettings({
+            ...currentSettings,
+            blockedCategories: categories,
         });
     };
 
@@ -328,11 +370,11 @@ export function useSettingsPage() {
         sources,
         subscriptions,
         sortBy,
-        passwordAccess,
-        accessPasswords,
-        envPasswordSet,
         realtimeLatency,
         searchDisplayMode,
+        fullscreenType,
+        proxyMode,
+        seekStepSeconds,
         isAddModalOpen,
         isExportModalOpen,
         isImportModalOpen,
@@ -347,26 +389,36 @@ export function useSettingsPage() {
         handleSourcesChange,
         handleAddSource,
         handleSortChange,
-        handlePasswordToggle,
-        handleAddPassword,
-        handleRemovePassword,
         handleExport,
-        handleImportFile, // Renamed from handleImport
-        handleImportLink, // New
-        handleAddSubscription, // New
-        handleRemoveSubscription, // New
-        handleRefreshSubscription, // New
+        handleImportFile,
+        handleImportLink,
+        handleAddSubscription,
+        handleRemoveSubscription,
+        handleRefreshSubscription,
         handleRestoreDefaults,
         handleResetAll,
         editingSource,
         handleEditSource,
         handleRealtimeLatencyChange,
         handleSearchDisplayModeChange,
-        fullscreenType,
         handleFullscreenTypeChange,
-        proxyMode,
         handleProxyModeChange,
+        handleSeekStepSecondsChange,
         rememberScrollPosition,
         handleRememberScrollPositionChange,
+        locale,
+        handleLocaleChange,
+        videoTogetherEnabled,
+        handleVideoTogetherEnabledChange,
+        danmakuApiUrl,
+        handleDanmakuApiUrlChange,
+        danmakuOpacity,
+        handleDanmakuOpacityChange,
+        danmakuFontSize,
+        handleDanmakuFontSizeChange,
+        danmakuDisplayArea,
+        handleDanmakuDisplayAreaChange,
+        blockedCategories,
+        handleBlockedCategoriesChange,
     };
 }

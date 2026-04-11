@@ -8,6 +8,9 @@ export function useSearchState() {
     const [completedSources, setCompletedSources] = useState(0);
     const [totalSources, setTotalSources] = useState(0);
     const [totalVideosFound, setTotalVideosFound] = useState(0);
+    const [currentPage, setCurrentPage] = useState(1);
+    const [maxPageCount, setMaxPageCount] = useState(1);
+    const [loadingMore, setLoadingMore] = useState(false);
     const currentQueryRef = useRef<string>('');
 
     const resetState = useCallback(() => {
@@ -17,6 +20,9 @@ export function useSearchState() {
         setCompletedSources(0);
         setTotalSources(0);
         setTotalVideosFound(0);
+        setCurrentPage(1);
+        setMaxPageCount(1);
+        setLoadingMore(false);
         currentQueryRef.current = '';
     }, []);
 
@@ -27,6 +33,9 @@ export function useSearchState() {
         setCompletedSources(0);
         setTotalSources(0);
         setTotalVideosFound(0);
+        setCurrentPage(1);
+        setMaxPageCount(1);
+        setLoadingMore(false);
         currentQueryRef.current = query;
     }, []);
 
@@ -43,6 +52,12 @@ export function useSearchState() {
         setTotalSources,
         totalVideosFound,
         setTotalVideosFound,
+        currentPage,
+        setCurrentPage,
+        maxPageCount,
+        setMaxPageCount,
+        loadingMore,
+        setLoadingMore,
         currentQueryRef,
         resetState,
         startSearch,

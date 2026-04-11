@@ -58,7 +58,7 @@ export function LinkImportTab({ onImport }: LinkImportTabProps) {
                 <label className="block text-sm font-medium text-[var(--text-color)] mb-2">
                     源配置链接
                 </label>
-                <div className="flex gap-2">
+                <div className="flex gap-2 flex-wrap">
                     <input
                         type="url"
                         value={url}

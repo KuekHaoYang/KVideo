@@ -104,11 +104,29 @@ export function parseBlocks(lines: string[]): Block[] {
 }
 
 /**
+ * Unwrap proxied URL to get original URL
+ */
+function unwrapProxyUrl(url: string): string {
+    if (url.includes('/api/proxy?url=')) {
+        try {
+            const match = url.match(/[?&]url=([^&]+)/);
+            if (match && match[1]) {
+                return decodeURIComponent(match[1]);
+            }
+        } catch {
+            return url;
+        }
+    }
+    return url;
+}
+
+/**
  * Extract filename from URL (handles both relative and absolute URLs)
  */
 function extractFilename(url: string): string {
     try {
-        const path = url.includes('://') ? new URL(url).pathname : url;
+        const unwrappedUrl = unwrapProxyUrl(url);
+        const path = unwrappedUrl.includes('://') ? new URL(unwrappedUrl).pathname : unwrappedUrl;
         const parts = path.split('/');
         return parts[parts.length - 1] || '';
     } catch {
@@ -143,7 +161,8 @@ function findCommonPrefix(strings: string[]): string {
  */
 function extractPathPrefix(url: string): string {
     try {
-        const path = url.includes('://') ? new URL(url).pathname : url;
+        const unwrappedUrl = unwrapProxyUrl(url);
+        const path = unwrappedUrl.includes('://') ? new URL(unwrappedUrl).pathname : unwrappedUrl;
         const lastSlash = path.lastIndexOf('/');
         return lastSlash >= 0 ? path.substring(0, lastSlash + 1) : '';
     } catch {
@@ -234,7 +253,7 @@ export function scoreBlock(block: Block, mainPattern: MainPattern, extraKeywords
 
     // **KEY FEATURE**: Check path prefix mismatch (e.g., different date/folder/bitrate)
     // This is the most reliable indicator for ads that come from different CDN paths
-    if (mainPattern.pathPrefix && block.segments.length > 0) {
+    if (mainPattern.pathPrefix !== undefined && block.segments.length > 0) {
         const pathMismatchCount = block.segments.filter(s => {
             const segmentPathPrefix = extractPathPrefix(s.url);
             return segmentPathPrefix !== mainPattern.pathPrefix;

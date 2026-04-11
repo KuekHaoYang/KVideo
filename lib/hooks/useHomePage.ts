@@ -4,6 +4,7 @@ import { useSearchCache } from '@/lib/hooks/useSearchCache';
 import { useParallelSearch } from '@/lib/hooks/useParallelSearch';
 import { useSubscriptionSync } from '@/lib/hooks/useSubscriptionSync';
 import { settingsStore, type SortOption } from '@/lib/store/settings-store';
+import { userSourcesStore } from '@/lib/store/user-sources-store';
 
 export function useHomePage() {
     useSubscriptionSync();
@@ -31,8 +32,12 @@ export function useHomePage() {
         totalSources,
         performSearch,
         resetSearch,
+        cancelSearch,
         loadCachedResults,
         applySorting,
+        loadMore,
+        hasMore,
+        loadingMore,
     } = useParallelSearch(
         saveToCache,
         onUrlUpdate
@@ -45,11 +50,20 @@ export function useHomePage() {
         const settings = settingsStore.getSettings();
         const enabledSources = settings.sources.filter(s => s.enabled);
 
-        if (enabledSources.length === 0) {
+        // Merge user personal sources
+        const userSources = userSourcesStore.getSources().filter(s => s.enabled !== false);
+        const allSources = [...enabledSources];
+        for (const us of userSources) {
+            if (!allSources.find(s => s.id === us.id)) {
+                allSources.push(us);
+            }
+        }
+
+        if (allSources.length === 0) {
             return false;
         }
 
-        performSearch(searchQuery, enabledSources, settings.sortBy);
+        performSearch(searchQuery, allSources, settings.sortBy);
         hasSearchedWithSourcesRef.current = true;
         return true;
     }, [performSearch]);
@@ -134,6 +148,10 @@ export function useHomePage() {
 
 
 
+    const handleCancelSearch = useCallback(() => {
+        cancelSearch();
+    }, [cancelSearch]);
+
     const handleReset = useCallback(() => {
         setHasSearched(false);
         setQuery('');
@@ -152,5 +170,9 @@ export function useHomePage() {
         totalSources,
         handleSearch,
         handleReset,
+        handleCancelSearch,
+        loadMore,
+        hasMore,
+        loadingMore,
     };
 }

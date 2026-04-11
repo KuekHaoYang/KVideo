@@ -8,6 +8,8 @@ import { Icons } from '@/components/ui/Icon';
 import { formatTime, formatDate } from '@/lib/utils/format-utils';
 import { PosterImage } from './PosterImage';
 import { FavoriteButton } from '@/components/favorites/FavoriteButton';
+import { getSourceName } from '@/lib/utils/source-names';
+import { storeGroupedSources } from '@/lib/utils/grouped-sources-cache';
 import type { VideoHistoryItem } from '@/lib/types';
 
 interface HistoryItemProps {
@@ -24,6 +26,19 @@ export function HistoryItem({ item, onRemove, isPremium = false }: HistoryItemPr
       title: item.title,
       episode: item.episodeIndex.toString(),
     });
+    // Store sourceMap in sessionStorage to avoid long URLs
+    if (item.sourceMap && Object.keys(item.sourceMap).length > 1) {
+      const groupData = Object.entries(item.sourceMap).map(([sourceName, videoId]) => ({
+        id: videoId,
+        source: sourceName,
+        sourceName: getSourceName(sourceName),
+        pic: item.poster,
+      }));
+      const cacheKey = storeGroupedSources(groupData);
+      if (cacheKey) {
+        params.set('gs', cacheKey);
+      }
+    }
     if (isPremium) {
       params.set('premium', '1');
     }
@@ -87,6 +102,7 @@ export function HistoryItem({ item, onRemove, isPremium = false }: HistoryItemPr
               title={item.title}
               poster={item.poster}
               remarks={episodeText}
+              sourceMap={item.sourceMap}
               size={14}
               className="!p-1.5 !bg-transparent !border-0 !shadow-none hover:!bg-[var(--glass-bg)]"
               showTooltip={false}

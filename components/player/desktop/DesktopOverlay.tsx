@@ -17,15 +17,19 @@ interface DesktopOverlayProps {
     showToast: boolean;
     toastMessage: string | null;
     showControls: boolean;
+    isFullscreen: boolean;
+    fullscreenClock: string;
     onTogglePlay: () => void;
     onSkipForward: () => void;
     onSkipBackward: () => void;
     showMoreMenu: boolean;
+    isPremium?: boolean;
     isProxied: boolean;
     onToggleMoreMenu: () => void;
     onMoreMenuMouseEnter: () => void;
     onMoreMenuMouseLeave: () => void;
     onCopyLink: (type?: 'original' | 'proxy') => void;
+    seekStepSeconds: number;
     // Speed Menu Props
     playbackRate: number;
     showSpeedMenu: boolean;
@@ -34,6 +38,8 @@ interface DesktopOverlayProps {
     onSpeedChange: (speed: number) => void;
     onSpeedMenuMouseEnter: () => void;
     onSpeedMenuMouseLeave: () => void;
+    webFullscreenSize: 'full' | 'large' | 'focused';
+    onCycleWebFullscreenSize: () => void;
     containerRef: React.RefObject<HTMLDivElement | null>;
     isRotated?: boolean;
 }
@@ -50,16 +56,20 @@ export function DesktopOverlay({
     isSkipBackwardAnimatingOut,
     showToast,
     toastMessage,
+    isFullscreen,
+    fullscreenClock,
     onTogglePlay,
     onSkipForward,
     onSkipBackward,
     showControls,
     showMoreMenu,
+    isPremium = false,
     isProxied,
     onToggleMoreMenu,
     onMoreMenuMouseEnter,
     onMoreMenuMouseLeave,
     onCopyLink,
+    seekStepSeconds,
     playbackRate,
     showSpeedMenu,
     speeds,
@@ -67,11 +77,14 @@ export function DesktopOverlay({
     onSpeedChange,
     onSpeedMenuMouseEnter,
     onSpeedMenuMouseLeave,
+    webFullscreenSize,
+    onCycleWebFullscreenSize,
     containerRef,
     isRotated = false,
 }: DesktopOverlayProps) {
     // Show navigation buttons when controls are visible or when paused (controls usually show when paused anyway)
     const showNavButtons = showControls || !isPlaying;
+    const showFullscreenClock = showControls || !isPlaying;
 
     return (
         <>
@@ -79,15 +92,34 @@ export function DesktopOverlay({
             <div className={`absolute top-8 left-6 z-40 transition-opacity duration-300 ${showControls ? 'opacity-100' : 'opacity-0'}`} style={{ pointerEvents: showControls ? 'auto' : 'none' }}>
                 <DesktopMoreMenu
                     showMoreMenu={showMoreMenu}
+                    isPremium={isPremium}
                     isProxied={isProxied}
                     onToggleMoreMenu={onToggleMoreMenu}
                     onMouseEnter={onMoreMenuMouseEnter}
                     onMouseLeave={onMoreMenuMouseLeave}
                     onCopyLink={onCopyLink}
+                    webFullscreenSize={webFullscreenSize}
+                    onCycleWebFullscreenSize={onCycleWebFullscreenSize}
                     containerRef={containerRef}
                     isRotated={isRotated}
                 />
             </div>
+
+            {isFullscreen && fullscreenClock && (
+                <div
+                    className={`absolute top-8 left-1/2 -translate-x-1/2 z-40 transition-opacity duration-300 ${showFullscreenClock ? 'opacity-100' : 'opacity-0'}`}
+                    style={{ pointerEvents: 'none' }}
+                >
+                    <div className="min-w-[88px] px-4 py-2 rounded-full bg-black/45 backdrop-blur-md border border-white/15 text-center shadow-[0_10px_30px_rgba(0,0,0,0.3)]">
+                        <div className="flex items-center justify-center gap-2 text-white">
+                            <Icons.Clock size={14} className="opacity-80" />
+                            <span className="text-sm font-semibold tracking-[0.18em] tabular-nums">
+                                {fullscreenClock}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* Speed Menu (Top Right) - Moved slightly down and lower z-index */}
             <div className={`absolute top-8 right-6 z-40 transition-opacity duration-300 ${showControls ? 'opacity-100' : 'opacity-0'}`} style={{ pointerEvents: showControls ? 'auto' : 'none' }}>
@@ -142,15 +174,15 @@ export function DesktopOverlay({
             <div
                 className={`absolute left-0 top-0 bottom-0 flex items-center justify-center p-4 md:p-8 transition-opacity duration-300 z-10 ${showNavButtons ? 'opacity-100' : 'opacity-0'
                     }`}
-                style={{ pointerEvents: 'none' }}
+                style={{ pointerEvents: showNavButtons ? 'auto' : 'none' }}
             >
                 <button
                     onClick={(e) => {
                         e.stopPropagation();
                         onSkipBackward();
                     }}
-                    className="group flex items-center justify-center w-10 h-10 md:w-16 md:h-16 rounded-full bg-black/40 hover:bg-black/60 backdrop-blur-sm transition-all duration-300 hover:scale-110 active:scale-95 pointer-events-auto cursor-pointer"
-                    aria-label="后退 10 秒"
+                    className="group flex items-center justify-center w-10 h-10 md:w-16 md:h-16 rounded-full bg-black/40 hover:bg-black/60 backdrop-blur-sm transition-all duration-300 hover:scale-110 active:scale-95 cursor-pointer"
+                    aria-label={`后退 ${seekStepSeconds} 秒`}
                 >
                     <Icons.SkipBack className="w-5 h-5 md:w-8 md:h-8 text-white/80 group-hover:text-white" />
                 </button>
@@ -160,15 +192,15 @@ export function DesktopOverlay({
             <div
                 className={`absolute right-0 top-0 bottom-0 flex items-center justify-center p-4 md:p-8 transition-opacity duration-300 z-10 ${showNavButtons ? 'opacity-100' : 'opacity-0'
                     }`}
-                style={{ pointerEvents: 'none' }}
+                style={{ pointerEvents: showNavButtons ? 'auto' : 'none' }}
             >
                 <button
                     onClick={(e) => {
                         e.stopPropagation();
                         onSkipForward();
                     }}
-                    className="group flex items-center justify-center w-10 h-10 md:w-16 md:h-16 rounded-full bg-black/40 hover:bg-black/60 backdrop-blur-sm transition-all duration-300 hover:scale-110 active:scale-95 pointer-events-auto cursor-pointer"
-                    aria-label="前进 10 秒"
+                    className="group flex items-center justify-center w-10 h-10 md:w-16 md:h-16 rounded-full bg-black/40 hover:bg-black/60 backdrop-blur-sm transition-all duration-300 hover:scale-110 active:scale-95 cursor-pointer"
+                    aria-label={`前进 ${seekStepSeconds} 秒`}
                 >
                     <Icons.FastForward className="w-5 h-5 md:w-8 md:h-8 text-white/80 group-hover:text-white" />
                 </button>

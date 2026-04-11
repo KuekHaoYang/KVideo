@@ -1,4 +1,5 @@
 import type { AppSettings } from './settings-store';
+import { profiledKey } from '@/lib/utils/profile-storage';
 
 export const SEARCH_HISTORY_KEY = 'kvideo-search-history';
 export const WATCH_HISTORY_KEY = 'kvideo-watch-history';
@@ -20,8 +21,8 @@ export function exportSettings(settings: AppSettings, includeHistory: boolean = 
     };
 
     if (includeHistory && typeof window !== 'undefined') {
-        const searchHistory = localStorage.getItem(SEARCH_HISTORY_KEY);
-        const watchHistory = localStorage.getItem(WATCH_HISTORY_KEY);
+        const searchHistory = localStorage.getItem(profiledKey(SEARCH_HISTORY_KEY));
+        const watchHistory = localStorage.getItem(profiledKey(WATCH_HISTORY_KEY));
 
         if (searchHistory) exportData.searchHistory = JSON.parse(searchHistory);
         if (watchHistory) exportData.watchHistory = JSON.parse(watchHistory);
@@ -49,11 +50,11 @@ export function importSettings(
 
         // Case 2: History only (can be independent)
         if (data.searchHistory && typeof window !== 'undefined') {
-            localStorage.setItem(SEARCH_HISTORY_KEY, JSON.stringify(data.searchHistory));
+            localStorage.setItem(profiledKey(SEARCH_HISTORY_KEY), JSON.stringify(data.searchHistory));
             imported = true;
         }
         if (data.watchHistory && typeof window !== 'undefined') {
-            localStorage.setItem(WATCH_HISTORY_KEY, JSON.stringify(data.watchHistory));
+            localStorage.setItem(profiledKey(WATCH_HISTORY_KEY), JSON.stringify(data.watchHistory));
             imported = true;
         }
 

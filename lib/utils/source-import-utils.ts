@@ -103,17 +103,24 @@ export function parseSourcesFromJson(jsonString: string): ImportResult {
  * Fetch and parse sources from a URL
  */
 export async function fetchSourcesFromUrl(url: string): Promise<ImportResult> {
-    // If we're in the browser and it's an external URL, use our proxy to avoid CORS issues
+    const headers = {
+        'Accept': 'application/json',
+    };
     const isExternal = url.startsWith('http') && (typeof window !== 'undefined' && !url.includes(window.location.host));
-    const fetchUrl = isExternal
-        ? `/api/proxy?url=${encodeURIComponent(url)}`
-        : url;
 
-    const response = await fetch(fetchUrl, {
-        headers: {
-            'Accept': 'application/json',
-        },
-    });
+    let response: Response;
+
+    try {
+        response = await fetch(url, { headers });
+    } catch (directError) {
+        if (!isExternal) {
+            throw directError;
+        }
+
+        response = await fetch(`/api/proxy?url=${encodeURIComponent(url)}`, {
+            headers,
+        });
+    }
 
     if (!response.ok) {
         throw new Error(`获取失败: ${response.status} ${response.statusText}`);

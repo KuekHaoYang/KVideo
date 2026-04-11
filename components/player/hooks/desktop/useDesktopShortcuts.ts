@@ -8,6 +8,7 @@ interface UseDesktopShortcutsProps {
     togglePlay: () => void;
     toggleMute: () => void;
     toggleFullscreen: () => void;
+    toggleWindowFullscreen: () => void;
     togglePictureInPicture: () => void;
     skipForward: () => void;
     skipBackward: () => void;
@@ -26,6 +27,7 @@ export function useDesktopShortcuts({
     togglePlay,
     toggleMute,
     toggleFullscreen,
+    toggleWindowFullscreen,
     togglePictureInPicture,
     skipForward,
     skipBackward,
@@ -63,6 +65,10 @@ export function useDesktopShortcuts({
                     e.preventDefault();
                     toggleFullscreen();
                     break;
+                case 'w':
+                    e.preventDefault();
+                    toggleWindowFullscreen();
+                    break;
                 case 'm':
                     e.preventDefault();
                     toggleMute();
@@ -87,16 +93,26 @@ export function useDesktopShortcuts({
                     e.preventDefault();
                     const newVolUp = Math.min(1, volume + 0.1);
                     setVolume(newVolUp);
-                    if (videoRef.current) videoRef.current.volume = newVolUp;
+                    if (videoRef.current) {
+                        videoRef.current.volume = newVolUp;
+                        videoRef.current.muted = newVolUp === 0;
+                    }
                     setIsMuted(newVolUp === 0);
+                    localStorage.setItem('kvideo-volume', String(newVolUp));
+                    localStorage.setItem('kvideo-muted', String(newVolUp === 0));
                     showVolumeBarTemporarily();
                     break;
                 case 'arrowdown':
                     e.preventDefault();
                     const newVolDown = Math.max(0, volume - 0.1);
                     setVolume(newVolDown);
-                    if (videoRef.current) videoRef.current.volume = newVolDown;
+                    if (videoRef.current) {
+                        videoRef.current.volume = newVolDown;
+                        videoRef.current.muted = newVolDown === 0;
+                    }
                     setIsMuted(newVolDown === 0);
+                    localStorage.setItem('kvideo-volume', String(newVolDown));
+                    localStorage.setItem('kvideo-muted', String(newVolDown === 0));
                     showVolumeBarTemporarily();
                     break;
             }
@@ -112,6 +128,7 @@ export function useDesktopShortcuts({
         togglePlay,
         toggleMute,
         toggleFullscreen,
+        toggleWindowFullscreen,
         togglePictureInPicture,
         skipForward,
         skipBackward,

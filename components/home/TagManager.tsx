@@ -4,6 +4,12 @@ import { TagInput } from './TagInput';
 import { TagList } from './TagList';
 import { Tag } from './SortableTag';
 
+interface RecommendTagConfig {
+  label: string;
+  isSelected: boolean;
+  onSelect: () => void;
+}
+
 interface TagManagerProps {
   tags: Tag[];
   selectedTag: string;
@@ -19,6 +25,7 @@ interface TagManagerProps {
   onDragEnd: (event: DragEndEvent) => void;
   onJustAddedTagHandled: () => void;
   isLoadingTags?: boolean;
+  recommendTag?: RecommendTagConfig;
 }
 
 export function TagManager({
@@ -36,6 +43,7 @@ export function TagManager({
   onDragEnd,
   onJustAddedTagHandled,
   isLoadingTags,
+  recommendTag,
 }: TagManagerProps) {
   return (
     <>
@@ -84,6 +92,7 @@ export function TagManager({
           onTagDelete={onTagDelete}
           onDragEnd={onDragEnd}
           onJustAddedTagHandled={onJustAddedTagHandled}
+          recommendTag={recommendTag}
         />
       )}
     </>

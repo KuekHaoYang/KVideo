@@ -5,6 +5,7 @@ import { ImportModalTabs } from './import/ImportModalTabs';
 import { FileImportTab } from './import/FileImportTab';
 import { LinkImportTab } from './import/LinkImportTab';
 import { SubscriptionImportTab } from './import/SubscriptionImportTab';
+import { JsonImportTab } from './import/JsonImportTab';
 import type { ImportResult } from '@/lib/utils/source-import-utils';
 import type { SourceSubscription } from '@/lib/types';
 import { ModalBackdrop } from '@/components/ui/ModalBackdrop';
@@ -33,7 +34,7 @@ export function ImportModal({
   onRemoveSubscription,
   onRefreshSubscription
 }: ImportModalProps) {
-  const [activeTab, setActiveTab] = useState<'file' | 'link' | 'subscription'>('file');
+  const [activeTab, setActiveTab] = useState<'file' | 'link' | 'subscription' | 'json'>('file');
 
   // Reset tab on open
   useEffect(() => {
@@ -89,6 +90,10 @@ export function ImportModal({
                 onRemove={onRemoveSubscription}
                 onRefresh={onRefreshSubscription}
               />
+            )}
+
+            {activeTab === 'json' && (
+              <JsonImportTab />
             )}
           </div>
         </div>

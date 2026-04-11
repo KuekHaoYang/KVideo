@@ -8,6 +8,7 @@ import { SearchResults } from '@/components/home/SearchResults';
 import { usePremiumHomePage } from '@/lib/hooks/usePremiumHomePage';
 import { PremiumContent } from '@/components/premium/PremiumContent';
 import { FavoritesSidebar } from '@/components/favorites/FavoritesSidebar';
+import { PremiumPasswordGate } from '@/components/PremiumPasswordGate';
 
 function PremiumHomePage() {
     const {
@@ -20,6 +21,7 @@ function PremiumHomePage() {
         totalSources,
         handleSearch,
         handleReset,
+        handleCancelSearch,
     } = usePremiumHomePage();
 
     return (
@@ -35,12 +37,14 @@ function PremiumHomePage() {
                 <SearchForm
                     onSearch={handleSearch}
                     onClear={handleReset}
+                    onCancelSearch={handleCancelSearch}
                     isLoading={loading}
                     initialQuery={query}
                     currentSource=""
                     checkedSources={completedSources}
                     totalSources={totalSources}
                     placeholder="输入关键词开始搜索..."
+                    isPremium={true}
                 />
             </div>
 
@@ -63,7 +67,9 @@ function PremiumHomePage() {
 
                 {/* Premium Content - Trending and Latest */}
                 {!loading && !hasSearched && (
-                    <PremiumContent onSearch={handleSearch} />
+                    <>
+                        <PremiumContent onSearch={handleSearch} />
+                    </>
                 )}
             </main>
 
@@ -80,7 +86,9 @@ export default function PremiumPage() {
                 <div className="animate-spin rounded-full h-16 w-16 border-4 border-[var(--accent-color)] border-t-transparent"></div>
             </div>
         }>
-            <PremiumHomePage />
+            <PremiumPasswordGate>
+                <PremiumHomePage />
+            </PremiumPasswordGate>
         </Suspense>
     );
 }

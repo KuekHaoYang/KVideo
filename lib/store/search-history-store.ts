@@ -6,6 +6,7 @@
 
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import { profiledKey } from '@/lib/utils/profile-storage';
 
 const MAX_HISTORY_ITEMS = 20;
 
@@ -17,7 +18,7 @@ export interface SearchHistoryItem {
 
 interface SearchHistoryStore {
   searchHistory: SearchHistoryItem[];
-  
+
   // Actions
   addToSearchHistory: (query: string, resultCount?: number) => void;
   removeFromSearchHistory: (query: string) => void;
@@ -32,82 +33,95 @@ function normalizeQuery(query: string): string {
   return query.trim().toLowerCase();
 }
 
-export const useSearchHistoryStore = create<SearchHistoryStore>()(
-  persist(
-    (set, get) => ({
-      searchHistory: [],
+const createSearchHistoryStore = (name: string) =>
+  create<SearchHistoryStore>()(
+    persist(
+      (set, get) => ({
+        searchHistory: [],
 
-      addToSearchHistory: (query, resultCount) => {
-        const trimmedQuery = query.trim();
-        
-        // Don't add empty queries
-        if (!trimmedQuery) return;
+        addToSearchHistory: (query, resultCount) => {
+          const trimmedQuery = query.trim();
 
-        const normalized = normalizeQuery(trimmedQuery);
-        const timestamp = Date.now();
+          // Don't add empty queries
+          if (!trimmedQuery) return;
 
-        set((state) => {
-          // Check if query already exists (case-insensitive)
-          const existingIndex = state.searchHistory.findIndex(
-            (item) => normalizeQuery(item.query) === normalized
-          );
+          const normalized = normalizeQuery(trimmedQuery);
+          const timestamp = Date.now();
 
-          let newHistory: SearchHistoryItem[];
+          set((state) => {
+            // Check if query already exists (case-insensitive)
+            const existingIndex = state.searchHistory.findIndex(
+              (item) => normalizeQuery(item.query) === normalized
+            );
 
-          if (existingIndex !== -1) {
-            // Update existing item and move to top
-            const updatedItem: SearchHistoryItem = {
-              query: trimmedQuery, // Keep original casing from new search
-              timestamp,
-              resultCount,
-            };
+            let newHistory: SearchHistoryItem[];
 
-            newHistory = [
-              updatedItem,
-              ...state.searchHistory.filter((_, index) => index !== existingIndex),
-            ];
-          } else {
-            // Add new item at the top
-            const newItem: SearchHistoryItem = {
-              query: trimmedQuery,
-              timestamp,
-              resultCount,
-            };
+            if (existingIndex !== -1) {
+              // Update existing item and move to top
+              const updatedItem: SearchHistoryItem = {
+                query: trimmedQuery, // Keep original casing from new search
+                timestamp,
+                resultCount,
+              };
 
-            newHistory = [newItem, ...state.searchHistory];
-          }
+              newHistory = [
+                updatedItem,
+                ...state.searchHistory.filter((_, index) => index !== existingIndex),
+              ];
+            } else {
+              // Add new item at the top
+              const newItem: SearchHistoryItem = {
+                query: trimmedQuery,
+                timestamp,
+                resultCount,
+              };
 
-          // Trim to max items
-          if (newHistory.length > MAX_HISTORY_ITEMS) {
-            newHistory = newHistory.slice(0, MAX_HISTORY_ITEMS);
-          }
+              newHistory = [newItem, ...state.searchHistory];
+            }
 
-          return { searchHistory: newHistory };
-        });
-      },
+            // Trim to max items
+            if (newHistory.length > MAX_HISTORY_ITEMS) {
+              newHistory = newHistory.slice(0, MAX_HISTORY_ITEMS);
+            }
 
-      removeFromSearchHistory: (query) => {
-        const normalized = normalizeQuery(query);
-        
-        set((state) => ({
-          searchHistory: state.searchHistory.filter(
-            (item) => normalizeQuery(item.query) !== normalized
-          ),
-        }));
-      },
+            return { searchHistory: newHistory };
+          });
+        },
 
-      clearSearchHistory: () => {
-        set({ searchHistory: [] });
-      },
+        removeFromSearchHistory: (query) => {
+          const normalized = normalizeQuery(query);
 
-      getRecentSearches: (limit = 10) => {
-        const history = get().searchHistory;
-        return history.slice(0, limit);
-      },
-    }),
-    {
-      name: 'kvideo-search-history',
-      version: 1,
-    }
-  )
-);
+          set((state) => ({
+            searchHistory: state.searchHistory.filter(
+              (item) => normalizeQuery(item.query) !== normalized
+            ),
+          }));
+        },
+
+        clearSearchHistory: () => {
+          set({ searchHistory: [] });
+        },
+
+        getRecentSearches: (limit = 10) => {
+          const history = get().searchHistory;
+          return history.slice(0, limit);
+        },
+      }),
+      {
+        name,
+        version: 1,
+      }
+    )
+  );
+
+export const useSearchHistoryStore = createSearchHistoryStore(profiledKey('kvideo-search-history'));
+export const usePremiumSearchHistoryStore = createSearchHistoryStore(profiledKey('kvideo-premium-search-history'));
+
+/**
+ * Helper hook to get the appropriate search history store
+ */
+export function useSearchHistoryStoreSelector(isPremium = false) {
+  const normalStore = useSearchHistoryStore();
+  const premiumStore = usePremiumSearchHistoryStore();
+  return isPremium ? premiumStore : normalStore;
+}

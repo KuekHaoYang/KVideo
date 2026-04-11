@@ -14,6 +14,7 @@ import { FavoritesHeader } from './FavoritesHeader';
 import { FavoritesList } from './FavoritesList';
 import { FavoritesFooter } from './FavoritesFooter';
 import { trapFocus } from '@/lib/accessibility/focus-management';
+import { useFloatingButtonPosition } from '@/lib/hooks/useFloatingButtonPosition';
 
 export function FavoritesSidebar({ isPremium = false }: { isPremium?: boolean }) {
     const [isOpen, setIsOpen] = useState(false);
@@ -26,6 +27,14 @@ export function FavoritesSidebar({ isPremium = false }: { isPremium?: boolean })
     const { favorites, removeFavorite, clearFavorites } = useFavorites(isPremium);
     const sidebarRef = useRef<HTMLElement>(null);
     const cleanupFocusTrapRef = useRef<(() => void) | null>(null);
+    const {
+        floatingStyle,
+        onPointerDown,
+        consumeSyntheticClick,
+    } = useFloatingButtonPosition({
+        storageKey: isPremium ? 'kvideo-premium-favorites-button-position' : 'kvideo-favorites-button-position',
+        defaultAnchor: 'left',
+    });
 
     // Setup focus trap when sidebar opens
     useEffect(() => {
@@ -84,9 +93,15 @@ export function FavoritesSidebar({ isPremium = false }: { isPremium?: boolean })
         <>
             {/* Toggle Button - Left side */}
             <button
-                onClick={() => setIsOpen(true)}
-                className="fixed left-6 top-1/2 -translate-y-1/2 z-40 bg-[var(--glass-bg)] backdrop-blur-[8px] saturate-[120%] border border-[var(--glass-border)] rounded-[var(--radius-2xl)] shadow-[var(--shadow-md)] p-3 hover:scale-105 transition-transform duration-200 cursor-pointer"
+                onClick={(event) => {
+                    if (consumeSyntheticClick(event)) return;
+                    setIsOpen(true);
+                }}
+                onPointerDown={onPointerDown}
+                style={floatingStyle}
+                className="fixed z-40 bg-[var(--glass-bg)] backdrop-blur-[8px] saturate-[120%] border border-[var(--glass-border)] rounded-[var(--radius-2xl)] shadow-[var(--shadow-md)] p-3 hover:scale-105 transition-transform duration-200 cursor-pointer touch-none select-none"
                 aria-label="打开收藏夹"
+                title="点击打开收藏夹，拖动可调整位置"
             >
                 <Icons.Heart size={24} className="text-[var(--text-color)]" />
             </button>

@@ -36,6 +36,7 @@ export interface VideoItem {
   vod_actor?: string;
   vod_director?: string;
   vod_content?: string;
+  vod_lang?: string;
   source: string;
   latency?: number; // Response time in milliseconds
 }
@@ -50,10 +51,16 @@ export interface SourceBadge {
   id: string;
   name: string;
   count: number;
+  typeName?: string;
 }
 
 export interface TypeBadge {
   type: string;
+  count: number;
+}
+
+export interface LanguageBadge {
+  lang: string;
   count: number;
 }
 
@@ -76,6 +83,7 @@ export interface VideoDetail {
   vod_director?: string;
   vod_content?: string;
   type_name?: string;
+  vod_lang?: string;
   episodes: Episode[];
   source: string;
   source_code: string;
@@ -94,6 +102,10 @@ export interface VideoHistoryItem {
   poster?: string;
   episodes: Episode[];
   showIdentifier: string; // Unique identifier for deduplication
+  sourceMap?: Record<string, string | number>; // Maps source name to videoId for that source
+  vod_actor?: string;
+  type_name?: string;
+  vod_area?: string;
 }
 
 // Favorite Entry
@@ -107,6 +119,7 @@ export interface FavoriteItem {
   type?: string; // movie type/category
   year?: string;
   remarks?: string; // e.g., episode info
+  sourceMap?: Record<string, string | number>; // Maps source name to videoId for source switching
 }
 
 // API Response Structures
@@ -134,6 +147,7 @@ export interface ApiDetailResponse {
     vod_director?: string;
     vod_content?: string;
     type_name?: string;
+    vod_lang?: string;
     vod_play_from?: string;
     vod_play_url?: string;
   }>;

@@ -5,6 +5,17 @@ import { ModalBackdrop } from '@/components/ui/ModalBackdrop';
 import { ModalHeader } from '@/components/ui/ModalHeader';
 import type { VideoSource } from '@/lib/types';
 
+const inputProps = {
+  spellCheck: false,
+  autoCorrect: 'off' as const,
+  autoCapitalize: 'off' as const,
+  autoComplete: 'off' as const,
+  'data-form-type': 'other',
+  'data-lpignore': 'true',
+  lang: 'en',
+  translate: 'no' as const,
+};
+
 interface AddSourceModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -14,7 +25,7 @@ interface AddSourceModalProps {
 }
 
 export function AddSourceModal({ isOpen, onClose, onAdd, existingIds, initialValues }: AddSourceModalProps) {
-  const { name, setName, url, setUrl, error, handleSubmit } = useAddSourceForm({
+  const { name, setName, customId, setCustomId, url, setUrl, error, handleSubmit, isEditing } = useAddSourceForm({
     isOpen,
     existingIds,
     onAdd,
@@ -49,8 +60,28 @@ export function AddSourceModal({ isOpen, onClose, onAdd, existingIds, initialVal
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="例如：新视频源"
+                {...inputProps}
                 className="w-full bg-[var(--glass-bg)] backdrop-blur-md border border-[var(--glass-border)] rounded-[var(--radius-2xl)] px-4 py-3 text-[var(--text-color)] placeholder:text-[var(--text-color-secondary)] focus:outline-none focus:border-[var(--accent-color)] focus:ring-4 focus:ring-[color-mix(in_srgb,var(--accent-color)_30%,transparent)] transition-all duration-[0.4s]"
               />
+            </div>
+
+            <div>
+              <label htmlFor="source-id" className="block mb-2 font-medium text-[var(--text-color)]">
+                源 ID
+              </label>
+              <input
+                id="source-id"
+                type="text"
+                value={customId}
+                onChange={(e) => setCustomId(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''))}
+                placeholder="自动生成，可手动修改"
+                disabled={isEditing}
+                {...inputProps}
+                className="w-full bg-[var(--glass-bg)] backdrop-blur-md border border-[var(--glass-border)] rounded-[var(--radius-2xl)] px-4 py-3 text-[var(--text-color)] placeholder:text-[var(--text-color-secondary)] focus:outline-none focus:border-[var(--accent-color)] focus:ring-4 focus:ring-[color-mix(in_srgb,var(--accent-color)_30%,transparent)] transition-all duration-[0.4s] disabled:opacity-50"
+              />
+              <p className="mt-1 text-xs text-[var(--text-color-secondary)]">
+                用于唯一标识此源，仅支持小写字母、数字和连字符
+              </p>
             </div>
 
             <div>
@@ -63,6 +94,7 @@ export function AddSourceModal({ isOpen, onClose, onAdd, existingIds, initialVal
                 value={url}
                 onChange={(e) => setUrl(e.target.value)}
                 placeholder="https://example.com/api.php/provide/vod"
+                {...inputProps}
                 className="w-full bg-[var(--glass-bg)] backdrop-blur-md border border-[var(--glass-border)] rounded-[var(--radius-2xl)] px-4 py-3 text-[var(--text-color)] placeholder:text-[var(--text-color-secondary)] focus:outline-none focus:border-[var(--accent-color)] focus:ring-4 focus:ring-[color-mix(in_srgb,var(--accent-color)_30%,transparent)] transition-all duration-[0.4s]"
               />
             </div>

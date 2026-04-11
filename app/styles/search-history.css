@@ -50,11 +50,14 @@
 }
 
 .search-history-item:hover {
+    background: rgba(0, 122, 255, 0.1);
     background: color-mix(in srgb, var(--accent-color) 10%, transparent);
 }
 
 .search-history-item.highlighted {
+    background: rgba(0, 122, 255, 0.15);
     background: color-mix(in srgb, var(--accent-color) 15%, transparent);
+    box-shadow: inset 0 0 0 1px rgba(0, 122, 255, 0.3);
     box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent-color) 30%, transparent);
 }
 
@@ -75,6 +78,7 @@
 }
 
 .search-history-remove:hover {
+    background: rgba(128, 128, 128, 0.2);
     background: color-mix(in srgb, var(--text-color-secondary) 20%, transparent);
     color: var(--text-color);
     transform: scale(1.1);

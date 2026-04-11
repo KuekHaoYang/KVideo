@@ -11,6 +11,8 @@ import { Icons } from '@/components/ui/Icon';
 import { TypeBadgeItem } from './TypeBadgeItem';
 import { useKeyboardNavigation } from '@/lib/hooks/useKeyboardNavigation';
 
+const TYPE_EXPAND_KEY = 'kvideo_type_badges_expanded';
+
 interface TypeBadge {
   type: string;
   count: number;
@@ -23,12 +25,24 @@ interface TypeBadgeListProps {
 }
 
 export function TypeBadgeList({ badges, selectedTypes, onToggleType }: TypeBadgeListProps) {
-  const [isExpanded, setIsExpanded] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(() => {
+    if (typeof window === 'undefined') return true;
+    const saved = localStorage.getItem(TYPE_EXPAND_KEY);
+    return saved !== 'false'; // default to expanded
+  });
   const [focusedIndex, setFocusedIndex] = useState(-1);
   const [hasOverflow, setHasOverflow] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const badgeContainerRef = useRef<HTMLDivElement>(null);
   const badgeRefs = useRef<(HTMLButtonElement | null)[]>([]);
+
+  const toggleExpanded = useCallback(() => {
+    setIsExpanded(prev => {
+      const next = !prev;
+      localStorage.setItem(TYPE_EXPAND_KEY, String(next));
+      return next;
+    });
+  }, []);
 
   // Keyboard navigation
   useKeyboardNavigation({
@@ -52,7 +66,8 @@ export function TypeBadgeList({ badges, selectedTypes, onToggleType }: TypeBadge
     }, [badges, onToggleType]),
   });
 
-  // Check if content has overflow on mount and when badges change
+  // Check if content has overflow on mount and when badge count changes
+  const hasCheckedOverflow = useRef(false);
   useEffect(() => {
     const checkOverflow = () => {
       if (badgeContainerRef.current) {
@@ -62,10 +77,13 @@ export function TypeBadgeList({ badges, selectedTypes, onToggleType }: TypeBadge
     };
 
     checkOverflow();
-    // Recheck after a short delay to account for animations
-    const timeout = setTimeout(checkOverflow, 100);
-    return () => clearTimeout(timeout);
-  }, [badges]);
+    // Only do delayed recheck on first measurement
+    if (!hasCheckedOverflow.current) {
+      hasCheckedOverflow.current = true;
+      const timeout = setTimeout(checkOverflow, 100);
+      return () => clearTimeout(timeout);
+    }
+  }, [badges.length]);
 
   return (
     <>
@@ -76,7 +94,7 @@ export function TypeBadgeList({ badges, selectedTypes, onToggleType }: TypeBadge
         role="group"
         aria-label="类型筛选"
       >
-        <div className={`relative transition-all duration-300 z-10 ${!isExpanded ? 'max-h-[50px] overflow-hidden' : 'overflow-visible'
+        <div className={`relative transition-[max-height] duration-300 z-10 ${!isExpanded ? 'max-h-[50px] overflow-hidden' : 'overflow-visible'
           }`}>
           <div
             ref={badgeContainerRef}
@@ -98,7 +116,8 @@ export function TypeBadgeList({ badges, selectedTypes, onToggleType }: TypeBadge
         </div>
         {hasOverflow && (
           <button
-            onClick={() => setIsExpanded(!isExpanded)}
+            type="button"
+            onClick={toggleExpanded}
             className="mt-2 text-xs text-[var(--text-color-secondary)] hover:text-[var(--accent-color)]
                      flex items-center gap-1 transition-colors self-start cursor-pointer"
           >

@@ -4,24 +4,26 @@ import { Icons } from '@/components/ui/Icon';
 
 
 interface DesktopRightControlsProps {
-    isFullscreen: boolean;
+    isNativeFullscreen: boolean;
+    isWebFullscreen: boolean;
     isPiPSupported: boolean;
     isAirPlaySupported: boolean;
     isCastAvailable: boolean;
-    isProxied?: boolean;
-    onToggleFullscreen: () => void;
+    onToggleNativeFullscreen: () => void;
+    onToggleWebFullscreen: () => void;
     onTogglePictureInPicture: () => void;
     onShowAirPlayMenu: () => void;
     onShowCastMenu: () => void;
 }
 
 export function DesktopRightControls({
-    isFullscreen,
+    isNativeFullscreen,
+    isWebFullscreen,
     isPiPSupported,
     isAirPlaySupported,
     isCastAvailable,
-    isProxied,
-    onToggleFullscreen,
+    onToggleNativeFullscreen,
+    onToggleWebFullscreen,
     onTogglePictureInPicture,
     onShowAirPlayMenu,
     onShowCastMenu
@@ -70,13 +72,24 @@ export function DesktopRightControls({
                 )
             }
 
-            {/* Fullscreen */}
+            {/* Web Fullscreen */}
             <button
-                onClick={onToggleFullscreen}
+                onClick={onToggleWebFullscreen}
                 className="btn-icon"
-                aria-label={isFullscreen ? '退出全屏' : '全屏'}
+                aria-label={isWebFullscreen ? '退出网页全屏' : '网页全屏'}
+                title={isWebFullscreen ? '退出网页全屏 (W)' : '网页全屏 (W)'}
             >
-                {isFullscreen ? <Icons.Minimize size={20} /> : <Icons.Maximize size={20} />}
+                <Icons.Target size={20} className={isWebFullscreen ? 'text-[var(--accent-color)]' : ''} />
+            </button>
+
+            {/* Native Fullscreen */}
+            <button
+                onClick={onToggleNativeFullscreen}
+                className="btn-icon"
+                aria-label={isNativeFullscreen ? '退出系统全屏' : '系统全屏'}
+                title={isNativeFullscreen ? '退出系统全屏 (F)' : '系统全屏 (F)'}
+            >
+                {isNativeFullscreen ? <Icons.Minimize size={20} /> : <Icons.Maximize size={20} />}
             </button>
         </div >
     );

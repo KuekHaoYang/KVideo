@@ -73,6 +73,7 @@ export async function getVideoDetail(
             vod_director: videoData.vod_director,
             vod_content: videoData.vod_content,
             type_name: videoData.type_name,
+            vod_lang: videoData.vod_lang,
             episodes,
             source: source.id,
             source_code: playFrom[selectedIndex] || '',

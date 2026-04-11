@@ -5,6 +5,8 @@
 
 import { Icons } from '@/components/ui/Icon';
 import { formatDate } from '@/lib/utils/format-utils';
+import { getSourceName } from '@/lib/utils/source-names';
+import { storeGroupedSources } from '@/lib/utils/grouped-sources-cache';
 import type { FavoriteItem } from '@/lib/types';
 
 interface FavoritesItemProps {
@@ -20,6 +22,18 @@ export function FavoritesItem({ item, onRemove, isPremium = false }: FavoritesIt
             source: item.source,
             title: item.title,
         });
+        if (item.sourceMap && Object.keys(item.sourceMap).length > 1) {
+            const groupData = Object.entries(item.sourceMap).map(([sourceName, videoId]) => ({
+                id: videoId,
+                source: sourceName,
+                sourceName: getSourceName(sourceName),
+                pic: item.poster,
+            }));
+            const cacheKey = storeGroupedSources(groupData);
+            if (cacheKey) {
+                params.set('gs', cacheKey);
+            }
+        }
         if (isPremium) {
             params.set('premium', '1');
         }

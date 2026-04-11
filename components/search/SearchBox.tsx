@@ -11,9 +11,10 @@ interface SearchBoxProps {
     onClear?: () => void;
     initialQuery?: string;
     placeholder?: string;
+    isPremium?: boolean;
 }
 
-export function SearchBox({ onSearch, onClear, initialQuery = '', placeholder = '搜索电影、电视剧、综艺...' }: SearchBoxProps) {
+export function SearchBox({ onSearch, onClear, initialQuery = '', placeholder = '搜索电影、电视剧、综艺...', isPremium = false }: SearchBoxProps) {
     const [query, setQuery] = useState(initialQuery);
     const inputRef = useRef<HTMLInputElement>(null);
 
@@ -35,7 +36,7 @@ export function SearchBox({ onSearch, onClear, initialQuery = '', placeholder = 
         onSearch(selectedQuery);
         // Blur the input after selecting from history
         inputRef.current?.blur();
-    });
+    }, isPremium);
 
     // Update query when initialQuery changes
     useEffect(() => {
@@ -81,6 +82,7 @@ export function SearchBox({ onSearch, onClear, initialQuery = '', placeholder = 
                 aria-expanded={isDropdownOpen}
                 aria-controls="search-history-dropdown"
                 aria-autocomplete="list"
+                data-focusable
             />
 
             <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1 z-10">

@@ -6,6 +6,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import type { FavoriteItem } from '@/lib/types';
+import { profiledKey } from '@/lib/utils/profile-storage';
 
 const MAX_FAVORITES = 100;
 
@@ -117,8 +118,8 @@ const createFavoritesStore = (name: string) =>
         )
     );
 
-export const useFavoritesStore = createFavoritesStore('kvideo-favorites-store');
-export const usePremiumFavoritesStore = createFavoritesStore('kvideo-premium-favorites-store');
+export const useFavoritesStore = createFavoritesStore(profiledKey('kvideo-favorites-store'));
+export const usePremiumFavoritesStore = createFavoritesStore(profiledKey('kvideo-premium-favorites-store'));
 
 /**
  * Helper hook to get the appropriate favorites store

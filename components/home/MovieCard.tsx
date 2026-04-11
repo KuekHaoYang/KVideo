@@ -36,6 +36,7 @@ export const MovieCard = memo(function MovieCard({ movie, onMovieClick }: MovieC
         e.preventDefault();
         onMovieClick(movie);
       }}
+      data-focusable
       className="group cursor-pointer hover:translate-y-[-2px] transition-transform duration-200 ease-out"
       style={{
         position: 'relative',
@@ -76,7 +77,13 @@ export const MovieCard = memo(function MovieCard({ movie, onMovieClick }: MovieC
           )}
           {movie.rate && parseFloat(movie.rate) > 0 && (
             <div
-              className="absolute top-2 right-2 bg-black/80 px-2.5 py-1.5 flex items-center gap-1.5 rounded-[var(--radius-full)]"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation(); // 阻止事件冒泡，防止触发外层卡片的搜索点击
+                window.open(movie.url, '_blank', 'noopener,noreferrer');
+              }}
+              title="在豆瓣中查看"
+              className="absolute top-2 right-2 bg-black/80 hover:bg-black/90 px-2.5 py-1.5 flex items-center gap-1.5 rounded-[var(--radius-full)] z-20 hover:scale-105 transition-all shadow-md"
             >
               <Icons.Star size={12} className="text-yellow-400 fill-yellow-400" />
               <span className="text-xs font-bold text-white">

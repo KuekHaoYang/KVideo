@@ -10,6 +10,7 @@ interface UsePlaybackControlsProps {
     initialTime: number;
     shouldAutoPlay: boolean;
     setDuration: (duration: number) => void;
+    setBufferedTime: (time: number) => void;
     setCurrentTime: (time: number) => void;
     onTimeUpdate?: (currentTime: number, duration: number) => void;
     onError?: (error: string) => void;
@@ -18,6 +19,8 @@ interface UsePlaybackControlsProps {
     playbackRate: number;
     setPlaybackRate: (rate: number) => void;
     setShowSpeedMenu: (show: boolean) => void;
+    volume: number;
+    isMuted: boolean;
 }
 
 export function usePlaybackControls({
@@ -28,6 +31,7 @@ export function usePlaybackControls({
     initialTime,
     shouldAutoPlay,
     setDuration,
+    setBufferedTime,
     setCurrentTime,
     onTimeUpdate,
     onError,
@@ -35,8 +39,32 @@ export function usePlaybackControls({
     speedMenuTimeoutRef,
     playbackRate,
     setPlaybackRate,
-    setShowSpeedMenu
+    setShowSpeedMenu,
+    volume,
+    isMuted
 }: UsePlaybackControlsProps) {
+    const updateBufferedTime = useCallback(() => {
+        if (!videoRef.current) return;
+
+        const video = videoRef.current;
+        const { buffered, currentTime } = video;
+        let bufferedEnd = 0;
+
+        for (let index = 0; index < buffered.length; index += 1) {
+            const rangeStart = buffered.start(index);
+            const rangeEnd = buffered.end(index);
+
+            if (currentTime >= rangeStart && currentTime <= rangeEnd + 0.25) {
+                bufferedEnd = rangeEnd;
+                break;
+            }
+
+            bufferedEnd = Math.max(bufferedEnd, rangeEnd);
+        }
+
+        setBufferedTime(bufferedEnd);
+    }, [setBufferedTime, videoRef]);
+
     const togglePlay = useCallback(() => {
         if (!videoRef.current) return;
         if (isPlaying) {
@@ -63,14 +91,16 @@ export function usePlaybackControls({
         const total = videoRef.current.duration;
         setCurrentTime(current);
         setDuration(total);
+        updateBufferedTime();
         if (onTimeUpdate) {
             onTimeUpdate(current, total);
         }
-    }, [videoRef, isDraggingProgressRef, setCurrentTime, setDuration, onTimeUpdate]);
+    }, [videoRef, isDraggingProgressRef, setCurrentTime, setDuration, updateBufferedTime, onTimeUpdate]);
 
     const handleLoadedMetadata = useCallback(() => {
         if (!videoRef.current) return;
         setDuration(videoRef.current.duration);
+        updateBufferedTime();
         // Removed setIsLoading(false) because metadata loading is too early.
         // We wait for onCanPlay to set isLoading to false.
 
@@ -87,10 +117,14 @@ export function usePlaybackControls({
             videoRef.current.playbackRate = playbackRate;
         }
 
+        // Apply saved volume and mute state when new source loads
+        videoRef.current.volume = isMuted ? 0 : volume;
+        videoRef.current.muted = isMuted;
+
         videoRef.current.play().catch((err: Error) => {
             console.warn('Autoplay was prevented:', err);
         });
-    }, [videoRef, setDuration, setIsLoading, initialTime, playbackRate]);
+    }, [videoRef, setDuration, updateBufferedTime, initialTime, playbackRate, volume, isMuted]);
 
     // Handle late initialization of initialTime (e.g. from async storage hydration)
     useEffect(() => {
@@ -123,6 +157,10 @@ export function usePlaybackControls({
         }
     }, [setIsLoading, onError]);
 
+    const handleProgressEvent = useCallback(() => {
+        updateBufferedTime();
+    }, [updateBufferedTime]);
+
     const changePlaybackSpeed = useCallback((speed: number) => {
         if (!videoRef.current) return;
         videoRef.current.playbackRate = speed;
@@ -151,6 +189,7 @@ export function usePlaybackControls({
         handlePause,
         handleTimeUpdateEvent,
         handleLoadedMetadata,
+        handleProgressEvent,
         handleVideoError,
         changePlaybackSpeed,
         formatTime
@@ -160,6 +199,7 @@ export function usePlaybackControls({
         handlePause,
         handleTimeUpdateEvent,
         handleLoadedMetadata,
+        handleProgressEvent,
         handleVideoError,
         changePlaybackSpeed
     ]);

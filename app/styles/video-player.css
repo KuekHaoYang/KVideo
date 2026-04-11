@@ -2,6 +2,7 @@
 .spinner {
     width: 48px;
     height: 48px;
+    border: 5px solid rgba(128, 128, 128, 0.35);
     border: 5px solid color-mix(in srgb, var(--glass-bg) 50%, transparent);
     border-top-color: var(--accent-color);
     border-radius: var(--radius-full);
@@ -75,6 +76,16 @@
     top: 0;
     height: 100%;
     background-color: var(--accent-color);
+    border-radius: var(--radius-full);
+    pointer-events: none;
+}
+
+.slider-buffer {
+    position: absolute;
+    left: 0;
+    top: 0;
+    height: 100%;
+    background: rgba(255, 255, 255, 0.4);
     border-radius: var(--radius-full);
     pointer-events: none;
 }

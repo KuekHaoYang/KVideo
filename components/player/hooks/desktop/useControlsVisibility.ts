@@ -107,11 +107,33 @@ export function useControlsVisibility({
         return () => clearSpeedMenuTimeout();
     }, [showSpeedMenu, startSpeedMenuTimeout, clearSpeedMenuTimeout]);
 
+    const handleTouchToggleControls = useCallback(() => {
+        if (showControls && isPlaying) {
+            // Controls visible + playing = hide immediately
+            if (controlsTimeoutRef.current) {
+                clearTimeout(controlsTimeoutRef.current);
+            }
+            setShowControls(false);
+        } else if (!showControls) {
+            // Controls hidden = show + start 3s auto-hide timer
+            setShowControls(true);
+            if (isPlaying) {
+                if (controlsTimeoutRef.current) {
+                    clearTimeout(controlsTimeoutRef.current);
+                }
+                controlsTimeoutRef.current = setTimeout(() => {
+                    setShowControls(false);
+                }, 3000);
+            }
+        }
+    }, [showControls, isPlaying, setShowControls, controlsTimeoutRef]);
+
     const visibilityActions = useMemo(() => ({
         handleMouseMove,
+        handleTouchToggleControls,
         startSpeedMenuTimeout,
         clearSpeedMenuTimeout
-    }), [handleMouseMove, startSpeedMenuTimeout, clearSpeedMenuTimeout]);
+    }), [handleMouseMove, handleTouchToggleControls, startSpeedMenuTimeout, clearSpeedMenuTimeout]);
 
     return visibilityActions;
 }

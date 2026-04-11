@@ -18,6 +18,7 @@ interface FavoriteButtonProps {
     type?: string;
     year?: string;
     remarks?: string;
+    sourceMap?: Record<string, string | number>;
     className?: string;
     size?: number;
     showTooltip?: boolean;
@@ -33,6 +34,7 @@ export const FavoriteButton = memo<FavoriteButtonProps>(({
     type,
     year,
     remarks,
+    sourceMap,
     className = '',
     size = 20,
     showTooltip = true,
@@ -61,11 +63,12 @@ export const FavoriteButton = memo<FavoriteButtonProps>(({
             type,
             year,
             remarks,
+            sourceMap,
         });
         setIsFav(newState);
 
         setTimeout(() => setIsAnimating(false), 300);
-    }, [videoId, source, title, poster, sourceName, type, year, remarks, toggleFavorite]);
+    }, [videoId, source, title, poster, sourceName, type, year, remarks, sourceMap, toggleFavorite]);
 
     return (
         <button

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { processM3u8Content } from '@/lib/utils/proxy-utils';
 import { fetchWithRetry } from '@/lib/utils/fetch-with-retry';
+import { getRuntimeFeatures } from '@/lib/server/runtime-features';
 
 export const runtime = 'edge';
 
@@ -9,6 +10,18 @@ export const runtime = 'edge';
 // process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
 
 export async function GET(request: NextRequest) {
+    const runtimeFeatures = getRuntimeFeatures();
+
+    if (!runtimeFeatures.mediaProxyEnabled) {
+        return NextResponse.json(
+            {
+                error: 'External media proxy is disabled on this deployment',
+                message: runtimeFeatures.restrictionSummary,
+            },
+            { status: 403 }
+        );
+    }
+
     const url = request.nextUrl.searchParams.get('url');
 
     if (!url) {

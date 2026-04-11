@@ -2,10 +2,12 @@ import { useEffect, useRef } from 'react';
 import Hls from 'hls.js';
 import { usePlayerSettings } from './usePlayerSettings';
 import { filterM3u8Ad } from '@/lib/utils/m3u8-utils';
+import { useRuntimeFeatures } from '@/components/RuntimeFeaturesProvider';
 
 interface UseHlsPlayerProps {
     videoRef: React.RefObject<HTMLVideoElement | null>;
     src: string;
+    isPremium?: boolean;
     autoPlay?: boolean;
     onAutoPlayPrevented?: (error: Error) => void;
     onError?: (message: string) => void;
@@ -14,12 +16,14 @@ interface UseHlsPlayerProps {
 export function useHlsPlayer({
     videoRef,
     src,
+    isPremium = false,
     autoPlay = false,
     onAutoPlayPrevented,
     onError
 }: UseHlsPlayerProps) {
     const hlsRef = useRef<Hls | null>(null);
-    const { adFilterMode, adKeywords } = usePlayerSettings();
+    const { adFilterMode, adKeywords } = usePlayerSettings(isPremium);
+    const { mediaProxyEnabled } = useRuntimeFeatures();
     const isAdFilterEnabled = adFilterMode !== 'off';
 
     useEffect(() => {
@@ -38,7 +42,10 @@ export function useHlsPlayer({
         // Check if HLS is supported natively (Safari, Mobile Chrome)
         const isNativeHlsSupported = video.canPlayType('application/vnd.apple.mpegurl');
 
-        if (Hls.isSupported()) {
+        // Check if MSE is available (required by HLS.js)
+        const isMSESupported = Hls.isSupported();
+
+        if (isMSESupported) {
 
             // Define custom loader class to intercept manifest loading
             // We use 'any' cast because default loader type might not be strictly exposed in all typings
@@ -75,9 +82,9 @@ export function useHlsPlayer({
                     lowLatencyMode: false,
 
                     // Buffer Settings
-                    maxBufferLength: 60,
-                    maxMaxBufferLength: 120,
-                    maxBufferSize: 60 * 1000 * 1000,
+                    maxBufferLength: 120,
+                    maxMaxBufferLength: 240,
+                    maxBufferSize: 120 * 1000 * 1000,
                     maxBufferHole: 0.5,
 
                     // Start with more buffer
@@ -109,7 +116,7 @@ export function useHlsPlayer({
                     levelLoadingTimeOut: 10000,
 
                     // Backbuffer
-                    backBufferLength: 30,
+                    backBufferLength: 90,
                 };
 
                 // Use custom loader if ad filtering is enabled
@@ -132,17 +139,30 @@ export function useHlsPlayer({
 
                 // Manifest Parsed Handler
                 hls.on(Hls.Events.MANIFEST_PARSED, () => {
-                    // Check for HEVC
+                    // Filter HEVC levels: prefer H.264 for compatibility
                     if (hls) {
                         const levels = hls.levels;
                         if (levels && levels.length > 0) {
-                            const hasHEVC = levels.some(level =>
-                                level.videoCodec?.toLowerCase().includes('hev') ||
-                                level.videoCodec?.toLowerCase().includes('h265')
-                            );
+                            const h264Indices: number[] = [];
+                            let hasHEVC = false;
+                            levels.forEach((level, index) => {
+                                const codec = level.videoCodec?.toLowerCase() || '';
+                                if (codec.includes('hev') || codec.includes('h265') || codec.includes('hvc')) {
+                                    hasHEVC = true;
+                                } else {
+                                    h264Indices.push(index);
+                                }
+                            });
                             if (hasHEVC) {
-                                console.warn('[HLS] ⚠️ HEVC detected');
-                                onError?.('检测到 HEVC/H.265 编码，当前浏览器可能不支持');
+                                if (h264Indices.length > 0) {
+                                    // H.264 alternatives exist — lock to first H.264 level
+                                    console.info('[HLS] HEVC detected, using H.264 level for compatibility');
+                                    hls.currentLevel = h264Indices[0];
+                                } else {
+                                    // All levels are HEVC — warn user
+                                    console.warn('[HLS] ⚠️ All levels are HEVC, browser may not support');
+                                    onError?.('检测到 HEVC/H.265 编码，当前浏览器可能不支持');
+                                }
                             }
                         }
                     }
@@ -201,6 +221,23 @@ export function useHlsPlayer({
             // If it's in sub-playlists, it might fail unless we parse and blob those too (complex).
 
             if (isAdFilterEnabled) {
+                const fetchWithFallback = async (url: string): Promise<string> => {
+                    try {
+                        const res = await fetch(url);
+                        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                        return await res.text();
+                    } catch (e) {
+                        if (!mediaProxyEnabled) {
+                            throw e;
+                        }
+                        console.warn(`[HLS Native] Fetch failed for ${url}, trying proxy...`, e);
+                        const proxiedUrl = `/api/proxy?url=${encodeURIComponent(url)}`;
+                        const res = await fetch(proxiedUrl);
+                        if (!res.ok) throw new Error(`Proxy fetch failed: HTTP ${res.status}`);
+                        return await res.text();
+                    }
+                };
+
                 const processMasterPlaylist = async (masterSrc: string) => {
                     // Move blob tracking outside try to ensure cleanup on error
                     const createdBlobs: string[] = [];
@@ -214,8 +251,7 @@ export function useHlsPlayer({
                     }
 
                     try {
-                        const response = await fetch(absoluteMasterSrc);
-                        const masterContent = await response.text();
+                        const masterContent = await fetchWithFallback(absoluteMasterSrc);
 
                         // If it's a simple playlist (no variants), just filter and play
                         if (!masterContent.includes('#EXT-X-STREAM-INF')) {
@@ -246,8 +282,7 @@ export function useHlsPlayer({
                                     if (isRelative || uri.startsWith('http')) {
                                         try {
                                             const absoluteUrl = isRelative ? new URL(uri, absoluteMasterSrc).toString() : uri;
-                                            const subRes = await fetch(absoluteUrl);
-                                            const subContent = await subRes.text();
+                                            const subContent = await fetchWithFallback(absoluteUrl);
                                             const filteredSub = filterM3u8Ad(subContent, absoluteUrl, adFilterMode, adKeywords);
                                             const subBlob = new Blob([filteredSub], { type: 'application/vnd.apple.mpegurl' });
                                             const subBlobUrl = URL.createObjectURL(subBlob);
@@ -270,8 +305,7 @@ export function useHlsPlayer({
                                 if (isRelative || trimmedLine.startsWith('http')) {
                                     try {
                                         const absoluteUrl = isRelative ? new URL(trimmedLine, absoluteMasterSrc).toString() : trimmedLine;
-                                        const subRes = await fetch(absoluteUrl);
-                                        const subContent = await subRes.text();
+                                        const subContent = await fetchWithFallback(absoluteUrl);
                                         const filteredSub = filterM3u8Ad(subContent, absoluteUrl, adFilterMode, adKeywords);
                                         const subBlob = new Blob([filteredSub], { type: 'application/vnd.apple.mpegurl' });
                                         const subBlobUrl = URL.createObjectURL(subBlob);
@@ -312,6 +346,40 @@ export function useHlsPlayer({
                 processMasterPlaylist(src).then((result) => {
                     video.src = result.masterBlobUrl;
                     extraBlobs = result.allBlobs;
+
+                    // Some WebView-based browsers (Alook, Arthur, etc.) cannot play from blob: URLs.
+                    // Detect playback failure and fall back to the original source.
+                    let blobPlaybackFailed = false;
+
+                    const onBlobError = () => {
+                        if (blobPlaybackFailed) return;
+                        blobPlaybackFailed = true;
+                        console.warn('[HLS Native] Blob URL playback failed, falling back to original source.');
+                        video.removeEventListener('error', onBlobError);
+                        onError?.('当前浏览器不支持广告过滤，已回退到原始视频流');
+                        // Revoke blob URLs immediately
+                        extraBlobs.forEach(url => URL.revokeObjectURL(url));
+                        extraBlobs = [];
+                        video.src = src;
+                    };
+
+                    video.addEventListener('error', onBlobError);
+
+                    // Also set a timeout: if video hasn't started loading within 8s, fall back
+                    const fallbackTimer = setTimeout(() => {
+                        if (video.readyState === 0 && !blobPlaybackFailed) {
+                            console.warn('[HLS Native] Blob URL playback timed out, falling back to original source.');
+                            onBlobError();
+                        }
+                    }, 8000);
+
+                    // Clear the timeout once video starts loading
+                    const onLoadedData = () => {
+                        clearTimeout(fallbackTimer);
+                        video.removeEventListener('error', onBlobError);
+                        video.removeEventListener('loadeddata', onLoadedData);
+                    };
+                    video.addEventListener('loadeddata', onLoadedData);
                 }).catch((e) => {
                     console.warn('[HLS Native] Ad filtering failed, falling back to original source.', e);
                     onError?.('广告过滤失败，已回退到原始视频流');
@@ -322,8 +390,32 @@ export function useHlsPlayer({
                 video.src = src;
             }
         } else {
-            console.error('[HLS] HLS not supported');
-            onError?.('当前浏览器不支持 HLS 视频播放');
+            // Neither MSE nor native HLS supported
+            // Try direct playback as last resort (works for mp4 and some browser WebView)
+            console.warn('[HLS] No MSE or native HLS support. Trying direct playback...');
+            video.src = src;
+
+            let directFailed = false;
+            const handleCanPlay = () => {
+                directFailed = false;
+            };
+            const handleError = () => {
+                if (directFailed) return;
+                directFailed = true;
+                if (!mediaProxyEnabled) {
+                    onError?.('当前浏览器不支持 HLS 视频播放。建议使用 Chrome、Edge 或 Safari 浏览器。');
+                    return;
+                }
+                // Try proxied URL as final attempt
+                const proxiedUrl = `/api/proxy?url=${encodeURIComponent(src)}`;
+                video.src = proxiedUrl;
+                video.addEventListener('error', () => {
+                    onError?.('当前浏览器不支持 HLS 视频播放。建议使用 Chrome、Edge 或 Safari 浏览器。');
+                }, { once: true });
+            };
+
+            video.addEventListener('canplay', handleCanPlay, { once: true });
+            video.addEventListener('error', handleError, { once: true });
         }
 
         return () => {
@@ -332,5 +424,5 @@ export function useHlsPlayer({
             }
             extraBlobs.forEach(url => URL.revokeObjectURL(url));
         };
-    }, [src, videoRef, autoPlay, onAutoPlayPrevented, onError, isAdFilterEnabled, adFilterMode, adKeywords]);
+    }, [src, videoRef, autoPlay, onAutoPlayPrevented, onError, isAdFilterEnabled, adFilterMode, adKeywords, mediaProxyEnabled]);
 }

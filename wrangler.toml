@@ -1,0 +1,10 @@
+# Cloudflare Pages Wrangler Configuration
+# This file provides compatibility settings for Cloudflare Pages deployment.
+# It ensures nodejs_compat is always set, so users don't need to configure it manually.
+
+name = "kvideo"
+compatibility_date = "2024-09-23"
+compatibility_flags = ["nodejs_compat"]
+
+[vars]
+# Environment variables can be set here or in Cloudflare Dashboard

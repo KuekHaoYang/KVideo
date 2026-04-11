@@ -2,9 +2,11 @@
 import { ResultsHeader } from '@/components/search/ResultsHeader';
 import { SourceBadges } from '@/components/search/SourceBadges';
 import { TypeBadges } from '@/components/search/TypeBadges';
+import { LanguageBadges } from '@/components/search/LanguageBadges';
 import { VideoGrid } from '@/components/search/VideoGrid';
 import { useSourceBadges } from '@/lib/hooks/useSourceBadges';
 import { useTypeBadges } from '@/lib/hooks/useTypeBadges';
+import { useLanguageBadges } from '@/lib/hooks/useLanguageBadges';
 import { Video, SourceBadge } from '@/lib/types';
 
 interface SearchResultsProps {
@@ -20,7 +22,7 @@ export function SearchResults({
     availableSources,
     loading,
     isPremium = false,
-    latencies = {}
+    latencies = {},
 }: SearchResultsProps) {
     // Source badges hook - filters by video source
     const {
@@ -34,9 +36,18 @@ export function SearchResults({
     const {
         typeBadges,
         selectedTypes,
-        filteredVideos: finalFilteredVideos,
+        filteredVideos: typeFilteredVideos,
         toggleType,
     } = useTypeBadges(sourceFilteredVideos);
+
+    // Language badges hook - auto-collects and filters by vod_lang
+    // Apply on type-filtered results for combined filtering
+    const {
+        languageBadges,
+        selectedLangs,
+        filteredVideos: finalFilteredVideos,
+        toggleLang,
+    } = useLanguageBadges(typeFilteredVideos);
 
     if (results.length === 0 && !loading) return null;
 
@@ -68,7 +79,17 @@ export function SearchResults({
                 />
             )}
 
-            {/* Display filtered videos (both source and type filters applied) */}
+            {/* Language Badges - Auto-collected from search results */}
+            {languageBadges.length > 0 && (
+                <LanguageBadges
+                    badges={languageBadges}
+                    selectedLangs={selectedLangs}
+                    onToggleLang={toggleLang}
+                    className="mb-6"
+                />
+            )}
+
+            {/* Display filtered videos (source, type, and language filters applied) */}
             <VideoGrid
                 videos={finalFilteredVideos}
                 isPremium={isPremium}
@@ -77,3 +98,5 @@ export function SearchResults({
         </div>
     );
 }
+
+

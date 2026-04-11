@@ -15,6 +15,12 @@ interface CustomVideoPlayerProps {
   currentEpisodeIndex?: number;
   onNextEpisode?: () => void;
   isReversed?: boolean;
+  // Danmaku props
+  videoTitle?: string;
+  episodeName?: string;
+  isPremium?: boolean;
+  // Resolution callback
+  onResolutionDetected?: (info: import('./hooks/useVideoResolution').VideoResolutionInfo) => void;
 }
 
 /**

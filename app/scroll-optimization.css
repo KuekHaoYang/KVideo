@@ -23,12 +23,16 @@
 .video-card-wrapper {
   /* CSS containment for isolation */
   contain: layout style paint;
-  
-  /* Content visibility for lazy rendering */
-  content-visibility: auto;
-  
-  /* Reduce layout shifts */
-  contain-intrinsic-size: auto 400px;
+}
+
+@supports (content-visibility: auto) {
+  .video-card-wrapper {
+    /* Content visibility for lazy rendering */
+    content-visibility: auto;
+
+    /* Reduce layout shifts */
+    contain-intrinsic-size: auto 400px;
+  }
 }
 
 /* Reduce repaints on images */

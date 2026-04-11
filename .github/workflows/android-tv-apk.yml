@@ -1,0 +1,97 @@
+name: Android TV APK
+
+on:
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: "Optional release tag used to publish the built APK"
+        required: false
+        type: string
+      release_title:
+        description: "Optional release title"
+        required: false
+        type: string
+      kvideo_url:
+        description: "Optional default KVideo URL baked into the APK"
+        required: false
+        type: string
+
+permissions:
+  contents: write
+
+concurrency:
+  group: android-tv-apk-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build_android_tv_apk:
+    runs-on: ubuntu-latest
+    env:
+      KVIDEO_URL: ${{ inputs.kvideo_url || '' }}
+    defaults:
+      run:
+        working-directory: android-tv
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+          cache: gradle
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install Android SDK packages
+        run: sdkmanager "platforms;android-34" "build-tools;34.0.0"
+
+      - name: Make Gradle wrapper executable
+        run: chmod +x ./gradlew
+
+      - name: Build debug APK
+        run: ./gradlew --no-daemon assembleDebug -PkvideoUrl="$KVIDEO_URL"
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: kvideo-android-tv-apk
+          path: android-tv/app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
+
+      - name: Publish GitHub release
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.release_tag != '' }}
+        working-directory: .
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RELEASE_TAG: ${{ inputs.release_tag }}
+          RELEASE_TITLE: ${{ inputs.release_title }}
+        run: |
+          release_notes="$(mktemp)"
+          effective_title="${RELEASE_TITLE:-Android TV APK ${RELEASE_TAG}}"
+          default_url_text="${KVIDEO_URL:-未预置，首次启动时手动填写}"
+
+          cat >"$release_notes" <<EOF
+          预构建的 Android TV APK。
+
+          使用方式：
+          1. 下载并侧载安装 APK
+          2. 首次启动时输入你的 KVideo 地址
+          3. 保存后即可直接进入
+
+          构建提交：$GITHUB_SHA
+          默认地址：$default_url_text
+          EOF
+
+          if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
+            gh release upload "$RELEASE_TAG" "android-tv/app/build/outputs/apk/debug/app-debug.apk#KVideo-AndroidTV.apk" --clobber
+            gh release edit "$RELEASE_TAG" --title "$effective_title" --notes-file "$release_notes"
+          else
+            gh release create "$RELEASE_TAG" "android-tv/app/build/outputs/apk/debug/app-debug.apk#KVideo-AndroidTV.apk" \
+              --title "$effective_title" \
+              --notes-file "$release_notes" \
+              --target "$GITHUB_SHA"
+          fi

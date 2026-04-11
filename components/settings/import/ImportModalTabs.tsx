@@ -1,8 +1,8 @@
 'use client';
 
 interface ImportModalTabsProps {
-    activeTab: 'file' | 'link' | 'subscription';
-    onTabChange: (tab: 'file' | 'link' | 'subscription') => void;
+    activeTab: 'file' | 'link' | 'subscription' | 'json';
+    onTabChange: (tab: 'file' | 'link' | 'subscription' | 'json') => void;
 }
 
 export function ImportModalTabs({ activeTab, onTabChange }: ImportModalTabsProps) {
@@ -10,11 +10,12 @@ export function ImportModalTabs({ activeTab, onTabChange }: ImportModalTabsProps
         { id: 'file', label: '文件导入' },
         { id: 'link', label: '链接导入' },
         { id: 'subscription', label: '订阅管理' },
+        { id: 'json', label: 'JSON' },
     ] as const;
 
     return (
         <div className="relative mb-6">
-            <div className="flex border-b border-[var(--glass-border)] relative">
+            <div className="flex border-b border-[var(--glass-border)] relative overflow-x-auto whitespace-nowrap no-scrollbar w-full">
                 {tabs.map((tab) => (
                     <button
                         key={tab.id}

@@ -4,19 +4,22 @@ import { useDesktopPlayerState } from '../hooks/useDesktopPlayerState';
 
 interface DesktopOverlayWrapperProps {
     data: ReturnType<typeof useDesktopPlayerState>['data'];
-    actions: ReturnType<typeof useDesktopPlayerState>['actions'];
     showControls: boolean;
+    isFullscreen: boolean;
+    fullscreenClock: string;
     isRotated?: boolean;
     onTogglePlay: () => void;
     onSkipForward: () => void;
     onSkipBackward: () => void;
     isTransitioningToNextEpisode?: boolean;
     showMoreMenu: boolean;
+    isPremium?: boolean;
     isProxied: boolean;
     onToggleMoreMenu: () => void;
     onMoreMenuMouseEnter: () => void;
     onMoreMenuMouseLeave: () => void;
     onCopyLink: (type?: 'original' | 'proxy') => void;
+    seekStepSeconds: number;
     // Speed Menu Props
     playbackRate: number;
     showSpeedMenu: boolean;
@@ -25,24 +28,29 @@ interface DesktopOverlayWrapperProps {
     onSpeedChange: (speed: number) => void;
     onSpeedMenuMouseEnter: () => void;
     onSpeedMenuMouseLeave: () => void;
+    webFullscreenSize: 'full' | 'large' | 'focused';
+    onCycleWebFullscreenSize: () => void;
     containerRef: React.RefObject<HTMLDivElement | null>;
 }
 
 export function DesktopOverlayWrapper({
     data,
-    actions,
     showControls,
+    isFullscreen,
+    fullscreenClock,
     isRotated = false,
     onTogglePlay,
     onSkipForward,
     onSkipBackward,
     isTransitioningToNextEpisode = false,
     showMoreMenu,
+    isPremium = false,
     isProxied,
     onToggleMoreMenu,
     onMoreMenuMouseEnter,
     onMoreMenuMouseLeave,
     onCopyLink,
+    seekStepSeconds,
     playbackRate,
     showSpeedMenu,
     speeds,
@@ -50,6 +58,8 @@ export function DesktopOverlayWrapper({
     onSpeedChange,
     onSpeedMenuMouseEnter,
     onSpeedMenuMouseLeave,
+    webFullscreenSize,
+    onCycleWebFullscreenSize,
     containerRef,
 }: DesktopOverlayWrapperProps) {
     const {
@@ -79,15 +89,19 @@ export function DesktopOverlayWrapper({
             showToast={showToast}
             toastMessage={toastMessage}
             showControls={showControls}
+            isFullscreen={isFullscreen}
+            fullscreenClock={fullscreenClock}
             onTogglePlay={onTogglePlay}
             onSkipForward={onSkipForward}
             onSkipBackward={onSkipBackward}
             showMoreMenu={showMoreMenu}
+            isPremium={isPremium}
             isProxied={isProxied}
             onToggleMoreMenu={onToggleMoreMenu}
             onMoreMenuMouseEnter={onMoreMenuMouseEnter}
             onMoreMenuMouseLeave={onMoreMenuMouseLeave}
             onCopyLink={onCopyLink}
+            seekStepSeconds={seekStepSeconds}
             playbackRate={playbackRate}
             showSpeedMenu={showSpeedMenu}
             speeds={speeds}
@@ -95,6 +109,8 @@ export function DesktopOverlayWrapper({
             onSpeedChange={onSpeedChange}
             onSpeedMenuMouseEnter={onSpeedMenuMouseEnter}
             onSpeedMenuMouseLeave={onSpeedMenuMouseLeave}
+            webFullscreenSize={webFullscreenSize}
+            onCycleWebFullscreenSize={onCycleWebFullscreenSize}
             containerRef={containerRef}
             isRotated={isRotated}
         />

@@ -9,6 +9,7 @@ interface UseAutoSkipProps {
     currentTime: number;
     duration: number;
     isPlaying: boolean;
+    isPremium?: boolean;
     totalEpisodes?: number;
     currentEpisodeIndex?: number;
     onNextEpisode?: () => void;
@@ -27,6 +28,7 @@ export function useAutoSkip({
     currentTime,
     duration,
     isPlaying,
+    isPremium = false,
     totalEpisodes = 1,
     currentEpisodeIndex = 0,
     onNextEpisode,
@@ -39,7 +41,7 @@ export function useAutoSkip({
         skipIntroSeconds,
         autoSkipOutro,
         skipOutroSeconds,
-    } = usePlayerSettings();
+    } = usePlayerSettings(isPremium);
 
     // Track if we've already skipped intro for this video session
     const hasSkippedIntroRef = useRef(false);

@@ -7,13 +7,22 @@ const DEFAULT_TAG = { id: 'popular', label: '热门', value: '热门' };
 const STORAGE_KEY_PREFIX = 'kvideo_custom_tags_';
 
 export function useTagManager() {
-    const [contentType, setContentType] = useState<'movie' | 'tv'>('movie');
+    const [contentType, setContentType] = useState<'movie' | 'tv'>(() => {
+        if (typeof window === 'undefined') return 'movie';
+        const saved = localStorage.getItem('kvideo_default_content_type');
+        return saved === 'tv' ? 'tv' : 'movie';
+    });
     const [selectedTag, setSelectedTag] = useState(DEFAULT_TAG.value);
     const [tags, setTags] = useState<any[]>([]);
     const [isLoadingTags, setIsLoadingTags] = useState(false);
     const [newTagInput, setNewTagInput] = useState('');
     const [showTagManager, setShowTagManager] = useState(false);
     const [justAddedTag, setJustAddedTag] = useState(false);
+
+    // Persist content type preference
+    useEffect(() => {
+        localStorage.setItem('kvideo_default_content_type', contentType);
+    }, [contentType]);
 
     const storageKey = `${STORAGE_KEY_PREFIX}${contentType}`;
 

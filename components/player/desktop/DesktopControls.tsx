@@ -8,9 +8,12 @@ interface DesktopControlsProps {
     isPlaying: boolean;
     currentTime: number;
     duration: number;
+    bufferedTime: number;
     volume: number;
     isMuted: boolean;
     isFullscreen: boolean;
+    isNativeFullscreen: boolean;
+    isWebFullscreen: boolean;
 
 
     showVolumeBar: boolean;
@@ -25,6 +28,8 @@ interface DesktopControlsProps {
     onVolumeChange: (e: React.MouseEvent<HTMLDivElement>) => void;
     onVolumeMouseDown: (e: React.MouseEvent<HTMLDivElement>) => void;
     onToggleFullscreen: () => void;
+    onToggleNativeFullscreen: () => void;
+    onToggleWebFullscreen: () => void;
     onTogglePictureInPicture: () => void;
     onShowAirPlayMenu: () => void;
     onShowCastMenu: () => void;
@@ -39,6 +44,7 @@ export function DesktopControls(props: DesktopControlsProps) {
         showControls,
         currentTime,
         duration,
+        bufferedTime,
         progressBarRef,
         onProgressClick,
         onProgressMouseDown,
@@ -48,15 +54,19 @@ export function DesktopControls(props: DesktopControlsProps) {
 
     return (
         <div
-            className={`absolute bottom-0 left-0 right-0 z-30 transition-all duration-300 ${showControls ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2'
+            className={`absolute bottom-0 left-0 right-0 z-30 transition-all duration-300 ${showControls ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2 pointer-events-none'
                 }`}
-            style={{ pointerEvents: showControls ? 'auto' : 'none' }}
+            style={{
+                pointerEvents: showControls ? 'auto' : 'none',
+                visibility: showControls ? 'visible' : 'hidden',
+            }}
         >
             {/* Progress Bar */}
             <DesktopProgressBar
                 progressBarRef={progressBarRef}
                 currentTime={currentTime}
                 duration={duration}
+                bufferedTime={bufferedTime}
                 onProgressClick={onProgressClick}
                 onProgressMouseDown={onProgressMouseDown}
                 onProgressTouchStart={onProgressTouchStart}

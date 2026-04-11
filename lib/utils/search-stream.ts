@@ -1,6 +1,16 @@
 import { Video } from '@/lib/types';
 import { getSourceName } from '@/lib/utils/source-names';
 import { calculateRelevanceScore, hasMinimumMatch } from '@/lib/utils/search';
+import { settingsStore } from '@/lib/store/settings-store';
+
+/**
+ * Check if a video's category matches any blocked keyword.
+ */
+function isCategoryBlocked(video: any, blockedCategories: string[]): boolean {
+    if (blockedCategories.length === 0) return false;
+    const typeName = (video.type_name || video.vod_class || '').toLowerCase();
+    return blockedCategories.some(cat => typeName.includes(cat.toLowerCase()));
+}
 
 interface StreamHandlerParams {
     reader: ReadableStreamDefaultReader<Uint8Array>;
@@ -9,6 +19,7 @@ interface StreamHandlerParams {
     onProgress: (completedSources: number, totalVideosFound: number) => void;
     onComplete: () => void;
     onError: (message: string) => void;
+    onPageInfo?: (maxPageCount: number) => void;
     currentQuery: string;
 }
 
@@ -19,6 +30,7 @@ export async function processSearchStream({
     onProgress,
     onComplete,
     onError,
+    onPageInfo,
     currentQuery,
 }: StreamHandlerParams) {
     const decoder = new TextDecoder();
@@ -41,6 +53,7 @@ export async function processSearchStream({
 
     try {
         resetTimeout(); // Start initial timeout
+        const blockedCategories = settingsStore.getSettings().blockedCategories;
 
         while (true) {
             const { done, value } = await reader.read();
@@ -62,6 +75,7 @@ export async function processSearchStream({
                     } else if (data.type === 'videos') {
                         const newVideos: Video[] = data.videos
                             .filter((video: any) => hasMinimumMatch(video.vod_name, currentQuery))
+                            .filter((video: any) => !isCategoryBlocked(video, blockedCategories))
                             .map((video: any) => ({
                                 ...video,
                                 sourceName: video.sourceDisplayName || getSourceName(video.source),
@@ -69,6 +83,9 @@ export async function processSearchStream({
                                 relevanceScore: calculateRelevanceScore(video, currentQuery),
                             }));
                         onVideos(newVideos, data.source);
+                        if (data.pagecount && onPageInfo) {
+                            onPageInfo(data.pagecount);
+                        }
                         resetTimeout();
                     } else if (data.type === 'progress') {
                         onProgress(data.completedSources, data.totalVideosFound);
@@ -76,6 +93,9 @@ export async function processSearchStream({
                     } else if (data.type === 'complete') {
                         if (timeoutId) clearTimeout(timeoutId);
                         isCompleted = true;
+                        if (data.maxPageCount && onPageInfo) {
+                            onPageInfo(data.maxPageCount);
+                        }
                         onComplete();
                     } else if (data.type === 'error') {
                         onError(data.message);

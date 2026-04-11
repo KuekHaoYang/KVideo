@@ -4,7 +4,7 @@ import type { VideoHistoryItem } from '@/lib/types';
 
 interface HistoryListProps {
     history: VideoHistoryItem[];
-    onRemove: (videoId: string | number, source: string) => void;
+    onRemove: (showIdentifier: string) => void;
     isPremium?: boolean;
 }
 
@@ -20,9 +20,9 @@ export function HistoryList({ history, onRemove, isPremium = false }: HistoryLis
                 <div className="space-y-3">
                     {history.map((item) => (
                         <HistoryItem
-                            key={`${item.videoId}-${item.source}-${item.timestamp}`}
+                            key={item.showIdentifier}
                             item={item}
-                            onRemove={() => onRemove(item.videoId, item.source)}
+                            onRemove={() => onRemove(item.showIdentifier)}
                             isPremium={isPremium}
                         />
                     ))}

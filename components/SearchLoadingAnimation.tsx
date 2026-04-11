@@ -8,6 +8,7 @@ interface SearchLoadingAnimationProps {
   totalSources?: number;
   isPaused?: boolean;
   onComplete?: (checkedSources: number, totalSources: number) => void;
+  onCancel?: () => void;
 }
 
 export function SearchLoadingAnimation({
@@ -16,6 +17,7 @@ export function SearchLoadingAnimation({
   totalSources = 16,
   isPaused = false,
   onComplete,
+  onCancel,
 }: SearchLoadingAnimationProps) {
   const [dots, setDots] = useState('');
   const dotIntervalRef = useRef<NodeJS.Timeout | null>(null);
@@ -123,7 +125,17 @@ export function SearchLoadingAnimation({
               </span>
             )}
           </span>
-          <span className="font-medium">{Math.round(progress)}%</span>
+          <span className="flex items-center gap-2">
+            <span className="font-medium">{Math.round(progress)}%</span>
+            {!isComplete && onCancel && (
+              <button
+                onClick={onCancel}
+                className="px-2 py-0.5 rounded-[var(--radius-full)] bg-[var(--glass-bg)] hover:bg-red-500/20 text-[10px] transition-colors cursor-pointer"
+              >
+                取消
+              </button>
+            )}
+          </span>
         </div>
       </div>
     </div>

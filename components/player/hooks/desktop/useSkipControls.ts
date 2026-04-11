@@ -3,6 +3,7 @@ import { useCallback, useMemo } from 'react';
 interface UseSkipControlsProps {
     videoRef: React.RefObject<HTMLVideoElement | null>;
     duration: number;
+    seekStepSeconds: number;
     setCurrentTime: (time: number) => void;
     showSkipForwardIndicator: boolean;
     showSkipBackwardIndicator: boolean;
@@ -21,6 +22,7 @@ interface UseSkipControlsProps {
 export function useSkipControls({
     videoRef,
     duration,
+    seekStepSeconds,
     setCurrentTime,
     showSkipForwardIndicator,
     showSkipBackwardIndicator,
@@ -49,12 +51,12 @@ export function useSkipControls({
             clearTimeout(skipForwardTimeoutRef.current);
         }
 
-        const newSkipAmount = showSkipForwardIndicator ? skipForwardAmount + 10 : 10;
+        const newSkipAmount = showSkipForwardIndicator ? skipForwardAmount + seekStepSeconds : seekStepSeconds;
         setSkipForwardAmount(newSkipAmount);
         setShowSkipForwardIndicator(true);
         setIsSkipForwardAnimatingOut(false);
 
-        const targetTime = Math.min(videoRef.current.currentTime + 10, duration);
+        const targetTime = Math.min(videoRef.current.currentTime + seekStepSeconds, duration);
         videoRef.current.currentTime = targetTime;
         setCurrentTime(targetTime);
 
@@ -66,7 +68,7 @@ export function useSkipControls({
                 setIsSkipForwardAnimatingOut(false);
             }, 200);
         }, 800);
-    }, [videoRef, duration, showSkipForwardIndicator, skipForwardAmount, skipBackwardTimeoutRef, skipForwardTimeoutRef, setShowSkipBackwardIndicator, setSkipBackwardAmount, setIsSkipBackwardAnimatingOut, setSkipForwardAmount, setShowSkipForwardIndicator, setIsSkipForwardAnimatingOut, setCurrentTime]);
+    }, [videoRef, duration, seekStepSeconds, showSkipForwardIndicator, skipForwardAmount, skipBackwardTimeoutRef, skipForwardTimeoutRef, setShowSkipBackwardIndicator, setSkipBackwardAmount, setIsSkipBackwardAnimatingOut, setSkipForwardAmount, setShowSkipForwardIndicator, setIsSkipForwardAnimatingOut, setCurrentTime]);
 
     const skipBackward = useCallback(() => {
         if (!videoRef.current) return;
@@ -82,12 +84,12 @@ export function useSkipControls({
             clearTimeout(skipBackwardTimeoutRef.current);
         }
 
-        const newSkipAmount = showSkipBackwardIndicator ? skipBackwardAmount + 10 : 10;
+        const newSkipAmount = showSkipBackwardIndicator ? skipBackwardAmount + seekStepSeconds : seekStepSeconds;
         setSkipBackwardAmount(newSkipAmount);
         setShowSkipBackwardIndicator(true);
         setIsSkipBackwardAnimatingOut(false);
 
-        const targetTime = Math.max(videoRef.current.currentTime - 10, 0);
+        const targetTime = Math.max(videoRef.current.currentTime - seekStepSeconds, 0);
         videoRef.current.currentTime = targetTime;
         setCurrentTime(targetTime);
 
@@ -99,7 +101,7 @@ export function useSkipControls({
                 setIsSkipBackwardAnimatingOut(false);
             }, 200);
         }, 800);
-    }, [videoRef, showSkipBackwardIndicator, skipBackwardAmount, skipForwardTimeoutRef, skipBackwardTimeoutRef, setShowSkipForwardIndicator, setSkipForwardAmount, setIsSkipForwardAnimatingOut, setSkipBackwardAmount, setShowSkipBackwardIndicator, setIsSkipBackwardAnimatingOut, setCurrentTime]);
+    }, [videoRef, seekStepSeconds, showSkipBackwardIndicator, skipBackwardAmount, skipForwardTimeoutRef, skipBackwardTimeoutRef, setShowSkipForwardIndicator, setSkipForwardAmount, setIsSkipForwardAnimatingOut, setSkipBackwardAmount, setShowSkipBackwardIndicator, setIsSkipBackwardAnimatingOut, setCurrentTime]);
 
     const skipActions = useMemo(() => ({
         skipForward,

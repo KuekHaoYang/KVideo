@@ -16,8 +16,12 @@ interface ParallelSearchResult {
   totalVideosFound: number;
   performSearch: (query: string, sources?: any[], sortBy?: SortOption) => Promise<void>;
   resetSearch: () => void;
+  cancelSearch: () => void;
   loadCachedResults: (results: Video[], sources: any[]) => void;
   applySorting: (sortBy: SortOption) => void;
+  loadMore: () => Promise<void>;
+  hasMore: boolean;
+  loadingMore: boolean;
 }
 
 export function useParallelSearch(
@@ -32,17 +36,22 @@ export function useParallelSearch(
     completedSources,
     totalSources,
     totalVideosFound,
+    currentPage,
+    maxPageCount,
+    loadingMore,
     setResults,
     setAvailableSources,
     setTotalVideosFound,
     resetState,
   } = state;
 
-  const { performSearch, cancelSearch } = useSearchAction({
+  const { performSearch, loadMore: loadMoreAction, cancelSearch } = useSearchAction({
     state,
     onCacheUpdate,
     onUrlUpdate,
   });
+
+  const hasMore = currentPage < maxPageCount;
 
   /**
    * Reset search state
@@ -77,8 +86,12 @@ export function useParallelSearch(
     totalVideosFound,
     performSearch,
     resetSearch,
+    cancelSearch,
     loadCachedResults,
     applySorting,
+    loadMore: loadMoreAction,
+    hasMore,
+    loadingMore,
   };
 }
 

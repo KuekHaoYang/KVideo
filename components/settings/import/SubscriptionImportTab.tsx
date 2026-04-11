@@ -79,7 +79,7 @@ export function SubscriptionImportTab({
                             onKeyDown={handleAddKeydown}
                             className="w-full bg-[color-mix(in_srgb,var(--bg-color)_50%,transparent)] border border-[var(--glass-border)] rounded-[var(--radius-2xl)] px-4 py-2 text-[var(--text-color)] placeholder:text-[var(--text-color-secondary)] focus:outline-none focus:border-[var(--accent-color)]"
                         />
-                        <div className="flex gap-2">
+                        <div className="flex gap-2 flex-wrap">
                             <input
                                 type="url"
                                 value={url}
