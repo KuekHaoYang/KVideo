@@ -11,6 +11,7 @@ import { AccountSettings } from '@/components/settings/AccountSettings';
 import { DisplaySettings } from '@/components/settings/DisplaySettings';
 import { PlayerSettings } from '@/components/settings/PlayerSettings';
 import { SettingsHeader } from '@/components/settings/SettingsHeader';
+import { AppVersionSettings } from '@/components/settings/AppVersionSettings';
 import { UserSourceSettings } from '@/components/settings/UserSourceSettings';
 import { UserDanmakuSettings } from '@/components/settings/UserDanmakuSettings';
 import { PermissionGate } from '@/components/PermissionGate';
@@ -79,6 +80,8 @@ export default function SettingsPage() {
       <div className="container mx-auto px-4 py-8 max-w-4xl space-y-8">
         {/* Header */}
         <SettingsHeader />
+
+        <AppVersionSettings />
 
         {/* Account Settings */}
         <AccountSettings />

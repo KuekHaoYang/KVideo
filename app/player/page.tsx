@@ -416,20 +416,22 @@ function PlayerContent() {
                   className="min-w-[240px]"
                 />
               </div>
-              <VideoPlayer
-                playUrl={playUrl}
-                videoId={videoId || undefined}
-                currentEpisode={currentEpisode}
-                onBack={() => router.back()}
-                totalEpisodes={videoData?.episodes?.length || 0}
-                onNextEpisode={handleNextEpisode}
-                isReversed={isReversed}
-                isPremium={isPremium}
-                videoTitle={videoData?.vod_name || title || ''}
-                episodeName={videoData?.episodes?.[currentEpisode]?.name || ''}
-                externalTimeRef={playerTimeRef}
-                onResolutionDetected={setDetectedResolution}
-              />
+              <div className="-mx-4 sm:mx-0">
+                <VideoPlayer
+                  playUrl={playUrl}
+                  videoId={videoId || undefined}
+                  currentEpisode={currentEpisode}
+                  onBack={() => router.back()}
+                  totalEpisodes={videoData?.episodes?.length || 0}
+                  onNextEpisode={handleNextEpisode}
+                  isReversed={isReversed}
+                  isPremium={isPremium}
+                  videoTitle={videoData?.vod_name || title || ''}
+                  episodeName={videoData?.episodes?.[currentEpisode]?.name || ''}
+                  externalTimeRef={playerTimeRef}
+                  onResolutionDetected={setDetectedResolution}
+                />
+              </div>
               <div className="hidden lg:block">
                 <VideoMetadata
                   videoData={videoData}

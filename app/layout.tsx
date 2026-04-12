@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { AutoSync } from '@/components/AutoSync'; // <-- 引入了自动同步组件
+import { SiteIconProvider } from '@/components/SiteIconProvider';
 import { TVProvider } from "@/lib/contexts/TVContext";
 import { TVNavigationInitializer } from "@/components/TVNavigationInitializer";
 import { Analytics } from "@vercel/analytics/react";
@@ -16,6 +17,7 @@ import { LocaleProvider } from "@/components/LocaleProvider";
 import { RuntimeFeaturesProvider } from "@/components/RuntimeFeaturesProvider";
 import { VideoTogetherController } from '@/components/VideoTogetherController';
 import { getRuntimeFeatures } from "@/lib/server/runtime-features";
+import { resolveSiteIconSrc } from '@/lib/server/site-icon';
 import fs from 'fs';
 import path from 'path';
 
@@ -61,19 +63,24 @@ async function AdKeywordsWrapper() {
   return <AdKeywordsInjector keywords={keywords} />;
 }
 
-export const metadata: Metadata = {
-  title: siteConfig.title,
-  description: siteConfig.description,
-  icons: {
-    icon: '/icon.png',
-  },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const siteIconSrc = await resolveSiteIconSrc();
 
-export default function RootLayout({
+  return {
+    title: siteConfig.title,
+    description: siteConfig.description,
+    icons: {
+      icon: siteIconSrc,
+    },
+  };
+}
+
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const siteIconSrc = await resolveSiteIconSrc();
   const runtimeFeatures = getRuntimeFeatures();
   const videoTogetherScriptUrl =
     process.env.VIDEOTOGETHER_SCRIPT_URL?.trim() || DEFAULT_VIDEOTOGETHER_SCRIPT_URL;
@@ -89,7 +96,7 @@ export default function RootLayout({
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
         <meta name="apple-mobile-web-app-title" content="KVideo" />
-        <link rel="apple-touch-icon" href="/icon.png" />
+        <link rel="apple-touch-icon" href={siteIconSrc} />
         {/* Theme Color (for browser address bar) */}
         <meta name="theme-color" content="#000000" />
         {/* Mobile viewport */}
@@ -99,30 +106,32 @@ export default function RootLayout({
         className="antialiased"
         suppressHydrationWarning
       >
-        <ThemeProvider>
-          <RuntimeFeaturesProvider initialFeatures={runtimeFeatures}>
-            <VideoTogetherController
-              envEnabled={videoTogetherEnvEnabled}
-              scriptUrl={videoTogetherScriptUrl}
-              settingUrl={videoTogetherSettingUrl}
-            />
-            {/* 加入自动同步组件，它会在后台默默工作，我们放在 ThemeProvider 内部的最前面 */}
-            <AutoSync />
-            <LocaleProvider />
+        <SiteIconProvider iconSrc={siteIconSrc}>
+          <ThemeProvider>
+            <RuntimeFeaturesProvider initialFeatures={runtimeFeatures}>
+              <VideoTogetherController
+                envEnabled={videoTogetherEnvEnabled}
+                scriptUrl={videoTogetherScriptUrl}
+                settingUrl={videoTogetherSettingUrl}
+              />
+              {/* 加入自动同步组件，它会在后台默默工作，我们放在 ThemeProvider 内部的最前面 */}
+              <AutoSync />
+              <LocaleProvider />
 
-            <TVProvider>
-              <TVNavigationInitializer />
-              <PasswordGate hasAuth={!!(process.env.ADMIN_PASSWORD || process.env.ACCOUNTS || process.env.ACCESS_PASSWORD)}>
-                <AdKeywordsWrapper />
-                {children}
-                <BackToTop />
-                <ScrollPositionManager />
-              </PasswordGate>
-            </TVProvider>
-            <Analytics />
-            <ServiceWorkerRegister />
-          </RuntimeFeaturesProvider>
-        </ThemeProvider>
+              <TVProvider>
+                <TVNavigationInitializer />
+                <PasswordGate hasAuth={!!(process.env.ADMIN_PASSWORD || process.env.ACCOUNTS || process.env.ACCESS_PASSWORD)}>
+                  <AdKeywordsWrapper />
+                  {children}
+                  <BackToTop />
+                  <ScrollPositionManager />
+                </PasswordGate>
+              </TVProvider>
+              <Analytics />
+              <ServiceWorkerRegister />
+            </RuntimeFeaturesProvider>
+          </ThemeProvider>
+        </SiteIconProvider>
 
         {/* ARIA Live Region for Screen Reader Announcements */}
         <div

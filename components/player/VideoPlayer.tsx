@@ -2,7 +2,6 @@
 
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { Card } from '@/components/ui/Card';
 import { useHistory } from '@/lib/store/history-store';
 import { CustomVideoPlayer } from './CustomVideoPlayer';
 import { VideoPlayerError } from './VideoPlayerError';
@@ -181,8 +180,7 @@ export function VideoPlayer({
   }
 
   return (
-    <div data-no-spatial>
-    <Card hover={false} className="p-0 relative">
+    <div data-no-spatial className="relative">
       {/* Mode Indicator Badge - controlled by settings */}
       {showModeIndicator && (
         <div className="absolute top-3 right-3 z-30">
@@ -220,7 +218,6 @@ export function VideoPlayer({
           onResolutionDetected={onResolutionDetected}
         />
       )}
-    </Card>
     </div>
   );
 }

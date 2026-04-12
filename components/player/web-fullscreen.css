@@ -16,6 +16,11 @@
     --kvideo-web-scale: 1;
 }
 
+.kvideo-container.is-web-fullscreen.top-align-stage {
+    align-items: flex-start !important;
+    padding-top: calc(env(safe-area-inset-top, 0px) + clamp(0px, 1.5vh, 16px)) !important;
+}
+
 .kvideo-container.is-web-fullscreen .kvideo-web-fullscreen-stage {
     position: relative !important;
     width: min(calc(var(--kvideo-stage-viewport-width, var(--kvideo-viewport-width, 100vw)) * var(--kvideo-web-scale)), calc(var(--kvideo-stage-viewport-height, var(--kvideo-viewport-height, 100vh)) * var(--kvideo-web-scale) * 16 / 9)) !important;

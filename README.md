@@ -378,21 +378,50 @@ docker run -d -p 3000:3000 \
 - 变量名：`NEXT_PUBLIC_SITE_NAME`
 - 变量值：`我的视频平台`
 
-**Docker 部署：**
-```bash
-docker run -d -p 3000:3000 \
-  -e NEXT_PUBLIC_SITE_NAME="我的视频平台" \
-  -e NEXT_PUBLIC_SITE_TITLE="我的视频 - 聚合播放平台" \
-  -e NEXT_PUBLIC_SITE_DESCRIPTION="专属视频聚合播放平台" \
-  --name kvideo kuekhaoyang/kvideo:latest
-```
-
 **本地开发：**
 在项目根目录创建 `.env.local` 文件：
 ```env
 NEXT_PUBLIC_SITE_NAME=我的视频平台
 NEXT_PUBLIC_SITE_TITLE=我的视频 - 聚合播放平台
 NEXT_PUBLIC_SITE_DESCRIPTION=专属视频聚合播放平台
+```
+
+> [!NOTE]
+> `NEXT_PUBLIC_SITE_*` 属于构建时变量。直接运行 Docker Hub 的预构建镜像时，`docker run -e NEXT_PUBLIC_SITE_* ...` 不会覆盖已经打包进前端的文案。
+
+## Docker 图标自定义
+
+Docker 预构建镜像支持在运行时替换图标，无需重新构建镜像。该配置会作用于顶部 Logo 和浏览器 favicon；如果你还要同步替换安装后的 PWA 图标，请直接覆盖仓库中的 `public/icon.png` 后重新构建镜像。
+
+### 可用环境变量：
+
+| 变量名 | 说明 |
+|--------|------|
+| `SITE_ICON_FILE` | 从容器内文件路径读取图标，适合 Docker 挂载，优先级高于 `SITE_ICON_URL` |
+| `SITE_ICON_URL` | 直接使用外部 URL 或站内路径作为图标 |
+
+### 配置示例：
+
+**Docker 挂载文件（推荐）：**
+```bash
+docker run -d -p 3000:3000 \
+  -v /path/to/icon.png:/app/custom/icon.png:ro \
+  -e SITE_ICON_FILE=/app/custom/icon.png \
+  --name kvideo kuekhaoyang/kvideo:latest
+```
+
+**Docker 使用 URL：**
+```bash
+docker run -d -p 3000:3000 \
+  -e SITE_ICON_URL="https://example.com/icon.png" \
+  --name kvideo kuekhaoyang/kvideo:latest
+```
+
+**Docker 使用站内路径：**
+```bash
+docker run -d -p 3000:3000 \
+  -e SITE_ICON_URL="/placeholder-poster.svg" \
+  --name kvideo kuekhaoyang/kvideo:latest
 ```
 
 ## 自动订阅源配置
@@ -632,6 +661,8 @@ docker run -e PORT=8080 -p 8080:8080 --name kvideo kuekhaoyang/kvideo:latest
 | `NEXT_PUBLIC_SITE_TITLE` | 浏览器标签页标题 | `KVideo - 视频聚合平台` |
 | `NEXT_PUBLIC_SITE_DESCRIPTION` | 站点描述 | `视频聚合平台` |
 | `NEXT_PUBLIC_SITE_NAME` | 站点头部名称 | `KVideo` |
+| `SITE_ICON_FILE` | Docker 运行时图标文件路径（优先于 `SITE_ICON_URL`） | - |
+| `SITE_ICON_URL` | Docker 运行时图标 URL 或站内路径 | - |
 | `SUBSCRIPTION_SOURCES` | 自动订阅源配置（服务端） | - |
 | `NEXT_PUBLIC_SUBSCRIPTION_SOURCES` | 自动订阅源配置（客户端） | - |
 | `IPTV_SOURCES` / `NEXT_PUBLIC_IPTV_SOURCES` | IPTV 直播源配置 | - |

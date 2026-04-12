@@ -4,6 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { ThemeSwitcher } from '@/components/ThemeSwitcher';
+import { useSiteIcon } from '@/components/SiteIconProvider';
 import { Icons } from '@/components/ui/Icon';
 import { siteConfig } from '@/lib/config/site-config';
 import { getSession, clearSession, hasPermission, type AuthSession } from '@/lib/store/auth-store';
@@ -20,6 +21,7 @@ export function Navbar({ onReset, isPremiumMode = false }: NavbarProps) {
     const favoritesHref = isPremiumMode ? '/premium/favorites' : '/favorites';
     const [session] = useState<AuthSession | null>(() => getSession());
     const { iptvEnabled } = useRuntimeFeatures();
+    const siteIconSrc = useSiteIcon();
 
     const handleLogout = () => {
         clearSession();
@@ -45,10 +47,11 @@ export function Navbar({ onReset, isPremiumMode = false }: NavbarProps) {
                         >
                             <div className="w-8 h-8 sm:w-10 sm:h-10 relative flex items-center justify-center flex-shrink-0">
                                 <Image
-                                    src="/icon.png"
+                                    src={siteIconSrc}
                                     alt={siteConfig.name}
                                     width={40}
                                     height={40}
+                                    unoptimized
                                     className="object-contain"
                                 />
                             </div>

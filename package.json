@@ -1,6 +1,6 @@
 {
   "name": "kvideo",
-  "version": "4.8.1",
+  "version": "4.9.2",
   "private": true,
   "scripts": {
     "dev": "next dev --port ${PORT:-3000}",
