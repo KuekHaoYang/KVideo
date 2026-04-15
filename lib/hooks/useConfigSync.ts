@@ -13,13 +13,8 @@ export function useConfigSync() {
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const hasPulled = useRef(false);
 
-  const getHeaders = useCallback(() => {
-    const profileId = getProfileId();
-    if (!profileId) return null;
-    return {
-      'x-profile-id': profileId,
-      'Content-Type': 'application/json',
-    };
+  const hasSession = useCallback(() => {
+    return !!getProfileId();
   }, []);
 
   // Pull config from server on mount (once)
@@ -28,11 +23,10 @@ export function useConfigSync() {
     hasPulled.current = true;
 
     const pull = async () => {
-      const headers = getHeaders();
-      if (!headers) return;
+      if (!hasSession()) return;
 
       try {
-        const res = await fetch('/api/user/config', { headers });
+        const res = await fetch('/api/user/config');
         const result = await res.json();
 
         if (result.success && result.data) {
@@ -83,7 +77,7 @@ export function useConfigSync() {
     };
 
     pull();
-  }, [getHeaders]);
+  }, [hasSession]);
 
   // Push config to server on settings change (debounced)
   useEffect(() => {
@@ -91,14 +85,15 @@ export function useConfigSync() {
       if (debounceRef.current) clearTimeout(debounceRef.current);
 
       debounceRef.current = setTimeout(async () => {
-        const headers = getHeaders();
-        if (!headers) return;
+        if (!hasSession()) return;
 
         try {
           const settings = settingsStore.getSettings();
           await fetch('/api/user/config', {
             method: 'POST',
-            headers,
+            headers: {
+              'Content-Type': 'application/json',
+            },
             body: JSON.stringify({
               sources: settings.sources,
               premiumSources: settings.premiumSources,
@@ -130,5 +125,5 @@ export function useConfigSync() {
       unsubscribe();
       if (debounceRef.current) clearTimeout(debounceRef.current);
     };
-  }, [getHeaders]);
+  }, [hasSession]);
 }

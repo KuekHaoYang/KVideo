@@ -1,64 +1,63 @@
-/**
- * Accounts API Route
- * Returns account list (names + roles, no passwords) for admin visibility
- */
-
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
+import {
+  createManagedAccount,
+  getPublicAuthConfig,
+  getServerSession,
+  isSuperAdminSession,
+  listAccountInfo,
+} from '@/lib/server/auth';
 
 export const runtime = 'edge';
 
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || '';
-const ACCESS_PASSWORD = process.env.ACCESS_PASSWORD || '';
-const ACCOUNTS = process.env.ACCOUNTS || '';
-
-const effectiveAdminPassword = ADMIN_PASSWORD || ACCESS_PASSWORD;
-
-interface AccountInfo {
-  name: string;
-  role: 'super_admin' | 'admin' | 'viewer';
-  customPermissions?: string[];
-}
-
-function getAccountList(): AccountInfo[] {
-  const accounts: AccountInfo[] = [];
-
-  // Add admin from ADMIN_PASSWORD
-  if (effectiveAdminPassword) {
-    accounts.push({ name: '超级管理员', role: 'super_admin' });
+async function requireSuperAdmin(request: NextRequest) {
+  const session = await getServerSession(request);
+  if (!session) {
+    return { error: NextResponse.json({ error: 'Authentication required' }, { status: 401 }) };
   }
 
-  // Add accounts from ACCOUNTS env var
-  if (ACCOUNTS) {
-    ACCOUNTS.split(',')
-      .map(entry => entry.trim())
-      .filter(entry => entry.length > 0)
-      .forEach(entry => {
-        const parts = entry.split(':');
-        if (parts.length >= 2) {
-          const name = parts[1].trim();
-          const parsedRole = parts[2]?.trim();
-          const role = parsedRole === 'super_admin' ? 'super_admin' : parsedRole === 'admin' ? 'admin' : 'viewer';
-          const perms = parts[3]?.trim();
-          const customPermissions = perms
-            ? perms.split('|').map(p => p.trim()).filter(p => p.length > 0)
-            : undefined;
-          if (name) {
-            accounts.push({ name, role, ...(customPermissions && customPermissions.length > 0 ? { customPermissions } : {}) });
-          }
-        }
-      });
+  if (!isSuperAdminSession(session)) {
+    return { error: NextResponse.json({ error: 'Super admin required' }, { status: 403 }) };
   }
 
-  return accounts;
+  return { session };
 }
 
-export async function GET() {
-  const accounts = getAccountList();
+export async function GET(request: NextRequest) {
+  const auth = await requireSuperAdmin(request);
+  if ('error' in auth) {
+    return auth.error;
+  }
+
+  const config = await getPublicAuthConfig();
+  const accounts = await listAccountInfo();
 
   return NextResponse.json({
+    loginMode: config.loginMode,
+    managed: config.loginMode === 'managed',
     accounts,
-    hasAdminPassword: !!effectiveAdminPassword,
-    hasAccounts: !!ACCOUNTS,
     totalCount: accounts.length,
   });
+}
+
+export async function POST(request: NextRequest) {
+  const auth = await requireSuperAdmin(request);
+  if ('error' in auth) {
+    return auth.error;
+  }
+
+  const config = await getPublicAuthConfig();
+  if (config.loginMode !== 'managed') {
+    return NextResponse.json({ error: 'Managed account mode is not enabled' }, { status: 400 });
+  }
+
+  try {
+    const body = await request.json();
+    const account = await createManagedAccount(body);
+    return NextResponse.json({ account }, { status: 201 });
+  } catch (error) {
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : 'Failed to create account' },
+      { status: 400 }
+    );
+  }
 }

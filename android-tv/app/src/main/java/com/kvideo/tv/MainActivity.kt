@@ -340,11 +340,11 @@ class MainActivity : ComponentActivity() {
 
     private inner class AndroidPlayerBridge {
         @JavascriptInterface
-        fun isPictureInPictureSupported(): Boolean = isPictureInPictureSupported()
+        fun isPictureInPictureSupported(): Boolean = this@MainActivity.isPictureInPictureSupported()
 
         @JavascriptInterface
         fun enterPictureInPicture(width: Int, height: Int): Boolean {
-            if (!isPictureInPictureSupported()) {
+            if (!this@MainActivity.isPictureInPictureSupported()) {
                 return false
             }
 

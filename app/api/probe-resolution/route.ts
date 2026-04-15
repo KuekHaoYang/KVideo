@@ -15,6 +15,7 @@ export const runtime = 'edge';
 interface ProbeRequest {
   id: string | number;
   source: string;
+  episodeIndex?: number;
 }
 
 function isValidSourceConfig(value: unknown): value is VideoSource {
@@ -71,37 +72,39 @@ function parseResolutionFromM3u8(content: string): { width: number; height: numb
 async function probeOne(video: ProbeRequest, providedConfigs: Map<string, VideoSource>): Promise<{
   id: string | number;
   source: string;
+  episodeIndex?: number;
   resolution: { width: number; height: number; label: string; color: string } | null;
 }> {
   try {
     const sourceConfig = providedConfigs.get(video.source) || getSourceById(video.source);
-    if (!sourceConfig) return { id: video.id, source: video.source, resolution: null };
+    if (!sourceConfig) return { id: video.id, source: video.source, episodeIndex: video.episodeIndex, resolution: null };
 
     // 1. Get detail to find first episode URL
     const detail = await getVideoDetail(video.id, sourceConfig);
     if (!detail.episodes || detail.episodes.length === 0) {
-      return { id: video.id, source: video.source, resolution: null };
+      return { id: video.id, source: video.source, episodeIndex: video.episodeIndex, resolution: null };
     }
 
-    const firstUrl = detail.episodes[0].url;
-    if (!firstUrl) return { id: video.id, source: video.source, resolution: null };
+    const episodeIndex = typeof video.episodeIndex === 'number'
+      ? Math.min(Math.max(video.episodeIndex, 0), detail.episodes.length - 1)
+      : 0;
+    const targetUrl = detail.episodes[episodeIndex]?.url || detail.episodes[0]?.url;
+    if (!targetUrl) return { id: video.id, source: video.source, episodeIndex, resolution: null };
 
     // 2. Fetch the m3u8 manifest
     let m3u8Content: string;
     try {
-      const res = await fetchWithTimeout(firstUrl, {
+      const res = await fetchWithTimeout(targetUrl, {
         headers: { 'User-Agent': 'Mozilla/5.0' },
       }, 8000);
       m3u8Content = await res.text();
     } catch {
       // Try with proxy
       try {
-        const proxyUrl = new URL('/api/proxy', 'http://localhost');
-        proxyUrl.searchParams.set('url', firstUrl);
         // Can't call our own proxy from edge easily, so just return null
-        return { id: video.id, source: video.source, resolution: null };
+        return { id: video.id, source: video.source, episodeIndex, resolution: null };
       } catch {
-        return { id: video.id, source: video.source, resolution: null };
+        return { id: video.id, source: video.source, episodeIndex, resolution: null };
       }
     }
 
@@ -115,7 +118,7 @@ async function probeOne(video: ProbeRequest, providedConfigs: Map<string, VideoS
         const trimmed = line.trim();
         if (trimmed && !trimmed.startsWith('#') && (trimmed.endsWith('.m3u8') || trimmed.includes('.m3u8?'))) {
           try {
-            const subUrl = trimmed.startsWith('http') ? trimmed : new URL(trimmed, firstUrl).toString();
+            const subUrl = trimmed.startsWith('http') ? trimmed : new URL(trimmed, targetUrl).toString();
             const subRes = await fetchWithTimeout(subUrl, {
               headers: { 'User-Agent': 'Mozilla/5.0' },
             }, 6000);
@@ -123,19 +126,19 @@ async function probeOne(video: ProbeRequest, providedConfigs: Map<string, VideoS
             const subResolution = parseResolutionFromM3u8(subContent);
             if (subResolution) {
               const labelInfo = getResolutionLabel(subResolution.width, subResolution.height);
-              return { id: video.id, source: video.source, resolution: { ...subResolution, ...labelInfo } };
+              return { id: video.id, source: video.source, episodeIndex, resolution: { ...subResolution, ...labelInfo } };
             }
           } catch { /* continue */ }
           break; // Only try the first sub-playlist
         }
       }
-      return { id: video.id, source: video.source, resolution: null };
+      return { id: video.id, source: video.source, episodeIndex, resolution: null };
     }
 
     const labelInfo = getResolutionLabel(res.width, res.height);
-    return { id: video.id, source: video.source, resolution: { ...res, ...labelInfo } };
+    return { id: video.id, source: video.source, episodeIndex, resolution: { ...res, ...labelInfo } };
   } catch {
-    return { id: video.id, source: video.source, resolution: null };
+    return { id: video.id, source: video.source, episodeIndex: video.episodeIndex, resolution: null };
   }
 }
 

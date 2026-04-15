@@ -15,9 +15,7 @@ export function useCloudSync(isPremium = false) {
 
     setIsSyncing(true);
     try {
-      const response = await fetch('/api/user/sync', {
-        headers: { 'x-profile-id': profileId }
-      });
+      const response = await fetch('/api/user/sync');
       const result = await response.json();
 
       if (result.success && result.data) {
@@ -46,8 +44,7 @@ export function useCloudSync(isPremium = false) {
 
       await fetch('/api/user/sync', {
         method: 'POST',
-        headers: { 
-          'x-profile-id': profileId,
+        headers: {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({

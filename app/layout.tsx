@@ -120,7 +120,16 @@ export default async function RootLayout({
 
               <TVProvider>
                 <TVNavigationInitializer />
-                <PasswordGate hasAuth={!!(process.env.ADMIN_PASSWORD || process.env.ACCOUNTS || process.env.ACCESS_PASSWORD)}>
+                <PasswordGate hasAuth={!!(
+                  process.env.ADMIN_PASSWORD ||
+                  process.env.ACCOUNTS ||
+                  process.env.ACCESS_PASSWORD ||
+                  (
+                    process.env.AUTH_SECRET &&
+                    process.env.UPSTASH_REDIS_REST_URL &&
+                    process.env.UPSTASH_REDIS_REST_TOKEN
+                  )
+                )}>
                   <AdKeywordsWrapper />
                   {children}
                   <BackToTop />

@@ -7,7 +7,6 @@ const PREMIUM_UNLOCK_KEY = 'kvideo-premium-unlocked';
 
 export function PremiumPasswordGate({ children }: { children: React.ReactNode }) {
     const [isLocked, setIsLocked] = useState(true);
-    const [hasPremiumAuth, setHasPremiumAuth] = useState(false);
     const [password, setPassword] = useState('');
     const [error, setError] = useState(false);
     const [isClient, setIsClient] = useState(false);
@@ -21,14 +20,19 @@ export function PremiumPasswordGate({ children }: { children: React.ReactNode })
             const unlocked = sessionStorage.getItem(PREMIUM_UNLOCK_KEY) === 'true';
 
             try {
-                const res = await fetch('/api/auth');
-                if (!res.ok) throw new Error('Failed to fetch auth config');
-                const data = await res.json();
+                const [configRes, sessionRes] = await Promise.all([
+                    fetch('/api/auth'),
+                    fetch('/api/auth/session'),
+                ]);
+                if (!configRes.ok) throw new Error('Failed to fetch auth config');
+                const data = await configRes.json();
+                const sessionData = sessionRes.ok ? await sessionRes.json() : null;
+                const isAdminSession = !!sessionData?.session &&
+                    (sessionData.session.role === 'admin' || sessionData.session.role === 'super_admin');
 
                 if (mounted) {
-                    setHasPremiumAuth(data.hasPremiumAuth);
                     // If no premium password configured, allow access
-                    setIsLocked(data.hasPremiumAuth && !unlocked);
+                    setIsLocked(data.hasPremiumAuth && !unlocked && !isAdminSession);
                     setIsClient(true);
                 }
             } catch {

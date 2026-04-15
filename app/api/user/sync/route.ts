@@ -1,5 +1,6 @@
 import { Redis } from '@upstash/redis';
 import { NextRequest, NextResponse } from 'next/server';
+import { getServerSession } from '@/lib/server/auth';
 
 // 确保这行代码在整个文件中只出现一次
 export const runtime = 'edge';
@@ -7,7 +8,8 @@ export const runtime = 'edge';
 const redis = Redis.fromEnv();
 
 export async function GET(request: NextRequest) {
-  const profileId = request.headers.get('x-profile-id');
+  const session = await getServerSession(request);
+  const profileId = session?.profileId;
   
   if (!profileId) {
     return NextResponse.json({ error: 'Missing profileId' }, { status: 400 });
@@ -26,7 +28,8 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  const profileId = request.headers.get('x-profile-id');
+  const session = await getServerSession(request);
+  const profileId = session?.profileId;
   
   if (!profileId) {
     return NextResponse.json({ error: 'Missing profileId' }, { status: 400 });
