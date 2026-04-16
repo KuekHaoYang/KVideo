@@ -1,4 +1,4 @@
-import { extractQualityLabel } from '@/lib/utils/video';
+import { extractNumericResolutionLabel } from '@/lib/utils/video';
 
 export interface ResolutionBadge {
   label: string;
@@ -8,7 +8,7 @@ export interface ResolutionBadge {
 export interface ResolutionLike extends ResolutionBadge {
   width?: number;
   height?: number;
-  origin?: 'probed' | 'played';
+  origin?: 'probed' | 'played' | 'hint';
   episodeIndex?: number;
 }
 
@@ -42,5 +42,5 @@ export function getSourceResolutionBadge(options: {
     return { label: cachedResolution.label, color: cachedResolution.color };
   }
 
-  return extractQualityLabel(remarks) || null;
+  return extractNumericResolutionLabel(remarks) || null;
 }

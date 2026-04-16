@@ -5,6 +5,7 @@ import {
   shouldExpandForCurrentSource,
 } from '@/lib/player/source-list-utils';
 import { shouldReuseCachedResolution } from '@/lib/player/resolution-cache';
+import { extractNumericResolutionLabel } from '@/lib/utils/video';
 
 test('shouldExpandForCurrentSource detects hidden active sources', () => {
   const sources = [
@@ -26,7 +27,7 @@ test('getSourceResolutionBadge prefers current actual resolution, then probed, t
     currentResolution: { label: '1080P', color: 'bg-green-500' },
     probedResolution: { label: '720P', color: 'bg-teal-500' },
     cachedResolution: { label: '4K', color: 'bg-amber-500' },
-    remarks: '蓝光',
+    remarks: '1080p',
   });
   assert.deepEqual(current, { label: '1080P', color: 'bg-green-500' });
 
@@ -34,22 +35,37 @@ test('getSourceResolutionBadge prefers current actual resolution, then probed, t
     isCurrent: false,
     probedResolution: { label: '720P', color: 'bg-teal-500' },
     cachedResolution: { label: '4K', color: 'bg-amber-500' },
-    remarks: '蓝光',
+    remarks: '1080p',
   });
   assert.deepEqual(probed, { label: '720P', color: 'bg-teal-500' });
 
   const cached = getSourceResolutionBadge({
     isCurrent: false,
     cachedResolution: { label: '4K', color: 'bg-amber-500' },
-    remarks: '蓝光',
+    remarks: '1080p',
   });
   assert.deepEqual(cached, { label: '4K', color: 'bg-amber-500' });
 
   const remark = getSourceResolutionBadge({
     isCurrent: false,
-    remarks: '蓝光原盘',
+    remarks: '2160p remux',
   });
-  assert.deepEqual(remark, { label: '蓝光', color: 'bg-blue-500' });
+  assert.deepEqual(remark, { label: '4K', color: 'bg-amber-500' });
+});
+
+test('getSourceResolutionBadge only accepts numeric resolution hints', () => {
+  const remark = getSourceResolutionBadge({
+    isCurrent: false,
+    remarks: '国语 蓝光原盘',
+  });
+  assert.equal(remark, null);
+  assert.equal(extractNumericResolutionLabel('中字'), null);
+  assert.equal(extractNumericResolutionLabel('segment.ts'), null);
+  assert.equal(extractNumericResolutionLabel('HDR remux'), null);
+  assert.deepEqual(extractNumericResolutionLabel('folder/2160/index.m3u8'), {
+    label: '4K',
+    color: 'bg-amber-500',
+  });
 });
 
 test('shouldReuseCachedResolution keeps played results across episode changes but re-probes stale probed data', () => {
@@ -79,4 +95,11 @@ test('shouldReuseCachedResolution keeps played results across episode changes bu
     origin: 'probed',
     episodeIndex: 2,
   }, 5), false);
+
+  assert.equal(shouldReuseCachedResolution({
+    label: '1080P',
+    color: 'bg-green-500',
+    origin: 'hint',
+    episodeIndex: 2,
+  }, 2), false);
 });

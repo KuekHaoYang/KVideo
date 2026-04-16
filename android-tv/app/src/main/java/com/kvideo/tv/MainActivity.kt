@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.content.pm.PackageManager
 import android.content.res.Configuration
+import android.graphics.Rect
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
@@ -25,6 +26,10 @@ import android.widget.EditText
 import android.widget.FrameLayout
 import android.widget.TextView
 import androidx.activity.ComponentActivity
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicBoolean
+import kotlin.math.roundToInt
 
 class MainActivity : ComponentActivity() {
 
@@ -210,6 +215,7 @@ class MainActivity : ComponentActivity() {
         newConfig: Configuration
     ) {
         super.onPictureInPictureModeChanged(isInPictureInPictureMode, newConfig)
+        dispatchPictureInPictureChange(isInPictureInPictureMode)
         if (!isInPictureInPictureMode) {
             applyImmersiveMode()
         }
@@ -338,30 +344,82 @@ class MainActivity : ComponentActivity() {
         return packageManager.hasSystemFeature(PackageManager.FEATURE_PICTURE_IN_PICTURE)
     }
 
+    private fun dispatchPictureInPictureChange(isInPictureInPictureMode: Boolean) {
+        val js = """
+            window.dispatchEvent(new CustomEvent('kvideo-android-pip-change', {
+                detail: { inPictureInPicture: ${if (isInPictureInPictureMode) "true" else "false"} }
+            }));
+        """.trimIndent()
+
+        webView.post {
+            try {
+                webView.evaluateJavascript(js, null)
+            } catch (error: Throwable) {
+                Log.w(TAG, "Failed to dispatch Picture-in-Picture change event", error)
+            }
+        }
+    }
+
+    private fun createSourceRectHint(left: Int, top: Int, right: Int, bottom: Int): Rect? {
+        if (right <= left || bottom <= top) {
+            return null
+        }
+
+        val density = resources.displayMetrics.density
+        return Rect(
+            (left * density).roundToInt(),
+            (top * density).roundToInt(),
+            (right * density).roundToInt(),
+            (bottom * density).roundToInt()
+        )
+    }
+
     private inner class AndroidPlayerBridge {
         @JavascriptInterface
         fun isPictureInPictureSupported(): Boolean = this@MainActivity.isPictureInPictureSupported()
 
         @JavascriptInterface
-        fun enterPictureInPicture(width: Int, height: Int): Boolean {
+        fun enterPictureInPicture(
+            width: Int,
+            height: Int,
+            left: Int,
+            top: Int,
+            right: Int,
+            bottom: Int
+        ): Boolean {
             if (!this@MainActivity.isPictureInPictureSupported()) {
                 return false
             }
 
+            val didEnterPiP = AtomicBoolean(false)
+            val latch = CountDownLatch(1)
+
             runOnUiThread {
                 try {
-                    exitCustomFullscreen()
                     val builder = android.app.PictureInPictureParams.Builder()
                     if (width > 0 && height > 0) {
                         builder.setAspectRatio(Rational(width, height))
                     }
-                    enterPictureInPictureMode(builder.build())
+                    createSourceRectHint(left, top, right, bottom)?.let(builder::setSourceRectHint)
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                        builder.setSeamlessResizeEnabled(true)
+                    }
+                    didEnterPiP.set(enterPictureInPictureMode(builder.build()))
                 } catch (error: IllegalStateException) {
                     Log.w(TAG, "Failed to enter Picture-in-Picture mode", error)
+                } finally {
+                    latch.countDown()
                 }
             }
 
-            return true
+            return try {
+                latch.await(1500, TimeUnit.MILLISECONDS)
+                didEnterPiP.get()
+            } catch (error: InterruptedException) {
+                Thread.currentThread().interrupt()
+                Log.w(TAG, "Interrupted while waiting for Picture-in-Picture result", error)
+                false
+            }
         }
     }
 }

@@ -27,44 +27,50 @@ export function parseVideoTitle(title: string): { cleanTitle: string, quality?: 
 }
 
 /**
- * Quality keywords and their display labels, ordered by priority (highest first).
+ * Numeric resolution keywords only.
+ * Qualitative labels such as "蓝光" or "高清" are intentionally excluded because
+ * they are not real numeric resolutions.
  */
-const QUALITY_PATTERNS: { pattern: RegExp; label: string; color: string }[] = [
-    { pattern: /4k|2160p|uhd/i, label: '4K', color: 'bg-amber-500' },
-    { pattern: /2k|1440p|qhd/i, label: '2K', color: 'bg-emerald-500' },
-    { pattern: /蓝光|藍光|bluray|blu-ray|remux/i, label: '蓝光', color: 'bg-blue-500' },
-    { pattern: /\bhdr\b|hdr10\+?/i, label: 'HDR', color: 'bg-violet-500' },
-    { pattern: /1080p|1080i|full\s*hd|fhd/i, label: '1080P', color: 'bg-green-500' },
-    { pattern: /超清|超高清/i, label: '超清', color: 'bg-green-500' },
-    { pattern: /540p/i, label: '540P', color: 'bg-cyan-500' },
-    { pattern: /720p|hd720/i, label: '720P', color: 'bg-teal-500' },
-    { pattern: /480p/i, label: '480P', color: 'bg-sky-500' },
-    { pattern: /360p/i, label: '360P', color: 'bg-gray-500' },
-    { pattern: /高清|流畅/i, label: '高清', color: 'bg-sky-500' },
-    { pattern: /web-?dl|webrip/i, label: 'WEB-DL', color: 'bg-indigo-500' },
-    { pattern: /hdtv/i, label: 'HDTV', color: 'bg-teal-500' },
-    { pattern: /dvd|dvdrip/i, label: 'DVD', color: 'bg-purple-500' },
-    { pattern: /抢先|枪版|ts版|ts\b|cam\b|hdts|预告/i, label: 'TS', color: 'bg-orange-500' },
-    { pattern: /标清|sd\b/i, label: 'SD', color: 'bg-gray-500' },
-    { pattern: /杜比|dolby|atmos/i, label: '杜比', color: 'bg-violet-500' },
-    { pattern: /国语|普通话|mandarin/i, label: '国语', color: 'bg-sky-500' },
-    { pattern: /粤语|cantonese/i, label: '粤语', color: 'bg-sky-500' },
-    { pattern: /中[文字]字幕|中字|双语字幕/i, label: '中字', color: 'bg-cyan-500' },
+const NUMERIC_RESOLUTION_PATTERNS: { pattern: RegExp; label: string; color: string }[] = [
+    { pattern: /(?:^|[^\d])(4320p?|8k)(?:[^\d]|$)/i, label: '8K', color: 'bg-rose-500' },
+    { pattern: /(?:^|[^\d])(2160p?|4k|uhd)(?:[^\d]|$)/i, label: '4K', color: 'bg-amber-500' },
+    { pattern: /(?:^|[^\d])(1440p?|2k|qhd)(?:[^\d]|$)/i, label: '2K', color: 'bg-emerald-500' },
+    { pattern: /(?:^|[^\d])(1080p?|1080i|full\s*hd|fhd)(?:[^\d]|$)/i, label: '1080P', color: 'bg-green-500' },
+    { pattern: /(?:^|[^\d])720p?(?:[^\d]|$)|hd720/i, label: '720P', color: 'bg-teal-500' },
+    { pattern: /(?:^|[^\d])540p?(?:[^\d]|$)/i, label: '540P', color: 'bg-cyan-500' },
+    { pattern: /(?:^|[^\d])480p?(?:[^\d]|$)/i, label: '480P', color: 'bg-sky-500' },
+    { pattern: /(?:^|[^\d])360p?(?:[^\d]|$)/i, label: '360P', color: 'bg-gray-500' },
+    { pattern: /(?:^|[^\d])240p?(?:[^\d]|$)/i, label: '240P', color: 'bg-gray-500' },
+    { pattern: /(?:^|[^\d])144p?(?:[^\d]|$)/i, label: '144P', color: 'bg-gray-500' },
 ];
 
 /**
- * Extracts quality label from video remarks or title.
- * Returns the quality label and its associated color class.
+ * Extracts a numeric playback resolution from video remarks or title.
+ * Non-numeric labels are intentionally ignored.
  */
-export function extractQualityLabel(remarks?: string, quality?: string): { label: string; color: string } | null {
+export function extractNumericResolutionLabel(
+    remarks?: string,
+    quality?: string
+): { label: string; color: string } | null {
     const text = `${remarks || ''} ${quality || ''}`;
     if (!text.trim()) return null;
 
-    for (const { pattern, label, color } of QUALITY_PATTERNS) {
+    for (const { pattern, label, color } of NUMERIC_RESOLUTION_PATTERNS) {
         if (pattern.test(text)) {
             return { label, color };
         }
     }
 
     return null;
+}
+
+export function extractPlaybackQualityLabel(
+    remarks?: string,
+    quality?: string
+): { label: string; color: string } | null {
+    return extractNumericResolutionLabel(remarks, quality);
+}
+
+export function extractQualityLabel(remarks?: string, quality?: string): { label: string; color: string } | null {
+    return extractNumericResolutionLabel(remarks, quality);
 }

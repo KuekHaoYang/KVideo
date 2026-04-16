@@ -18,6 +18,15 @@ interface VideoToProbe {
   episodeIndex?: number;
 }
 
+interface ResolutionProbeEvent {
+  done?: boolean;
+  id: string | number;
+  source: string;
+  episodeIndex?: number;
+  resolution?: ResolutionInfo | null;
+  resolutionOrigin?: 'manifest' | 'hint';
+}
+
 function getSourceConfigsForProbe(videos: VideoToProbe[]): VideoSource[] {
   if (typeof window === 'undefined' || videos.length === 0) {
     return [];
@@ -48,13 +57,17 @@ export function useResolutionProbe(videos: VideoToProbe[]): {
   const [resolutions, setResolutions] = useState<Record<string, ResolutionInfo | null>>({});
   const [isProbing, setIsProbing] = useState(false);
   const abortRef = useRef<AbortController | null>(null);
-  const probedKeysRef = useRef<Set<string>>(new Set());
+  const completedKeysRef = useRef<Set<string>>(new Set());
+  const inFlightKeysRef = useRef<Set<string>>(new Set());
 
   useEffect(() => {
     if (!videos || videos.length === 0) return;
 
+    const inFlightKeys = inFlightKeysRef.current;
+    const completedKeys = completedKeysRef.current;
     const cached: Record<string, ResolutionInfo | null> = {};
     const needProbe: VideoToProbe[] = [];
+    const batchRequestKeys: string[] = [];
 
     for (const video of videos) {
       const resultKey = `${video.source}:${video.id}`;
@@ -63,9 +76,13 @@ export function useResolutionProbe(videos: VideoToProbe[]): {
 
       if (shouldReuseCachedResolution(cachedInfo, video.episodeIndex)) {
         cached[resultKey] = cachedInfo;
-      } else if (!probedKeysRef.current.has(requestKey)) {
+      } else if (
+        !completedKeys.has(requestKey) &&
+        !inFlightKeys.has(requestKey)
+      ) {
         needProbe.push(video);
-        probedKeysRef.current.add(requestKey);
+        batchRequestKeys.push(requestKey);
+        inFlightKeys.add(requestKey);
       }
     }
 
@@ -110,15 +127,18 @@ export function useResolutionProbe(videos: VideoToProbe[]): {
           for (const line of lines) {
             if (!line.startsWith('data: ')) continue;
             try {
-              const data = JSON.parse(line.slice(6));
+              const data = JSON.parse(line.slice(6)) as ResolutionProbeEvent;
               if (data.done) continue;
 
               const resultKey = `${data.source}:${data.id}`;
+              const requestKey = `${data.source}:${data.id}:${data.episodeIndex ?? 0}`;
+              inFlightKeys.delete(requestKey);
+              completedKeys.add(requestKey);
 
               if (data.resolution) {
                 const resolution: ResolutionInfo = {
                   ...data.resolution,
-                  origin: 'probed',
+                  origin: data.resolutionOrigin === 'hint' ? 'hint' : 'probed',
                   episodeIndex: typeof data.episodeIndex === 'number' ? data.episodeIndex : undefined,
                 };
                 setCachedResolution(data.source, data.id, resolution);
@@ -136,12 +156,18 @@ export function useResolutionProbe(videos: VideoToProbe[]): {
           console.warn('[ResolutionProbe] Failed:', error);
         }
       } finally {
+        for (const requestKey of batchRequestKeys) {
+          inFlightKeys.delete(requestKey);
+        }
         setIsProbing(false);
       }
     })();
 
     return () => {
       controller.abort();
+      for (const requestKey of batchRequestKeys) {
+        inFlightKeys.delete(requestKey);
+      }
     };
   }, [videos]);
 

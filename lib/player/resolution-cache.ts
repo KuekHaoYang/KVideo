@@ -1,9 +1,9 @@
 export interface ResolutionCacheEntry {
-  width: number;
-  height: number;
+  width?: number;
+  height?: number;
   label: string;
   color: string;
-  origin?: 'probed' | 'played';
+  origin?: 'probed' | 'played' | 'hint';
   episodeIndex?: number;
 }
 
@@ -45,5 +45,6 @@ export function shouldReuseCachedResolution(
 ): boolean {
   if (!entry) return false;
   if (entry.origin === 'played') return true;
+  if (entry.origin === 'hint') return false;
   return entry.episodeIndex === episodeIndex;
 }
