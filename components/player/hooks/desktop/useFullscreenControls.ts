@@ -1,9 +1,75 @@
-import { useCallback, useEffect, useMemo } from 'react';
+import { useCallback, useEffect, useMemo, useRef } from 'react';
 import type { FullscreenMode } from '../useDesktopPlayerState';
+import {
+    createAndroidPiPTransitionPlan,
+    getAndroidPiPSourceRect,
+    shouldRestoreInlineAfterAndroidPiP,
+    shouldRollbackTemporaryWindowFullscreen,
+    type AndroidPiPSessionState,
+} from './android-pip-utils';
 
 interface AndroidPiPBridge {
     isPictureInPictureSupported?: () => boolean;
-    enterPictureInPicture?: (width: number, height: number) => boolean;
+    enterPictureInPicture?: (
+        width: number,
+        height: number,
+        left: number,
+        top: number,
+        right: number,
+        bottom: number
+    ) => boolean;
+}
+
+interface AndroidPiPChangeDetail {
+    inPictureInPicture?: boolean;
+}
+
+type OrientationCapableScreen = Screen & {
+    orientation?: ScreenOrientation & {
+        lock?: (orientation: string) => Promise<void>;
+        unlock?: () => void;
+    };
+};
+
+type FullscreenCapableDocument = Document & {
+    webkitFullscreenElement?: Element | null;
+    mozFullScreenElement?: Element | null;
+    msFullscreenElement?: Element | null;
+    webkitExitFullscreen?: () => Promise<void>;
+    mozCancelFullScreen?: () => Promise<void>;
+    msExitFullscreen?: () => Promise<void>;
+    pictureInPictureEnabled?: boolean;
+    pictureInPictureElement?: Element | null;
+    exitPictureInPicture?: () => Promise<void>;
+};
+
+type FullscreenCapableElement = HTMLDivElement & {
+    webkitRequestFullscreen?: () => Promise<void>;
+    mozRequestFullScreen?: () => Promise<void>;
+    msRequestFullscreen?: () => Promise<void>;
+};
+
+type PiPCapableVideoElement = HTMLVideoElement & {
+    webkitEnterFullscreen?: () => void;
+    webkitSupportsPresentationMode?: (mode: 'picture-in-picture') => boolean;
+    webkitPresentationMode?: 'inline' | 'picture-in-picture' | string;
+    webkitSetPresentationMode?: (mode: 'inline' | 'picture-in-picture') => void;
+    webkitShowPlaybackTargetPicker?: () => void;
+};
+
+function getFullscreenDocument(): FullscreenCapableDocument {
+    return document as FullscreenCapableDocument;
+}
+
+function waitForAnimationFrame(): Promise<void> {
+    return new Promise((resolve) => {
+        window.requestAnimationFrame(() => resolve());
+    });
+}
+
+async function waitForWindowFullscreenLayout(): Promise<void> {
+    await waitForAnimationFrame();
+    await waitForAnimationFrame();
 }
 
 interface UseFullscreenControlsProps {
@@ -31,10 +97,13 @@ export function useFullscreenControls({
     setIsAirPlaySupported,
     fullscreenType = 'native'
 }: UseFullscreenControlsProps) {
+    const androidPiPSessionRef = useRef<AndroidPiPSessionState | null>(null);
+
     const lockLandscape = useCallback(async () => {
-        if (window.screen && (window.screen as any).orientation && (window.screen as any).orientation.lock) {
+        const orientation = (window.screen as OrientationCapableScreen).orientation;
+        if (orientation?.lock) {
             try {
-                await (window.screen as any).orientation.lock('landscape');
+                await orientation.lock('landscape');
             } catch (error) {
                 console.warn('Orientation lock failed:', error);
             }
@@ -42,21 +111,25 @@ export function useFullscreenControls({
     }, []);
 
     const unlockOrientation = useCallback(() => {
-        if (window.screen && (window.screen as any).orientation && (window.screen as any).orientation.unlock) {
+        const orientation = (window.screen as OrientationCapableScreen).orientation;
+        if (orientation?.unlock) {
             try {
-                (window.screen as any).orientation.unlock();
+                orientation.unlock();
             } catch {
                 // Ignore unlock errors from unsupported browsers.
             }
         }
     }, []);
 
-    const getNativeFullscreenElement = useCallback(() => (
-        document.fullscreenElement ||
-        (document as any).webkitFullscreenElement ||
-        (document as any).mozFullScreenElement ||
-        (document as any).msFullscreenElement
-    ), []);
+    const getNativeFullscreenElement = useCallback(() => {
+        const fullscreenDocument = getFullscreenDocument();
+        return (
+            fullscreenDocument.fullscreenElement ||
+            fullscreenDocument.webkitFullscreenElement ||
+            fullscreenDocument.mozFullScreenElement ||
+            fullscreenDocument.msFullscreenElement
+        );
+    }, []);
 
     const getAndroidPiPBridge = useCallback((): AndroidPiPBridge | null => {
         if (typeof window === 'undefined') return null;
@@ -67,31 +140,15 @@ export function useFullscreenControls({
         return bridge;
     }, []);
 
-    const requestAndroidPictureInPicture = useCallback(() => {
-        const bridge = getAndroidPiPBridge();
-        const video = videoRef.current;
-        if (!bridge || !video || typeof bridge.enterPictureInPicture !== 'function') {
-            return false;
-        }
-
-        const width = video.videoWidth || containerRef.current?.clientWidth || 16;
-        const height = video.videoHeight || containerRef.current?.clientHeight || 9;
-
-        try {
-            return bridge.enterPictureInPicture(width, height) !== false;
-        } catch (error) {
-            console.error('Android Picture-in-Picture bridge failed:', error);
-            return false;
-        }
-    }, [containerRef, getAndroidPiPBridge, videoRef]);
-
     useEffect(() => {
         if (typeof document !== 'undefined') {
-            const hasNativePiP = Boolean((document as any).pictureInPictureEnabled);
-            const hasWebkitPiP = videoRef.current && (
-                'webkitSupportsPresentationMode' in (videoRef.current as any) ||
-                'webkitPresentationMode' in (videoRef.current as any)
-            );
+            const fullscreenDocument = getFullscreenDocument();
+            const video = videoRef.current as PiPCapableVideoElement | null;
+            const hasNativePiP = Boolean(fullscreenDocument.pictureInPictureEnabled);
+            const hasWebkitPiP = Boolean(video && (
+                typeof video.webkitSupportsPresentationMode === 'function' ||
+                typeof video.webkitPresentationMode === 'string'
+            ));
             const androidBridge = getAndroidPiPBridge();
             const hasAndroidPiPBridge = Boolean(androidBridge?.isPictureInPictureSupported?.());
             setIsPiPSupported(hasNativePiP || !!hasWebkitPiP || hasAndroidPiPBridge);
@@ -102,15 +159,17 @@ export function useFullscreenControls({
     }, [getAndroidPiPBridge, setIsPiPSupported, setIsAirPlaySupported, videoRef]);
 
     const exitNativeFullscreen = useCallback(async () => {
+        const fullscreenDocument = getFullscreenDocument();
+
         try {
-            if (document.exitFullscreen) {
-                await document.exitFullscreen();
-            } else if ((document as any).webkitExitFullscreen) {
-                await (document as any).webkitExitFullscreen();
-            } else if ((document as any).mozCancelFullScreen) {
-                await (document as any).mozCancelFullScreen();
-            } else if ((document as any).msExitFullscreen) {
-                await (document as any).msExitFullscreen();
+            if (fullscreenDocument.exitFullscreen) {
+                await fullscreenDocument.exitFullscreen();
+            } else if (fullscreenDocument.webkitExitFullscreen) {
+                await fullscreenDocument.webkitExitFullscreen();
+            } else if (fullscreenDocument.mozCancelFullScreen) {
+                await fullscreenDocument.mozCancelFullScreen();
+            } else if (fullscreenDocument.msExitFullscreen) {
+                await fullscreenDocument.msExitFullscreen();
             }
         } catch (error) {
             console.error('Failed to exit fullscreen:', error);
@@ -138,23 +197,25 @@ export function useFullscreenControls({
     }, [exitNativeFullscreen, fullscreenMode, lockLandscape, setFullscreenMode, setIsFullscreen]);
 
     const enterNativeFullscreen = useCallback(async () => {
-        if (!containerRef.current) return;
+        const container = containerRef.current as FullscreenCapableElement | null;
+        const video = videoRef.current as PiPCapableVideoElement | null;
+        if (!container) return;
 
         if (fullscreenMode === 'window') {
             exitWindowFullscreen();
         }
 
         try {
-            if (containerRef.current.requestFullscreen) {
-                await containerRef.current.requestFullscreen();
-            } else if ((containerRef.current as any).webkitRequestFullscreen) {
-                await (containerRef.current as any).webkitRequestFullscreen();
-            } else if ((containerRef.current as any).mozRequestFullScreen) {
-                await (containerRef.current as any).mozRequestFullScreen();
-            } else if ((containerRef.current as any).msRequestFullscreen) {
-                await (containerRef.current as any).msRequestFullscreen();
-            } else if (videoRef.current && (videoRef.current as any).webkitEnterFullscreen) {
-                (videoRef.current as any).webkitEnterFullscreen();
+            if (container.requestFullscreen) {
+                await container.requestFullscreen();
+            } else if (container.webkitRequestFullscreen) {
+                await container.webkitRequestFullscreen();
+            } else if (container.mozRequestFullScreen) {
+                await container.mozRequestFullScreen();
+            } else if (container.msRequestFullscreen) {
+                await container.msRequestFullscreen();
+            } else if (video?.webkitEnterFullscreen) {
+                video.webkitEnterFullscreen();
             }
 
             setFullscreenMode('native');
@@ -162,9 +223,9 @@ export function useFullscreenControls({
             await lockLandscape();
         } catch (error) {
             console.warn('Fullscreen request failed, trying fallback:', error);
-            if (videoRef.current && (videoRef.current as any).webkitEnterFullscreen) {
+            if (video?.webkitEnterFullscreen) {
                 try {
-                    (videoRef.current as any).webkitEnterFullscreen();
+                    video.webkitEnterFullscreen();
                     setFullscreenMode('native');
                     setIsFullscreen(true);
                 } catch (fallbackError) {
@@ -179,6 +240,65 @@ export function useFullscreenControls({
         lockLandscape,
         setFullscreenMode,
         setIsFullscreen,
+        videoRef,
+    ]);
+
+    const requestAndroidPictureInPicture = useCallback(async () => {
+        const bridge = getAndroidPiPBridge();
+        const video = videoRef.current;
+        if (!bridge || !video || typeof bridge.enterPictureInPicture !== 'function') {
+            return false;
+        }
+
+        const plan = createAndroidPiPTransitionPlan(fullscreenMode);
+        const session: AndroidPiPSessionState = {
+            enteredTemporaryWindowFullscreen: plan.enterTemporaryWindowFullscreen,
+            restoreInlineOnExit: plan.restoreInlineOnExit,
+        };
+
+        try {
+            if (plan.enterTemporaryWindowFullscreen) {
+                await enterWindowFullscreen();
+                await waitForWindowFullscreenLayout();
+            }
+
+            const width = video.videoWidth || containerRef.current?.clientWidth || 16;
+            const height = video.videoHeight || containerRef.current?.clientHeight || 9;
+            const sourceRect = getAndroidPiPSourceRect(containerRef.current);
+
+            androidPiPSessionRef.current = session;
+
+            const didEnterPiP = bridge.enterPictureInPicture(
+                width,
+                height,
+                sourceRect?.left ?? 0,
+                sourceRect?.top ?? 0,
+                sourceRect?.right ?? 0,
+                sourceRect?.bottom ?? 0
+            ) !== false;
+
+            if (!didEnterPiP) {
+                if (shouldRollbackTemporaryWindowFullscreen(session)) {
+                    exitWindowFullscreen();
+                }
+                androidPiPSessionRef.current = null;
+            }
+
+            return didEnterPiP;
+        } catch (error) {
+            if (shouldRollbackTemporaryWindowFullscreen(session)) {
+                exitWindowFullscreen();
+            }
+            androidPiPSessionRef.current = null;
+            console.error('Android Picture-in-Picture bridge failed:', error);
+            return false;
+        }
+    }, [
+        containerRef,
+        enterWindowFullscreen,
+        exitWindowFullscreen,
+        fullscreenMode,
+        getAndroidPiPBridge,
         videoRef,
     ]);
 
@@ -285,23 +405,47 @@ export function useFullscreenControls({
         return () => window.removeEventListener('keydown', handleEsc);
     }, [exitWindowFullscreen, fullscreenMode]);
 
+    useEffect(() => {
+        if (typeof window === 'undefined') return;
+
+        const handleAndroidPiPChange = (event: Event) => {
+            const detail = (event as CustomEvent<AndroidPiPChangeDetail>).detail;
+            const inPictureInPicture = Boolean(detail?.inPictureInPicture);
+
+            if (shouldRestoreInlineAfterAndroidPiP(androidPiPSessionRef.current, inPictureInPicture)) {
+                exitWindowFullscreen();
+            }
+
+            if (!inPictureInPicture) {
+                androidPiPSessionRef.current = null;
+            }
+        };
+
+        window.addEventListener('kvideo-android-pip-change', handleAndroidPiPChange);
+        return () => window.removeEventListener('kvideo-android-pip-change', handleAndroidPiPChange);
+    }, [exitWindowFullscreen]);
+
     const togglePictureInPicture = useCallback(async () => {
         if (!videoRef.current || !isPiPSupported) return;
-        const video = videoRef.current as any;
+        const video = videoRef.current as PiPCapableVideoElement;
+        const fullscreenDocument = getFullscreenDocument();
         try {
-            if (document.pictureInPictureElement) {
-                await document.exitPictureInPicture();
+            if (fullscreenDocument.pictureInPictureElement && fullscreenDocument.exitPictureInPicture) {
+                await fullscreenDocument.exitPictureInPicture();
             } else if (video.webkitPresentationMode === 'picture-in-picture') {
-                video.webkitSetPresentationMode('inline');
-            } else if (video.requestPictureInPicture && (document as any).pictureInPictureEnabled) {
+                video.webkitSetPresentationMode?.('inline');
+            } else if (video.requestPictureInPicture && fullscreenDocument.pictureInPictureEnabled) {
                 await video.requestPictureInPicture();
-            } else if (requestAndroidPictureInPicture()) {
+            } else if (await requestAndroidPictureInPicture()) {
                 return;
-            } else if (video.webkitSupportsPresentationMode && video.webkitSupportsPresentationMode('picture-in-picture')) {
+            } else if (
+                video.webkitSupportsPresentationMode?.('picture-in-picture') &&
+                video.webkitSetPresentationMode
+            ) {
                 video.webkitSetPresentationMode('picture-in-picture');
             }
         } catch (error) {
-            if (requestAndroidPictureInPicture()) {
+            if (await requestAndroidPictureInPicture()) {
                 return;
             }
             console.error('Failed to toggle Picture-in-Picture:', error);
@@ -310,7 +454,7 @@ export function useFullscreenControls({
 
     const showAirPlayMenu = useCallback(() => {
         if (!videoRef.current || !isAirPlaySupported) return;
-        const video = videoRef.current as any;
+        const video = videoRef.current as PiPCapableVideoElement;
         if (video.webkitShowPlaybackTargetPicker) {
             video.webkitShowPlaybackTargetPicker();
         }

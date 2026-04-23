@@ -24,9 +24,14 @@ export function Navbar({ onReset, isPremiumMode = false }: NavbarProps) {
     const siteIconSrc = useSiteIcon();
 
     const handleLogout = () => {
-        clearSession();
-        // Navigate to root to clear search query params
-        window.location.href = '/';
+        fetch('/api/auth/session', { method: 'DELETE' })
+            .catch(() => {
+                // Best effort only.
+            })
+            .finally(() => {
+                clearSession();
+                window.location.href = '/';
+            });
     };
 
     return (
@@ -83,9 +88,9 @@ export function Navbar({ onReset, isPremiumMode = false }: NavbarProps) {
                                             {session.name.charAt(0)}
                                         </div>
                                         <span className="text-[var(--text-color)] max-w-[60px] truncate">{session.name}</span>
-                                        {session.role === 'admin' && (
+                                        {(session.role === 'admin' || session.role === 'super_admin') && (
                                             <span className="px-1 py-0.5 bg-[var(--accent-color)]/10 text-[var(--accent-color)] rounded text-[10px] font-medium">
-                                                管理
+                                                {session.role === 'super_admin' ? '超管' : '管理'}
                                             </span>
                                         )}
                                     </div>

@@ -9,9 +9,10 @@ import { LatencyBadge } from '@/components/ui/LatencyBadge';
 import { Button } from '@/components/ui/Button';
 import { useKeyboardNavigation } from '@/lib/hooks/useKeyboardNavigation';
 import { settingsStore } from '@/lib/store/settings-store';
-import { extractQualityLabel } from '@/lib/utils/video';
 import type { VideoResolutionInfo } from './hooks/useVideoResolution';
 import type { ResolutionInfo } from '@/lib/hooks/useResolutionProbe';
+import { getCachedResolution } from '@/lib/player/resolution-cache';
+import { getSourceResolutionBadge, shouldExpandForCurrentSource } from '@/lib/player/source-list-utils';
 
 interface Episode {
   name?: string;
@@ -66,6 +67,7 @@ export function EpisodeList({
 }: EpisodeListProps) {
   const listRef = useRef<HTMLDivElement>(null);
   const buttonRefs = useRef<(HTMLButtonElement | null)[]>([]);
+  const sourceItemRefs = useRef<Record<string, HTMLButtonElement | null>>({});
   const [sourceExpanded, setSourceExpanded] = useState(false);
   const [showAllSources, setShowAllSources] = useState(false);
 
@@ -77,18 +79,14 @@ export function EpisodeList({
 
   // Helper: get best resolution badge for a source
   const getResBadge = useCallback((source: SourceInfo, isCurrent: boolean) => {
-    // For current source, prefer actual detected resolution from video element
-    if (isCurrent && currentResolution) {
-      return { label: currentResolution.label, color: currentResolution.color };
-    }
-    // Check probed resolution from m3u8 manifest
     const probeKey = `${source.source}:${source.id}`;
-    const probed = sourceResolutions?.[probeKey];
-    if (probed) {
-      return { label: probed.label, color: probed.color };
-    }
-    // Fall back to quality label parsed from remarks
-    return extractQualityLabel(source.remarks) || null;
+    return getSourceResolutionBadge({
+      isCurrent,
+      currentResolution: currentResolution || undefined,
+      probedResolution: sourceResolutions?.[probeKey] || undefined,
+      cachedResolution: getCachedResolution(source.source, source.id) || undefined,
+      remarks: source.remarks,
+    });
   }, [currentResolution, sourceResolutions]);
 
   // Current source info
@@ -97,21 +95,47 @@ export function EpisodeList({
     return sources.find(s => s.source === currentSource) || null;
   }, [sources, currentSource]);
 
-  useEffect(() => {
-    if (sourceSectionCollapsed) {
-      setSourceExpanded(false);
-    }
-  }, [sourceSectionCollapsed]);
-
   // Sort sources by latency
+  const initialLatencies = useMemo(() => {
+    if (!sources) return {};
+    return sources.reduce<Record<string, number>>((accumulator, source) => {
+      if (source.latency !== undefined) {
+        accumulator[source.source] = source.latency;
+      }
+      return accumulator;
+    }, {});
+  }, [sources]);
+
+  const mergedLatencies = useMemo(() => ({
+    ...initialLatencies,
+    ...latencies,
+  }), [initialLatencies, latencies]);
+
   const sortedSources = useMemo(() => {
     if (!sources) return [];
     return [...sources].sort((a, b) => {
-      const latA = latencies[a.source] ?? a.latency ?? Infinity;
-      const latB = latencies[b.source] ?? b.latency ?? Infinity;
+      const latA = mergedLatencies[a.source] ?? a.latency ?? Infinity;
+      const latB = mergedLatencies[b.source] ?? b.latency ?? Infinity;
       return latA - latB;
     });
-  }, [sources, latencies]);
+  }, [mergedLatencies, sources]);
+
+  const isSourceListOpen = !sourceSectionCollapsed && sourceExpanded;
+  const forceExpandedForCurrentSource = !!currentSource && shouldExpandForCurrentSource(sortedSources, currentSource);
+  const showAllVisibleSources = showAllSources || forceExpandedForCurrentSource;
+
+  useEffect(() => {
+    if (!isSourceListOpen || !currentSource) return;
+
+    const frame = requestAnimationFrame(() => {
+      sourceItemRefs.current[currentSource]?.scrollIntoView({
+        behavior: 'smooth',
+        block: 'center',
+      });
+    });
+
+    return () => cancelAnimationFrame(frame);
+  }, [currentSource, isSourceListOpen, showAllVisibleSources, sortedSources]);
 
   // Resolve source ID to its actual baseUrl for pinging
   const getSourcePingUrl = useCallback((sourceId: string): string | null => {
@@ -127,16 +151,7 @@ export function EpisodeList({
   // Initialize latencies from sources
   useEffect(() => {
     if (!sources) return;
-    const initial: Record<string, number> = {};
-    let hasMissing = false;
-    sources.forEach(s => {
-      if (s.latency !== undefined) {
-        initial[s.source] = s.latency;
-      } else {
-        hasMissing = true;
-      }
-    });
-    setLatencies(initial);
+    const hasMissing = sources.some((source) => source.latency === undefined);
 
     // Auto-refresh latencies for sources that don't have them
     if (hasMissing && sources.length > 1) {
@@ -283,7 +298,7 @@ export function EpisodeList({
               <button
                 onClick={() => {
                   if (!sourceSectionCollapsed) {
-                    setSourceExpanded(!sourceExpanded);
+                    setSourceExpanded((current) => !current);
                   }
                 }}
                 className={`flex-1 min-w-0 flex items-center justify-between gap-3 text-left ${sourceSectionCollapsed ? 'cursor-default' : 'cursor-pointer'}`}
@@ -301,7 +316,7 @@ export function EpisodeList({
                 {!sourceSectionCollapsed && (
                   <Icons.ChevronDown
                     size={16}
-                    className={`flex-shrink-0 text-[var(--text-color-secondary)] transition-transform duration-200 ${sourceExpanded ? 'rotate-180' : 'rotate-0'}`}
+                    className={`flex-shrink-0 text-[var(--text-color-secondary)] transition-transform duration-200 ${isSourceListOpen ? 'rotate-180' : 'rotate-0'}`}
                   />
                 )}
               </button>
@@ -331,11 +346,11 @@ export function EpisodeList({
           </div>
 
           {/* Expanded source list */}
-          {!sourceSectionCollapsed && sourceExpanded && (
+          {isSourceListOpen && (
             <div className="mt-2 space-y-2">
               {(() => {
                 const MAX_VISIBLE = 5;
-                const visibleSources = showAllSources ? sortedSources : sortedSources.slice(0, MAX_VISIBLE);
+                const visibleSources = showAllVisibleSources ? sortedSources : sortedSources.slice(0, MAX_VISIBLE);
                 const hasMoreSources = sortedSources.length > MAX_VISIBLE;
 
                 // Group sources by typeName
@@ -360,12 +375,14 @@ export function EpisodeList({
                             )}
                             {typeSources.map((source, index) => {
                               const isCurrent = source.source === currentSource;
-                              const latency = latencies[source.source] ?? source.latency;
+                              const latency = mergedLatencies[source.source] ?? source.latency;
                               const globalIndex = sortedSources.indexOf(source);
+                              const badge = getResBadge(source, isCurrent);
 
                               return (
                                 <button
                                   key={`${source.source}-${index}`}
+                                  ref={(element) => { sourceItemRefs.current[source.source] = element; }}
                                   onClick={() => {
                                     if (!isCurrent) {
                                       onSourceChange!(source);
@@ -401,16 +418,13 @@ export function EpisodeList({
                                   <div className="flex-1 min-w-0">
                                     <div className="font-medium text-sm truncate flex items-center gap-1.5">
                                       {source.sourceName || source.source}
-                                      {(() => {
-                                        const badge = getResBadge(source, isCurrent);
-                                        return badge ? (
-                                          <span className={`inline-flex items-center px-1 py-0 rounded text-[9px] font-bold text-white ${badge.color}`}>
-                                            {badge.label}
-                                          </span>
-                                        ) : null;
-                                      })()}
+                                      {badge ? (
+                                        <span className={`inline-flex items-center px-1 py-0 rounded text-[9px] font-bold text-white ${badge.color}`}>
+                                          {badge.label}
+                                        </span>
+                                      ) : null}
                                     </div>
-                                    {source.remarks && !extractQualityLabel(source.remarks) && (
+                                    {source.remarks && !badge && (
                                       <div className="text-[10px] text-[var(--text-color-secondary)] truncate mt-0.5">{source.remarks}</div>
                                     )}
                                     {latency !== undefined && (
@@ -441,11 +455,13 @@ export function EpisodeList({
                       ) : (
                         visibleSources.map((source, index) => {
                           const isCurrent = source.source === currentSource;
-                          const latency = latencies[source.source] ?? source.latency;
+                          const latency = mergedLatencies[source.source] ?? source.latency;
+                          const badge = getResBadge(source, isCurrent);
 
                           return (
                             <button
                               key={`${source.source}-${index}`}
+                              ref={(element) => { sourceItemRefs.current[source.source] = element; }}
                               onClick={() => {
                                 if (!isCurrent) {
                                   onSourceChange!(source);
@@ -481,16 +497,13 @@ export function EpisodeList({
                               <div className="flex-1 min-w-0">
                                 <div className="font-medium text-sm truncate flex items-center gap-1.5">
                                   {source.sourceName || source.source}
-                                  {(() => {
-                                    const badge = getResBadge(source, isCurrent);
-                                    return badge ? (
-                                      <span className={`inline-flex items-center px-1 py-0 rounded text-[9px] font-bold text-white ${badge.color}`}>
-                                        {badge.label}
-                                      </span>
-                                    ) : null;
-                                  })()}
+                                  {badge ? (
+                                    <span className={`inline-flex items-center px-1 py-0 rounded text-[9px] font-bold text-white ${badge.color}`}>
+                                      {badge.label}
+                                    </span>
+                                  ) : null}
                                 </div>
-                                {source.remarks && !extractQualityLabel(source.remarks) && (
+                                {source.remarks && !badge && (
                                   <div className="text-[10px] text-[var(--text-color-secondary)] truncate mt-0.5">{source.remarks}</div>
                                 )}
                                 {latency !== undefined && (
@@ -520,10 +533,10 @@ export function EpisodeList({
                     </div>
                     {hasMoreSources && (
                       <button
-                        onClick={() => setShowAllSources(!showAllSources)}
+                        onClick={() => setShowAllSources((current) => !current)}
                         className="w-full mt-1.5 py-1.5 text-xs text-[var(--text-color-secondary)] hover:text-[var(--accent-color)] flex items-center justify-center gap-1 transition-colors cursor-pointer"
                       >
-                        {showAllSources ? (
+                        {showAllVisibleSources ? (
                           <>收起 <Icons.ChevronDown size={12} className="rotate-180" /></>
                         ) : (
                           <>展开更多 ({sortedSources.length - MAX_VISIBLE}) <Icons.ChevronDown size={12} /></>
