@@ -4,11 +4,10 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import type { VideoSource } from '@/lib/types';
 
 interface UseAddSourceFormProps {
-    isOpen: boolean;
     existingIds: string[];
     onAdd: (source: VideoSource) => void;
     onClose: () => void;
@@ -20,29 +19,31 @@ function generateIdFromName(name: string): string {
     return slug || `custom-${Date.now().toString(36)}`;
 }
 
-export function useAddSourceForm({ isOpen, existingIds, onAdd, onClose, initialValues }: UseAddSourceFormProps) {
-    const [name, setName] = useState('');
-    const [customId, setCustomId] = useState('');
-    const [idManuallyEdited, setIdManuallyEdited] = useState(false);
-    const [url, setUrl] = useState('');
-    const [error, setError] = useState('');
+function getInitialFormState(initialValues?: VideoSource | null) {
+    if (initialValues) {
+        return {
+            name: initialValues.name,
+            customId: initialValues.id,
+            idManuallyEdited: true,
+            url: initialValues.baseUrl,
+        };
+    }
 
-    useEffect(() => {
-        if (isOpen) {
-            if (initialValues) {
-                setName(initialValues.name);
-                setCustomId(initialValues.id);
-                setUrl(initialValues.baseUrl);
-                setIdManuallyEdited(true);
-            } else {
-                setName('');
-                setCustomId('');
-                setUrl('');
-                setIdManuallyEdited(false);
-            }
-            setError('');
-        }
-    }, [isOpen, initialValues]);
+    return {
+        name: '',
+        customId: '',
+        idManuallyEdited: false,
+        url: '',
+    };
+}
+
+export function useAddSourceForm({ existingIds, onAdd, onClose, initialValues }: UseAddSourceFormProps) {
+    const initialFormState = getInitialFormState(initialValues);
+    const [name, setName] = useState(initialFormState.name);
+    const [customId, setCustomId] = useState(initialFormState.customId);
+    const [idManuallyEdited, setIdManuallyEdited] = useState(initialFormState.idManuallyEdited);
+    const [url, setUrl] = useState(initialFormState.url);
+    const [error, setError] = useState('');
 
     const handleNameChange = (newName: string) => {
         setName(newName);

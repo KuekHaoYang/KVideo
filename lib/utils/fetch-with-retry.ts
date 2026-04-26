@@ -1,33 +1,24 @@
-import { NextRequest } from 'next/server';
+import { fetchWithPolicy } from '@/lib/server/outbound-policy';
 
 interface FetchWithRetryOptions {
     url: string;
-    request: NextRequest;
     headers?: Record<string, string>;
+    signal?: AbortSignal;
+    timeoutMs?: number;
+    maxRetries?: number;
 }
 
-export async function fetchWithRetry({ url, request, headers = {} }: FetchWithRetryOptions): Promise<Response> {
-    // User-Agent rotation for better compatibility
-    const userAgents = [
-        'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-        'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1',
-        'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:120.0) Gecko/20100101 Firefox/120.0'
-    ];
-    const randomUA = userAgents[Math.floor(Math.random() * userAgents.length)];
-
-    // Smart Referer: use video domain instead of kvideo.vercel.app to avoid suspicion
-    const videoUrl = new URL(url);
-    const referer = request.nextUrl.searchParams.get('referer') || `${videoUrl.protocol}//${videoUrl.hostname}`;
-
-    // Optional IP forwarding (default: Beijing IP)
-    const forwardedIP = request.nextUrl.searchParams.get('ip') || '202.108.22.5';
-
-    const MAX_RETRIES = 5;
-    const TIMEOUT_MS = 30000; // 30 seconds
+export async function fetchWithRetry({
+    url,
+    headers = {},
+    signal,
+    timeoutMs = 30000,
+    maxRetries = 3,
+}: FetchWithRetryOptions): Promise<Response> {
     let lastError: unknown = null;
     let response: Response | null = null;
 
-    for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
         try {
             // Exponential backoff: 100ms, 200ms, 400ms, 800ms, 1600ms
             const backoffDelay = attempt > 1 ? Math.pow(2, attempt - 2) * 100 : 0;
@@ -36,24 +27,22 @@ export async function fetchWithRetry({ url, request, headers = {} }: FetchWithRe
             }
 
             const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), TIMEOUT_MS);
+            const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
 
-            response = await fetch(url, {
+            if (signal) {
+                if (signal.aborted) {
+                    clearTimeout(timeoutId);
+                    controller.abort();
+                } else {
+                    signal.addEventListener('abort', () => controller.abort(), { once: true });
+                }
+            }
+
+            response = await fetchWithPolicy(url, {
                 headers: {
-                    ...headers, // First: forwarded headers (Cookie, Range)
-                    // Then override with anti-blocking headers (these take precedence)
-                    'User-Agent': randomUA,
+                    ...headers,
                     'Accept': '*/*',
                     'Accept-Language': 'zh-CN,zh;q=0.9,en;q=0.8',
-                    'Accept-Encoding': 'gzip, deflate, br',
-                    'Connection': 'keep-alive',
-                    'X-Forwarded-For': forwardedIP,
-                    'Client-IP': forwardedIP,
-                    'Referer': referer,
-                    'Origin': `${videoUrl.protocol}//${videoUrl.hostname}`,
-                    'Sec-Fetch-Dest': 'empty',
-                    'Sec-Fetch-Mode': 'cors',
-                    'Sec-Fetch-Site': 'cross-site',
                 },
                 signal: controller.signal,
             });
@@ -64,7 +53,7 @@ export async function fetchWithRetry({ url, request, headers = {} }: FetchWithRe
                 break;
             }
 
-            if (response.status === 503 && attempt < MAX_RETRIES) {
+            if (response.status === 503 && attempt < maxRetries) {
                 console.warn(`⚠ Got 503 on attempt ${attempt}, retrying with backoff ${backoffDelay}ms...`);
                 lastError = `503 on attempt ${attempt}`;
                 continue;
@@ -76,7 +65,7 @@ export async function fetchWithRetry({ url, request, headers = {} }: FetchWithRe
             lastError = fetchError;
             if (fetchError instanceof Error && fetchError.name === 'AbortError') {
                 console.warn(`⚠ Timeout on attempt ${attempt}, retrying...`);
-            } else if (attempt < MAX_RETRIES) {
+            } else if (attempt < maxRetries) {
                 console.warn(`⚠ Fetch error on attempt ${attempt}, retrying...`, fetchError);
             } else {
                 throw fetchError;
@@ -87,7 +76,7 @@ export async function fetchWithRetry({ url, request, headers = {} }: FetchWithRe
     // If we got a response (even an error response like 403, 404), return it
     // Only throw if we truly failed to get any response
     if (!response) {
-        throw new Error(`Failed after ${MAX_RETRIES} attempts: ${lastError}`);
+        throw new Error(`Failed after ${maxRetries} attempts: ${lastError}`);
     }
 
     // Return the response even if it's an error status (403, 404, etc.)

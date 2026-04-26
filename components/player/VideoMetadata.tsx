@@ -3,6 +3,7 @@
 import { Card } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { Icons } from '@/components/ui/Icon';
+import { RemotePosterImage } from '@/components/ui/RemotePosterImage';
 import { getSourceName } from '@/lib/utils/source-names';
 
 /**
@@ -15,7 +16,17 @@ function splitPersonNames(str: string): string[] {
 }
 
 interface VideoMetadataProps {
-  videoData: any;
+  videoData: {
+    vod_pic?: string;
+    vod_name?: string;
+    vod_content?: string;
+    vod_actor?: string;
+    vod_director?: string;
+    vod_year?: string;
+    vod_area?: string;
+    vod_lang?: string;
+    type_name?: string;
+  } | null;
   source: string | null;
   title?: string | null;
 }
@@ -25,9 +36,9 @@ export function VideoMetadata({ videoData, source, title }: VideoMetadataProps) 
     <Card hover={false}>
       <div className="flex flex-col sm:flex-row items-start gap-4">
         {videoData?.vod_pic && (
-          <img
+          <RemotePosterImage
             src={videoData.vod_pic}
-            alt={videoData.vod_name}
+            alt={videoData.vod_name || title || '视频海报'}
             className="w-24 h-36 sm:w-32 sm:h-48 object-cover rounded-[var(--radius-2xl)] border border-[var(--glass-border)]"
           />
         )}

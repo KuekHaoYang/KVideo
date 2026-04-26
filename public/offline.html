@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>KVideo Offline</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        background:
+          radial-gradient(circle at top, rgba(31, 111, 235, 0.24), transparent 45%),
+          linear-gradient(180deg, #080b11 0%, #0f1620 100%);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        display: grid;
+        place-items: center;
+        color: #f3f6fb;
+        padding: 24px;
+      }
+
+      main {
+        width: min(100%, 420px);
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        border-radius: 28px;
+        background: rgba(14, 20, 28, 0.82);
+        backdrop-filter: blur(20px);
+        padding: 28px;
+        box-shadow: 0 24px 60px rgba(0, 0, 0, 0.35);
+      }
+
+      h1 {
+        margin: 0 0 12px;
+        font-size: 1.6rem;
+      }
+
+      p {
+        margin: 0;
+        color: rgba(243, 246, 251, 0.78);
+        line-height: 1.6;
+      }
+
+      a {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        margin-top: 18px;
+        padding: 12px 16px;
+        border-radius: 999px;
+        background: #1f6feb;
+        color: white;
+        text-decoration: none;
+        font-weight: 600;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>当前处于离线状态</h1>
+      <p>已缓存的站点外壳仍可打开，但媒体播放、图片代理和 API 请求需要重新联网后才能恢复。</p>
+      <a href="/">返回首页</a>
+    </main>
+  </body>
+</html>

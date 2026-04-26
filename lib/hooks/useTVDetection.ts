@@ -3,7 +3,7 @@
  * Detects if the user is on a TV/set-top-box browser.
  */
 
-import { useState, useEffect } from 'react';
+import { useSyncExternalStore } from 'react';
 
 const TV_USER_AGENT_PATTERNS = [
   /smarttv/i,
@@ -21,29 +21,49 @@ const TV_USER_AGENT_PATTERNS = [
   /hbbtv/i,
 ];
 
+function computeIsTV(): boolean {
+  if (typeof window === 'undefined') {
+    return false;
+  }
+
+  const ua = navigator.userAgent;
+  const uaMatch = TV_USER_AGENT_PATTERNS.some((pattern) => pattern.test(ua));
+  if (uaMatch) {
+    return true;
+  }
+
+  const maxDimension = Math.max(window.screen.width, window.screen.height);
+  const minDimension = Math.min(window.screen.width, window.screen.height);
+  const coarsePointer = window.matchMedia('(pointer: coarse)').matches;
+  const noHover =
+    window.matchMedia('(hover: none)').matches &&
+    window.matchMedia('(any-hover: none)').matches;
+  const noTouch = navigator.maxTouchPoints === 0;
+  const largeScreen = maxDimension >= 1280 && minDimension >= 720;
+
+  return largeScreen && coarsePointer && noHover && noTouch;
+}
+
+function subscribeToTVSignals(listener: () => void) {
+  if (typeof window === 'undefined') {
+    return () => {};
+  }
+
+  const mediaQueries = [
+    window.matchMedia('(pointer: coarse)'),
+    window.matchMedia('(hover: none)'),
+    window.matchMedia('(any-hover: none)'),
+  ];
+
+  window.addEventListener('resize', listener);
+  mediaQueries.forEach((mediaQuery) => mediaQuery.addEventListener('change', listener));
+
+  return () => {
+    window.removeEventListener('resize', listener);
+    mediaQueries.forEach((mediaQuery) => mediaQuery.removeEventListener('change', listener));
+  };
+}
+
 export function useTVDetection(): boolean {
-  const [isTV, setIsTV] = useState(false);
-
-  useEffect(() => {
-    const ua = navigator.userAgent;
-
-    // Check UA for TV indicators
-    const uaMatch = TV_USER_AGENT_PATTERNS.some(pattern => pattern.test(ua));
-
-    if (uaMatch) {
-      setIsTV(true);
-      return;
-    }
-
-    // Fallback heuristic: large screen + no touch + low pixel density
-    const isLargeScreen = window.innerWidth >= 1280;
-    const hasNoTouch = !('ontouchstart' in window) && navigator.maxTouchPoints === 0;
-    const lowDensity = window.devicePixelRatio <= 1.5;
-
-    if (isLargeScreen && hasNoTouch && lowDensity) {
-      setIsTV(true);
-    }
-  }, []);
-
-  return isTV;
+  return useSyncExternalStore(subscribeToTVSignals, computeIsTV, () => false);
 }

@@ -16,8 +16,12 @@ const eslintConfig = defineConfig([
   globalIgnores([
     // Default ignores of eslint-config-next:
     ".next/**",
+    ".open-next/**",
     "out/**",
     "build/**",
+    "android-tv/.gradle/**",
+    "android-tv/app/build/**",
+    "audit-artifacts/**",
     ".vercel/**",
     "next-env.d.ts",
   ]),

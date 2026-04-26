@@ -38,7 +38,7 @@ export function useSubscriptionSync() {
                 let anyChanged = false;
                 let currentSources = [...settings.sources];
                 let currentPremiumSources = [...settings.premiumSources];
-                let updatedSubscriptions = [...settings.subscriptions];
+                const updatedSubscriptions = [...settings.subscriptions];
                 const now = Date.now();
 
                 // Filter out subscriptions that were synced recently (within cooldown period)

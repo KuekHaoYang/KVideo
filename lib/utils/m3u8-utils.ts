@@ -106,7 +106,7 @@ export function filterM3u8Ad(content: string, baseUrl: string, mode: AdFilterMod
 
     // 3. Heuristic Analysis: If no explicit ad signals, use block-based detection
     const lines = content.split(/\r?\n/);
-    let adLineIndices = new Set<number>();
+    const adLineIndices = new Set<number>();
 
     if (!hasCueTag && (mode === 'heuristic' || mode === 'aggressive')) {
         // No obvious ad signals - run heuristic analysis

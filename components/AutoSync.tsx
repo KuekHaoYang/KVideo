@@ -7,12 +7,17 @@ import { useCloudSync } from '@/lib/hooks/useCloudSync';
 import { useConfigSync } from '@/lib/hooks/useConfigSync';
 import { getSession } from '@/lib/store/auth-store';
 
-// 防抖函数，防止频繁请求
-function debounce(fn: Function, delay: number) {
-  let timeoutId: NodeJS.Timeout;
-  return (...args: any[]) => {
-    clearTimeout(timeoutId);
-    timeoutId = setTimeout(() => fn(...args), delay);
+type VoidCallback = () => void;
+
+function debounce(fn: VoidCallback, delay: number): VoidCallback {
+  let timeoutId: NodeJS.Timeout | null = null;
+
+  return () => {
+    if (timeoutId) {
+      clearTimeout(timeoutId);
+    }
+
+    timeoutId = setTimeout(() => fn(), delay);
   };
 }
 

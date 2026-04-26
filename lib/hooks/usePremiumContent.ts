@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useInfiniteScroll } from '@/lib/hooks/useInfiniteScroll';
 import { settingsStore } from '@/lib/store/settings-store';
+import type { VideoSource } from '@/lib/types';
 
 interface PremiumVideo {
     vod_id: string | number;
@@ -9,6 +10,10 @@ interface PremiumVideo {
     vod_remarks?: string;
     type_name?: string;
     source: string;
+}
+
+interface PremiumCategoryResponse {
+    videos?: PremiumVideo[];
 }
 
 const PAGE_LIMIT = 20;
@@ -29,13 +34,7 @@ export function usePremiumContent(categoryValue: string) {
         try {
             // Get sources from settings
             const settings = settingsStore.getSettings();
-            // Resolve all relevant sources (premium sources + subscriptions that might be premium)
-            // For simplicity, we send all enabled premium sources.
-            const premiumSources = [
-                ...settings.premiumSources,
-                // Check if any subscription sources are marked as premium
-                ...settings.subscriptions.filter(s => (s as any).group === 'premium')
-            ].filter(s => (s as any).enabled !== false);
+            const premiumSources: VideoSource[] = settings.premiumSources.filter((source) => source.enabled !== false);
 
             if (premiumSources.length === 0) {
                 setLoading(false);
@@ -59,7 +58,7 @@ export function usePremiumContent(categoryValue: string) {
 
             if (!response.ok) throw new Error('Failed to fetch');
 
-            const data = await response.json();
+            const data = (await response.json()) as PremiumCategoryResponse;
             const newVideos = data.videos || [];
 
             setVideos(prev => append ? [...prev, ...newVideos] : newVideos);
@@ -80,7 +79,7 @@ export function usePremiumContent(categoryValue: string) {
 
         // Initial check for sources
         const settings = settingsStore.getSettings();
-        const sourcesCount = settings.premiumSources.length + settings.subscriptions.length;
+        const sourcesCount = settings.premiumSources.length;
         sourceCountRef.current = sourcesCount;
 
         loadVideos(1, false);
@@ -90,10 +89,7 @@ export function usePremiumContent(categoryValue: string) {
     useEffect(() => {
         const handleSettingsUpdate = () => {
             const settings = settingsStore.getSettings();
-            const premiumSources = [
-                ...settings.premiumSources,
-                ...settings.subscriptions.filter(s => (s as any).group === 'premium')
-            ].filter(s => (s as any).enabled !== false);
+            const premiumSources = settings.premiumSources.filter((source) => source.enabled !== false);
 
             const currentSourceCount = premiumSources.length;
 

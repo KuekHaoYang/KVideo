@@ -21,6 +21,15 @@ interface DesktopMoreMenuProps {
     isRotated?: boolean;
 }
 
+interface MenuPositionState {
+    top: number;
+    left: number;
+    maxHeight: string;
+    openUpward: boolean;
+    align: 'left' | 'right';
+    triggerWidth: number;
+}
+
 export function DesktopMoreMenu({
     showMoreMenu,
     isPremium = false,
@@ -66,8 +75,16 @@ export function DesktopMoreMenu({
 
     const buttonRef = React.useRef<HTMLButtonElement>(null);
     const menuRef = React.useRef<HTMLDivElement>(null);
-    const [menuPosition, setMenuPosition] = React.useState({ top: 0, left: 0, maxHeight: 'none', openUpward: false, align: 'right' as 'left' | 'right' });
+    const [menuPosition, setMenuPosition] = React.useState<MenuPositionState>({
+        top: 0,
+        left: 0,
+        maxHeight: 'none',
+        openUpward: false,
+        align: 'right',
+        triggerWidth: 0,
+    });
     const [isAdFilterOpen, setAdFilterOpen] = React.useState(false);
+    const [portalTarget, setPortalTarget] = React.useState<HTMLElement | null>(null);
 
     const AD_FILTER_LABELS: Record<string, string> = {
         off: '关闭',
@@ -99,6 +116,17 @@ export function DesktopMoreMenu({
             clearInterval(interval);
         };
     }, [containerRef]);
+
+    React.useEffect(() => {
+        if (typeof document === 'undefined') {
+            return;
+        }
+
+        const nextPortalTarget = ((isRotated || isFullscreen) && containerRef.current)
+            ? containerRef.current
+            : document.body;
+        setPortalTarget(nextPortalTarget);
+    }, [containerRef, isRotated, isFullscreen, showMoreMenu]);
 
     // Dual Positioning Strategy
     const calculateMenuPosition = React.useCallback(() => {
@@ -145,7 +173,8 @@ export function DesktopMoreMenu({
                 left: left,
                 maxHeight: `${maxHeight}px`,
                 openUpward: openUpward,
-                align: align
+                align: align,
+                triggerWidth: buttonRect.width,
             });
         } else if (isFullscreen && !isRotated) {
             // Fullscreen Mode (not rotated): Use container-relative coordinates
@@ -186,7 +215,8 @@ export function DesktopMoreMenu({
                 left: isLeftHalf ? left : left + buttonWidth,
                 maxHeight: `${maxHeight}px`,
                 openUpward: openUpward,
-                align: align
+                align: align,
+                triggerWidth: buttonWidth,
             });
         } else {
             // Rotated Mode: Use Container Coordinates (offset loop) and Portal to Container
@@ -234,7 +264,8 @@ export function DesktopMoreMenu({
                 left: left, // Fixed vertical container coordinate
                 maxHeight: `${maxHeight}px`,
                 openUpward: openUpward,
-                align: align
+                align: align,
+                triggerWidth: buttonWidth,
             });
         }
     }, [containerRef, isRotated, isFullscreen]);
@@ -283,7 +314,7 @@ export function DesktopMoreMenu({
                         right: `calc(100% - ${menuPosition.left}px + 10px)`,
                         left: 'auto'
                     } : {
-                        left: `${menuPosition.left + buttonRef.current?.offsetWidth! + 10}px`,
+                        left: `${menuPosition.left + menuPosition.triggerWidth + 10}px`,
                         right: 'auto'
                     }),
 
@@ -649,7 +680,7 @@ export function DesktopMoreMenu({
 
             {/* More Menu Dropdown (Portal) */}
             {/* More Menu Dropdown (Portal) */}
-            {showMoreMenu && typeof document !== 'undefined' && createPortal(MenuContent, ((isRotated || isFullscreen) && containerRef.current) ? containerRef.current : document.body)}
+            {showMoreMenu && portalTarget && createPortal(MenuContent, portalTarget)}
         </div>
     );
 }

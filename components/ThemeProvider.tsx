@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 
 type Theme = 'light' | 'dark' | 'system';
 
@@ -12,73 +12,97 @@ interface ThemeContextType {
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
+interface ViewTransitionHandle {
+  finished: Promise<void>;
+  skipTransition?: () => void;
+}
+
+type DocumentWithViewTransition = Document & {
+  startViewTransition?: (callback: () => void) => ViewTransitionHandle;
+};
+
+function isTheme(value: string | null): value is Theme {
+  return value === 'light' || value === 'dark' || value === 'system';
+}
+
+function subscribeToSystemTheme(listener: () => void) {
+  if (typeof window === 'undefined') {
+    return () => {};
+  }
+
+  const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+  mediaQuery.addEventListener('change', listener);
+  return () => mediaQuery.removeEventListener('change', listener);
+}
+
+function getSystemThemeSnapshot() {
+  if (typeof window === 'undefined') {
+    return false;
+  }
+
+  return window.matchMedia('(prefers-color-scheme: dark)').matches;
+}
+
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [theme, setTheme] = useState<Theme>('system');
-  const [actualTheme, setActualTheme] = useState<'light' | 'dark'>('dark');
-  const [mounted, setMounted] = useState(false);
-  const transitionRef = React.useRef<any>(null);
-
-  useEffect(() => {
-    setMounted(true);
-    // Load saved theme
-    const saved = localStorage.getItem('theme') as Theme;
-    if (saved) {
-      setTheme(saved);
+  const [theme, setTheme] = useState<Theme>(() => {
+    if (typeof window === 'undefined') {
+      return 'system';
     }
-  }, []);
+
+    const savedTheme = localStorage.getItem('theme');
+    return isTheme(savedTheme) ? savedTheme : 'system';
+  });
+  const transitionRef = useRef<ViewTransitionHandle | null>(null);
+  const prefersDark = useSyncExternalStore(
+    subscribeToSystemTheme,
+    getSystemThemeSnapshot,
+    () => true,
+  );
+  const actualTheme = useMemo<'light' | 'dark'>(() => {
+    if (theme === 'system') {
+      return prefersDark ? 'dark' : 'light';
+    }
+
+    return theme;
+  }, [prefersDark, theme]);
 
   useEffect(() => {
-    if (!mounted) return;
-
-    const applyTheme = (newTheme?: 'light' | 'dark') => {
-      const themeToApply = newTheme || (theme === 'system' 
-        ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')
-        : theme);
-      
-      setActualTheme(themeToApply);
-      document.documentElement.classList.toggle('dark', themeToApply === 'dark');
+    const applyTheme = () => {
+      document.documentElement.classList.toggle('dark', actualTheme === 'dark');
     };
 
     const applyThemeWithTransition = () => {
-      // Abort previous transition if it exists
       if (transitionRef.current) {
         try {
-          transitionRef.current.skipTransition();
-        } catch (e) {
-          // Ignore if transition already finished
+          transitionRef.current.skipTransition?.();
+        } catch {
+          // Ignore if the previous transition already finished.
         }
       }
 
-      // Check if document is visible - skip transition if hidden
       if (document.hidden) {
         applyTheme();
         return;
       }
 
-      // Check if View Transition API is supported
-      // @ts-ignore - View Transition API is experimental
-      if (typeof document.startViewTransition === 'function') {
+      const transitionDocument = document as DocumentWithViewTransition;
+      if (typeof transitionDocument.startViewTransition === 'function') {
         try {
-          // @ts-ignore
-          transitionRef.current = document.startViewTransition(() => {
+          transitionRef.current = transitionDocument.startViewTransition(() => {
             applyTheme();
           });
-          
-          // Clear ref after transition completes or fails
+
           if (transitionRef.current) {
             transitionRef.current.finished
               .then(() => { transitionRef.current = null; })
-              .catch((error: Error) => { 
-                // Silently handle transition errors (visibility changes, etc.)
+              .catch(() => {
                 transitionRef.current = null;
               });
           }
-        } catch (error) {
-          // Fallback if transition fails to start
+        } catch {
           applyTheme();
         }
       } else {
-        // Fallback for browsers that don't support View Transition API
         applyTheme();
       }
     };
@@ -86,42 +110,30 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     applyThemeWithTransition();
     localStorage.setItem('theme', theme);
 
-    // Listen for system theme changes
-    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-    const handleSystemThemeChange = () => {
-      if (theme === 'system') {
-        applyThemeWithTransition();
-      }
-    };
-    
-    // Listen for visibility changes to abort transitions
     const handleVisibilityChange = () => {
       if (document.hidden && transitionRef.current) {
         try {
-          transitionRef.current.skipTransition();
-        } catch (e) {
-          // Ignore
+          transitionRef.current.skipTransition?.();
+        } catch {
+          // Ignore transition cleanup failures.
         }
         transitionRef.current = null;
       }
     };
-    
-    mediaQuery.addEventListener('change', handleSystemThemeChange);
+
     document.addEventListener('visibilitychange', handleVisibilityChange);
-    
+
     return () => {
-      mediaQuery.removeEventListener('change', handleSystemThemeChange);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
-      // Abort any pending transition on unmount
       if (transitionRef.current) {
         try {
-          transitionRef.current.skipTransition();
-        } catch (e) {
-          // Ignore
+          transitionRef.current.skipTransition?.();
+        } catch {
+          // Ignore transition cleanup failures.
         }
       }
     };
-  }, [theme, mounted]);
+  }, [actualTheme, theme]);
 
   return (
     <ThemeContext.Provider value={{ theme, setTheme, actualTheme }}>

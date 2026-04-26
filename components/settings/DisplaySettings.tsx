@@ -151,7 +151,7 @@ export function DisplaySettings({
             <div className="mt-6">
                 <h3 className="font-medium text-[var(--text-color)] mb-2">内容类目过滤</h3>
                 <p className="text-sm text-[var(--text-color-secondary)] mb-4">
-                    添加要从搜索结果中隐藏的类目关键词（如"伦理"），匹配的视频将不会显示
+                    添加要从搜索结果中隐藏的类目关键词（如 &quot;伦理&quot;），匹配的视频将不会显示
                 </p>
                 <div className="flex gap-2 mb-3">
                     <input

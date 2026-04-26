@@ -1,9 +1,3 @@
-/**
- * Probe Resolution API
- * Fetches actual video resolution by parsing m3u8 manifests.
- * Accepts a batch of videos and streams results back via SSE.
- */
-
 import { NextRequest } from 'next/server';
 import { getSourceById } from '@/lib/api/video-sources';
 import { getVideoDetail } from '@/lib/api/detail-api';
@@ -14,9 +8,11 @@ import {
   parseResolutionFromManifest,
   type ResolutionProbeLabel,
 } from '@/lib/player/resolution-probe-utils';
+import { requireAuthenticatedRequestIfConfigured } from '@/lib/server/api-access';
+import { buildSourceConfigMap, normalizeSourceConfig } from '@/lib/server/source-validation';
 import type { VideoSource } from '@/lib/types';
 
-export const runtime = 'edge';
+export const runtime = 'nodejs';
 
 interface ProbeRequest {
   id: string | number;
@@ -24,45 +20,39 @@ interface ProbeRequest {
   episodeIndex?: number;
 }
 
-function isValidSourceConfig(value: unknown): value is VideoSource {
+interface ProbeRequestBody {
+  videos?: unknown;
+  sourceConfigs?: unknown;
+}
+
+function isProbeRequest(value: unknown): value is ProbeRequest {
   if (!value || typeof value !== 'object') {
     return false;
   }
 
-  const source = value as Partial<VideoSource>;
-  return typeof source.id === 'string' &&
-    typeof source.name === 'string' &&
-    typeof source.baseUrl === 'string' &&
-    typeof source.searchPath === 'string' &&
-    typeof source.detailPath === 'string';
-}
-
-function buildSourceConfigMap(rawConfigs: unknown): Map<string, VideoSource> {
-  const configs = new Map<string, VideoSource>();
-  if (!Array.isArray(rawConfigs)) {
-    return configs;
-  }
-
-  for (const config of rawConfigs) {
-    if (isValidSourceConfig(config)) {
-      configs.set(config.id, config);
-    }
-  }
-
-  return configs;
+  const request = value as Partial<ProbeRequest>;
+  return (
+    (typeof request.id === 'string' || typeof request.id === 'number') &&
+    typeof request.source === 'string' &&
+    (typeof request.episodeIndex === 'undefined' || typeof request.episodeIndex === 'number')
+  );
 }
 
 async function fetchManifestText(url: string, timeoutMs: number): Promise<string> {
-  const response = await fetchWithTimeout(url, {
-    headers: { 'User-Agent': 'Mozilla/5.0' },
-  }, timeoutMs);
+  const response = await fetchWithTimeout(
+    url,
+    {
+      headers: { 'User-Agent': 'Mozilla/5.0' },
+    },
+    timeoutMs,
+  );
   return response.text();
 }
 
 async function probeManifestResolution(
   targetUrl: string,
   m3u8Content: string,
-  detailHint: ResolutionProbeLabel | null
+  detailHint: ResolutionProbeLabel | null,
 ): Promise<{ resolution: ResolutionProbeLabel | null; origin: 'manifest' | 'hint' }> {
   const directResolution = parseResolutionFromManifest(m3u8Content, targetUrl);
   if (directResolution) {
@@ -94,23 +84,26 @@ async function probeManifestResolution(
   };
 }
 
-async function probeOne(video: ProbeRequest, providedConfigs: Map<string, VideoSource>): Promise<{
-  id: string | number;
-  source: string;
-  episodeIndex?: number;
-  resolution: ResolutionProbeLabel | null;
-  resolutionOrigin: 'manifest' | 'hint';
-}> {
+async function resolveSourceConfig(sourceId: string, providedConfigs: Map<string, VideoSource>): Promise<VideoSource | null> {
+  const providedSource = providedConfigs.get(sourceId);
+  if (providedSource) {
+    return providedSource;
+  }
+
+  const builtInSource = getSourceById(sourceId);
+  return builtInSource ? normalizeSourceConfig(builtInSource) : null;
+}
+
+async function probeOne(video: ProbeRequest, providedConfigs: Map<string, VideoSource>) {
   try {
-    const sourceConfig = providedConfigs.get(video.source) || getSourceById(video.source);
+    const sourceConfig = await resolveSourceConfig(video.source, providedConfigs);
     if (!sourceConfig) {
-      return { id: video.id, source: video.source, episodeIndex: video.episodeIndex, resolution: null, resolutionOrigin: 'manifest' };
+      return { id: video.id, source: video.source, episodeIndex: video.episodeIndex, resolution: null, resolutionOrigin: 'manifest' as const };
     }
 
-    // 1. Get detail to find first episode URL
     const detail = await getVideoDetail(video.id, sourceConfig);
     if (!detail.episodes || detail.episodes.length === 0) {
-      return { id: video.id, source: video.source, episodeIndex: video.episodeIndex, resolution: null, resolutionOrigin: 'manifest' };
+      return { id: video.id, source: video.source, episodeIndex: video.episodeIndex, resolution: null, resolutionOrigin: 'manifest' as const };
     }
 
     const episodeIndex = typeof video.episodeIndex === 'number'
@@ -118,45 +111,47 @@ async function probeOne(video: ProbeRequest, providedConfigs: Map<string, VideoS
       : 0;
     const targetUrl = detail.episodes[episodeIndex]?.url || detail.episodes[0]?.url;
     if (!targetUrl) {
-      return { id: video.id, source: video.source, episodeIndex, resolution: null, resolutionOrigin: 'manifest' };
+      return { id: video.id, source: video.source, episodeIndex, resolution: null, resolutionOrigin: 'manifest' as const };
     }
 
     const detailHint = extractResolutionHint(detail.vod_remarks, targetUrl);
 
-    // 2. Fetch the m3u8 manifest
-    let m3u8Content: string;
     try {
-      m3u8Content = await fetchManifestText(targetUrl, 8000);
+      const m3u8Content = await fetchManifestText(targetUrl, 8000);
+      const probed = await probeManifestResolution(targetUrl, m3u8Content, detailHint);
+      return { id: video.id, source: video.source, episodeIndex, resolution: probed.resolution, resolutionOrigin: probed.origin };
     } catch {
       return {
         id: video.id,
         source: video.source,
         episodeIndex,
         resolution: detailHint,
-        resolutionOrigin: detailHint ? 'hint' : 'manifest',
+        resolutionOrigin: detailHint ? 'hint' as const : 'manifest' as const,
       };
     }
-
-    const probed = await probeManifestResolution(targetUrl, m3u8Content, detailHint);
-    return { id: video.id, source: video.source, episodeIndex, resolution: probed.resolution, resolutionOrigin: probed.origin };
   } catch {
     return {
       id: video.id,
       source: video.source,
       episodeIndex: video.episodeIndex,
       resolution: null,
-      resolutionOrigin: 'manifest',
+      resolutionOrigin: 'manifest' as const,
     };
   }
 }
 
 export async function POST(request: NextRequest) {
-  try {
-    const body = await request.json();
-    const videos: ProbeRequest[] = body.videos;
-    const sourceConfigs = buildSourceConfigMap(body.sourceConfigs);
+  const access = await requireAuthenticatedRequestIfConfigured(request);
+  if (access.error) {
+    return access.error;
+  }
 
-    if (!Array.isArray(videos) || videos.length === 0) {
+  try {
+    const body = (await request.json()) as ProbeRequestBody;
+    const videos = Array.isArray(body.videos) ? body.videos.filter(isProbeRequest) : [];
+    const sourceConfigs = await buildSourceConfigMap(body.sourceConfigs, 50);
+
+    if (videos.length === 0) {
       return new Response(JSON.stringify({ error: 'Missing videos array' }), {
         status: 400,
         headers: { 'Content-Type': 'application/json' },
@@ -164,12 +159,11 @@ export async function POST(request: NextRequest) {
     }
 
     const batch = videos.slice(0, 100);
-
     const encoder = new TextEncoder();
+
     const stream = new ReadableStream({
       async start(controller) {
-        // Process in parallel with concurrency limit
-        const CONCURRENCY = 6;
+        const concurrency = 6;
         let index = 0;
 
         async function processNext(): Promise<void> {
@@ -177,17 +171,22 @@ export async function POST(request: NextRequest) {
             const current = batch[index++];
             try {
               const result = await probeOne(current, sourceConfigs);
-              const line = `data: ${JSON.stringify(result)}\n\n`;
-              controller.enqueue(encoder.encode(line));
+              controller.enqueue(encoder.encode(`data: ${JSON.stringify(result)}\n\n`));
             } catch {
-              const fallback = { id: current.id, source: current.source, resolution: null, resolutionOrigin: 'manifest' };
+              const fallback = {
+                id: current.id,
+                source: current.source,
+                resolution: null,
+                resolutionOrigin: 'manifest',
+              };
               controller.enqueue(encoder.encode(`data: ${JSON.stringify(fallback)}\n\n`));
             }
           }
         }
 
-        const workers = Array.from({ length: Math.min(CONCURRENCY, batch.length) }, () => processNext());
-        await Promise.all(workers);
+        await Promise.all(
+          Array.from({ length: Math.min(concurrency, batch.length) }, () => processNext()),
+        );
         controller.enqueue(encoder.encode('data: {"done":true}\n\n'));
         controller.close();
       },
@@ -197,7 +196,7 @@ export async function POST(request: NextRequest) {
       headers: {
         'Content-Type': 'text/event-stream',
         'Cache-Control': 'no-cache',
-        'Connection': 'keep-alive',
+        Connection: 'keep-alive',
       },
     });
   } catch {

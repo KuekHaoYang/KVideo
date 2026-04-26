@@ -6,6 +6,7 @@ import android.content.pm.PackageManager
 import android.content.res.Configuration
 import android.graphics.Rect
 import android.net.Uri
+import android.net.http.SslError
 import android.os.Build
 import android.os.Bundle
 import android.util.Log
@@ -16,8 +17,11 @@ import android.view.ViewGroup
 import android.view.WindowManager
 import android.view.inputmethod.EditorInfo
 import android.webkit.JavascriptInterface
+import android.webkit.SslErrorHandler
 import android.webkit.WebChromeClient
 import android.webkit.WebChromeClient.CustomViewCallback
+import android.webkit.WebResourceError
+import android.webkit.WebResourceRequest
 import android.webkit.WebSettings
 import android.webkit.WebView
 import android.webkit.WebViewClient
@@ -100,11 +104,55 @@ class MainActivity : ComponentActivity() {
                 loadWithOverviewMode = true
                 useWideViewPort = true
                 cacheMode = WebSettings.LOAD_DEFAULT
-                mixedContentMode = WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
+                mixedContentMode = WebSettings.MIXED_CONTENT_NEVER_ALLOW
                 databaseEnabled = true
+                allowFileAccess = false
+                allowContentAccess = false
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    safeBrowsingEnabled = true
+                }
             }
 
-            webViewClient = WebViewClient()
+            webViewClient = object : WebViewClient() {
+                override fun shouldOverrideUrlLoading(
+                    view: WebView?,
+                    request: WebResourceRequest?
+                ): Boolean {
+                    val targetUrl = request?.url?.toString() ?: return true
+                    if (!request.isForMainFrame) {
+                        return false
+                    }
+
+                    if (targetUrl == "about:blank" || isAllowedNavigationTarget(targetUrl)) {
+                        return false
+                    }
+
+                    showStatus(getString(R.string.status_blocked_navigation))
+                    Log.w(TAG, "Blocked navigation to $targetUrl")
+                    return true
+                }
+
+                override fun onReceivedSslError(
+                    view: WebView?,
+                    handler: SslErrorHandler?,
+                    error: SslError?
+                ) {
+                    handler?.cancel()
+                    showStatus(getString(R.string.status_ssl_error))
+                    Log.w(TAG, "Blocked page due to SSL error: ${error?.primaryError}")
+                }
+
+                override fun onReceivedError(
+                    view: WebView?,
+                    request: WebResourceRequest?,
+                    error: WebResourceError?
+                ) {
+                    super.onReceivedError(view, request, error)
+                    if (request?.isForMainFrame == true) {
+                        showSetup(getString(R.string.status_load_failed))
+                    }
+                }
+            }
             webChromeClient = object : WebChromeClient() {
                 override fun onShowCustomView(view: View?, callback: CustomViewCallback?) {
                     if (view == null || callback == null) {
@@ -240,8 +288,15 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun loadConfiguredUrl(url: String) {
+        if (!isValidUrl(url)) {
+            showSetup(getString(R.string.status_invalid_url))
+            return
+        }
+
         setupContainer.visibility = View.GONE
+        webView.visibility = View.VISIBLE
         statusText.text = getString(R.string.status_ready)
+        webView.stopLoading()
         webView.loadUrl(url)
     }
 
@@ -306,7 +361,49 @@ class MainActivity : ComponentActivity() {
 
         val uri = Uri.parse(url)
         val scheme = uri.scheme?.lowercase()
-        return (scheme == "http" || scheme == "https") && !uri.host.isNullOrBlank()
+        val isHttp = scheme == "http"
+        val isHttps = scheme == "https"
+
+        if (!BuildConfig.ALLOW_CLEARTEXT && !isHttps) {
+            return false
+        }
+
+        if (BuildConfig.ALLOW_CLEARTEXT && !isHttp && !isHttps) {
+            return false
+        }
+
+        return !uri.host.isNullOrBlank()
+    }
+
+    private fun normalizedPort(uri: Uri): Int {
+        return when {
+            uri.port != -1 -> uri.port
+            uri.scheme.equals("https", ignoreCase = true) -> 443
+            uri.scheme.equals("http", ignoreCase = true) -> 80
+            else -> -1
+        }
+    }
+
+    private fun isAllowedNavigationTarget(url: String): Boolean {
+        if (!isValidUrl(url)) {
+            return false
+        }
+
+        val configuredUrl = getConfiguredUrl()
+        if (configuredUrl.isBlank()) {
+            return false
+        }
+
+        val configuredUri = Uri.parse(configuredUrl)
+        val targetUri = Uri.parse(url)
+
+        return configuredUri.scheme.equals(targetUri.scheme, ignoreCase = true) &&
+            configuredUri.host.equals(targetUri.host, ignoreCase = true) &&
+            normalizedPort(configuredUri) == normalizedPort(targetUri)
+    }
+
+    private fun showStatus(message: String) {
+        statusText.text = message
     }
 
     private fun applyImmersiveMode() {

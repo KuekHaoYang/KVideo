@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { TagManager } from '@/components/home/TagManager';
 import { MovieGrid } from '@/components/home/MovieGrid';
 import { PremiumContentGrid } from './PremiumContentGrid';
@@ -38,16 +38,8 @@ export function PremiumContent({ onSearch }: PremiumContentProps) {
         loadMoreRef: recommendLoadMoreRef,
     } = usePersonalizedRecommendations(true);
 
-    // Track whether the recommendation tab is active
-    const [isRecommendSelected, setIsRecommendSelected] = useState(hasHistory);
-
-    useEffect(() => {
-        if (hasHistory) {
-            setIsRecommendSelected(true);
-        }
-    }, [hasHistory]);
-
-    const effectiveRecommendSelected = hasHistory && isRecommendSelected;
+    const [selectionMode, setSelectionMode] = useState<'recommend' | 'tag'>('recommend');
+    const effectiveRecommendSelected = hasHistory && selectionMode === 'recommend';
 
     // Get the category value from selected tag
     const categoryValue = tags.find(t => t.id === selectedTag)?.value || '';
@@ -60,18 +52,19 @@ export function PremiumContent({ onSearch }: PremiumContentProps) {
         loadMoreRef,
     } = usePremiumContent(effectiveRecommendSelected ? '' : categoryValue);
 
-    const handleVideoClick = (video: any) => {
-        if (onSearch) {
-            onSearch(video.vod_name || video.title);
+    const handleVideoClick = (video: { vod_name?: string; title?: string }) => {
+        const keyword = video.vod_name || video.title;
+        if (onSearch && keyword) {
+            onSearch(keyword);
         }
     };
 
     const handleRecommendSelect = () => {
-        setIsRecommendSelected(true);
+        setSelectionMode('recommend');
     };
 
     const handleRegularTagSelect = (tagId: string) => {
-        setIsRecommendSelected(false);
+        setSelectionMode('tag');
         setSelectedTag(tagId);
     };
 

@@ -5,13 +5,14 @@
  * Following Liquid Glass design system
  */
 
-import { useState, useCallback, useEffect, useMemo } from 'react';
-import Image from 'next/image';
+import { useState, useCallback, useMemo } from 'react';
 import { Card } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { Icons } from '@/components/ui/Icon';
 import { LatencyBadge } from '@/components/ui/LatencyBadge';
 import { Button } from '@/components/ui/Button';
+import { RemotePosterImage } from '@/components/ui/RemotePosterImage';
+import { settingsStore } from '@/lib/store/settings-store';
 
 export interface SourceInfo {
     id: string | number;
@@ -36,15 +37,37 @@ export function SourceSelector({
 }: SourceSelectorProps) {
     const [isLoading, setIsLoading] = useState(false);
     const [latencies, setLatencies] = useState<Record<string, number>>({});
+    const initialLatencies = useMemo(() => {
+        return sources.reduce<Record<string, number>>((accumulator, source) => {
+            if (source.latency !== undefined) {
+                accumulator[source.source] = source.latency;
+            }
+            return accumulator;
+        }, {});
+    }, [sources]);
+    const mergedLatencies = useMemo(() => ({
+        ...initialLatencies,
+        ...latencies,
+    }), [initialLatencies, latencies]);
+
+    const getSourcePingUrl = useCallback((sourceId: string): string | null => {
+        const settings = settingsStore.getSettings();
+        const allConfigs = [
+            ...settings.sources,
+            ...settings.premiumSources,
+        ];
+        const config = allConfigs.find((source) => source.id === sourceId);
+        return config?.baseUrl || null;
+    }, []);
 
     // Sort sources by latency
     const sortedSources = useMemo(() => {
         return [...sources].sort((a, b) => {
-            const latA = latencies[a.source] ?? a.latency ?? Infinity;
-            const latB = latencies[b.source] ?? b.latency ?? Infinity;
+            const latA = mergedLatencies[a.source] ?? a.latency ?? Infinity;
+            const latB = mergedLatencies[b.source] ?? b.latency ?? Infinity;
             return latA - latB;
         });
-    }, [sources, latencies]);
+    }, [sources, mergedLatencies]);
 
     // Refresh latency for all sources
     const refreshLatencies = useCallback(async () => {
@@ -53,12 +76,16 @@ export function SourceSelector({
         const results = await Promise.all(
             sources.map(async (source) => {
                 try {
-                    // Use the stored baseUrl or extract from source
+                    const pingUrl = getSourcePingUrl(source.source);
+                    if (!pingUrl) {
+                        return { source: source.source, latency: undefined };
+                    }
+
                     const response = await fetch('/api/ping', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
-                            url: source.source, // This should be the baseUrl ideally
+                            url: pingUrl,
                         }),
                     });
 
@@ -82,18 +109,7 @@ export function SourceSelector({
 
         setLatencies(newLatencies);
         setIsLoading(false);
-    }, [sources]);
-
-    // Initialize latencies from sources
-    useEffect(() => {
-        const initial: Record<string, number> = {};
-        sources.forEach(s => {
-            if (s.latency !== undefined) {
-                initial[s.source] = s.latency;
-            }
-        });
-        setLatencies(initial);
-    }, [sources]);
+    }, [sources, getSourcePingUrl]);
 
     if (sources.length <= 1) {
         return null;
@@ -121,7 +137,7 @@ export function SourceSelector({
             <div className="space-y-2 max-h-[300px] overflow-y-auto">
                 {sortedSources.map((source, index) => {
                     const isCurrent = source.source === currentSource;
-                    const latency = latencies[source.source] ?? source.latency;
+                    const latency = mergedLatencies[source.source] ?? source.latency;
 
                     return (
                         <button
@@ -140,17 +156,12 @@ export function SourceSelector({
                             {/* Thumbnail */}
                             {source.pic && (
                                 <div className="w-12 h-16 rounded-[var(--radius-2xl)] overflow-hidden flex-shrink-0 bg-[color-mix(in_srgb,var(--glass-bg)_50%,transparent)]">
-                                    <Image
+                                    <RemotePosterImage
                                         src={source.pic}
                                         alt=""
                                         width={48}
                                         height={64}
                                         className="w-full h-full object-cover"
-                                        unoptimized
-                                        referrerPolicy="no-referrer"
-                                        onError={(e) => {
-                                            (e.currentTarget as HTMLImageElement).style.display = 'none';
-                                        }}
                                     />
                                 </div>
                             )}

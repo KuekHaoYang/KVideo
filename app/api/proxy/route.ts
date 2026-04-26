@@ -1,142 +1,128 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { processM3u8Content } from '@/lib/utils/proxy-utils';
 import { fetchWithRetry } from '@/lib/utils/fetch-with-retry';
+import { requireRelayAccess, buildSameOriginOptionsResponse } from '@/lib/server/api-access';
+import { OutboundPolicyError, getRelayForwardHeaders } from '@/lib/server/outbound-policy';
 import { getRuntimeFeatures } from '@/lib/server/runtime-features';
 
-export const runtime = 'edge';
+export const runtime = 'nodejs';
 
-// Disable SSL verification for video sources with invalid certificates
-// Note: This is not supported in Cloudflare Workers/Edge Runtime.
-// process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
+function buildPassThroughHeaders(response: Response): Headers {
+  const headers = new Headers();
+
+  response.headers.forEach((value, key) => {
+    const lowerKey = key.toLowerCase();
+    if (
+      [
+        'access-control-allow-origin',
+        'access-control-allow-methods',
+        'access-control-allow-headers',
+        'content-encoding',
+        'content-length',
+        'set-cookie',
+        'transfer-encoding',
+      ].includes(lowerKey)
+    ) {
+      return;
+    }
+
+    headers.set(key, value);
+  });
+
+  headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+  return headers;
+}
 
 export async function GET(request: NextRequest) {
-    const runtimeFeatures = getRuntimeFeatures();
+  const runtimeFeatures = getRuntimeFeatures();
 
-    if (!runtimeFeatures.mediaProxyEnabled) {
-        return NextResponse.json(
-            {
-                error: 'External media proxy is disabled on this deployment',
-                message: runtimeFeatures.restrictionSummary,
-            },
-            { status: 403 }
-        );
+  if (!runtimeFeatures.mediaProxyEnabled) {
+    return NextResponse.json(
+      {
+        error: 'External media proxy is disabled on this deployment',
+        message: runtimeFeatures.restrictionSummary,
+      },
+      { status: 403 },
+    );
+  }
+
+  const access = await requireRelayAccess(request);
+  if (access.error) {
+    return access.error;
+  }
+
+  const url = request.nextUrl.searchParams.get('url');
+  if (!url) {
+    return new NextResponse('Missing URL parameter', { status: 400 });
+  }
+
+  try {
+    const response = await fetchWithRetry({
+      url,
+      headers: Object.fromEntries(getRelayForwardHeaders(request)),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      return new NextResponse(errorText || `Upstream error: ${response.status}`, {
+        status: response.status,
+        statusText: response.statusText,
+        headers: {
+          'Content-Type': response.headers.get('Content-Type') || 'text/plain',
+        },
+      });
     }
 
-    const url = request.nextUrl.searchParams.get('url');
+    const contentType = response.headers.get('Content-Type') || '';
+    const isM3u8ByHeader = contentType.includes('application/vnd.apple.mpegurl') ||
+      contentType.includes('application/x-mpegurl') ||
+      url.endsWith('.m3u8');
 
-    if (!url) {
-        return new NextResponse('Missing URL parameter', { status: 400 });
+    if (isM3u8ByHeader || url.includes('.m3u8')) {
+      const text = await response.text();
+
+      if (text.trim().startsWith('#EXTM3U') || text.trim().startsWith('#EXT-X-')) {
+        const modifiedText = await processM3u8Content(text, url, request.nextUrl.origin);
+        return new NextResponse(modifiedText, {
+          status: response.status,
+          statusText: response.statusText,
+          headers: {
+            'Content-Type': 'application/vnd.apple.mpegurl',
+            'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+          },
+        });
+      }
+
+      return new NextResponse(text, {
+        status: response.status,
+        statusText: response.statusText,
+        headers: {
+          'Content-Type': contentType || 'text/plain',
+          'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+        },
+      });
     }
 
-    try {
-        // Extract headers to forward (only essential ones)
-        const requestHeaders: Record<string, string> = {};
-        const forwardHeaders = ['cookie', 'range'];
+    return new NextResponse(response.body, {
+      status: response.status,
+      statusText: response.statusText,
+      headers: buildPassThroughHeaders(response),
+    });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Unknown error';
+    const status = error instanceof OutboundPolicyError ? error.status : 500;
 
-        forwardHeaders.forEach(key => {
-            const value = request.headers.get(key);
-            if (value) requestHeaders[key] = value;
-        });
-
-        const response = await fetchWithRetry({ url, request, headers: requestHeaders });
-
-        // If upstream returned an error, pass it through with CORS headers
-        if (!response.ok) {
-            const errorText = await response.text();
-            return new NextResponse(errorText || `Upstream error: ${response.status}`, {
-                status: response.status,
-                statusText: response.statusText,
-                headers: {
-                    'Content-Type': response.headers.get('Content-Type') || 'text/plain',
-                    'Access-Control-Allow-Origin': '*',
-                },
-            });
-        }
-
-        const contentType = response.headers.get('Content-Type');
-
-        // Better M3U8 detection: check both content-type and actual content
-        const isM3u8ByHeader = contentType &&
-            (contentType.includes('application/vnd.apple.mpegurl') ||
-                contentType.includes('application/x-mpegurl')) ||
-            url.endsWith('.m3u8');
-
-        // For potential M3U8 files, check content
-        if (isM3u8ByHeader || url.includes('.m3u8')) {
-            const text = await response.text();
-
-            // Verify it's actually M3U8 content (starts with #EXTM3U or #EXT-X-)
-            if (text.trim().startsWith('#EXTM3U') || text.trim().startsWith('#EXT-X-')) {
-                const modifiedText = await processM3u8Content(text, url, request.nextUrl.origin);
-
-                return new NextResponse(modifiedText, {
-                    status: response.status,
-                    statusText: response.statusText,
-                    headers: {
-                        'Content-Type': 'application/vnd.apple.mpegurl',
-                        'Access-Control-Allow-Origin': '*',
-                        'Access-Control-Allow-Methods': 'GET, OPTIONS',
-                        'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-                    },
-                });
-            }
-
-            // Not M3U8 content, return as-is
-            return new NextResponse(text, {
-                status: response.status,
-                statusText: response.statusText,
-                headers: {
-                    'Content-Type': contentType || 'text/plain',
-                    'Access-Control-Allow-Origin': '*',
-                },
-            });
-        }
-
-        // For non-m3u8 content
-        const headers = new Headers();
-        response.headers.forEach((value, key) => {
-            const lowerKey = key.toLowerCase();
-            if (!['content-encoding', 'content-length', 'transfer-encoding'].includes(lowerKey)) {
-                headers.set(key, value);
-            }
-        });
-
-        headers.set('Access-Control-Allow-Origin', '*');
-        headers.set('Access-Control-Allow-Methods', 'GET, OPTIONS');
-        headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-        headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
-
-        return new NextResponse(response.body, {
-            status: response.status,
-            statusText: response.statusText,
-            headers: headers,
-        });
-    } catch (error) {
-        console.error('Proxy error:', error);
-        return new NextResponse(
-            JSON.stringify({
-                error: 'Proxy request failed',
-                message: error instanceof Error ? error.message : 'Unknown error',
-                url: url
-            }),
-            {
-                status: 500,
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Access-Control-Allow-Origin': '*',
-                }
-            }
-        );
-    }
+    return NextResponse.json(
+      {
+        error: 'Proxy request failed',
+        message,
+        url,
+      },
+      { status },
+    );
+  }
 }
 
 export async function OPTIONS(request: NextRequest) {
-    return new NextResponse(null, {
-        status: 204,
-        headers: {
-            'Access-Control-Allow-Origin': '*',
-            'Access-Control-Allow-Methods': 'GET, OPTIONS',
-            'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-        },
-    });
+  return buildSameOriginOptionsResponse(request, 'GET, OPTIONS');
 }

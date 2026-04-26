@@ -79,7 +79,31 @@ const SETTINGS_KEY = 'kvideo-settings';
 export const getDefaultSources = (): VideoSource[] => DEFAULT_SOURCES;
 export const getDefaultPremiumSources = (): VideoSource[] => PREMIUM_SOURCES;
 
+function isSourceSubscription(value: unknown): value is SourceSubscription {
+  if (!value || typeof value !== 'object') {
+    return false;
+  }
 
+  const candidate = value as Partial<SourceSubscription>;
+  return (
+    typeof candidate.id === 'string' &&
+    typeof candidate.name === 'string' &&
+    typeof candidate.url === 'string'
+  );
+}
+
+function isStoredVideoSource(value: unknown): value is VideoSource {
+  if (!value || typeof value !== 'object') {
+    return false;
+  }
+
+  const candidate = value as Partial<VideoSource>;
+  return (
+    typeof candidate.id === 'string' &&
+    typeof candidate.name === 'string' &&
+    typeof candidate.baseUrl === 'string'
+  );
+}
 
 function getEnvSubscriptions(customValue?: string): SourceSubscription[] {
   const envValue = (customValue || process.env.SUBSCRIPTION_SOURCES || process.env.NEXT_PUBLIC_SUBSCRIPTION_SOURCES || '').trim();
@@ -90,10 +114,14 @@ function getEnvSubscriptions(customValue?: string): SourceSubscription[] {
     const raw = JSON.parse(envValue);
     if (Array.isArray(raw)) {
       return raw
-        .filter((item: any) => item && typeof item.name === 'string' && typeof item.url === 'string')
-        .map((item: any) => createSubscription(item.name, item.url));
+        .filter((item): item is { name: string; url: string } =>
+          Boolean(item) &&
+          typeof item === 'object' &&
+          typeof (item as { name?: unknown }).name === 'string' &&
+          typeof (item as { url?: unknown }).url === 'string')
+        .map((item) => createSubscription(item.name, item.url));
     }
-  } catch (e) {
+  } catch {
     // Ignore JSON parse error, try direct URL
   }
 
@@ -218,16 +246,16 @@ export const settingsStore = {
 
       // Filter out invalid sources (missing baseUrl etc)
       const validSources = (Array.isArray(parsed.sources) ? parsed.sources : getDefaultSources())
-        .filter((s: any) => s && s.id && s.name && s.baseUrl);
+        .filter(isStoredVideoSource);
 
       const validPremiumSources = (Array.isArray(parsed.premiumSources) ? parsed.premiumSources : getDefaultPremiumSources())
-        .filter((s: any) => s && s.id && s.name && s.baseUrl);
+        .filter(isStoredVideoSource);
 
       // Validate that parsed data has all required properties
       return {
         sources: validSources,
         premiumSources: validPremiumSources,
-        subscriptions: mergedSubscriptions.filter((s: any) => s && s.id && s.name && s.url),
+        subscriptions: mergedSubscriptions.filter(isSourceSubscription),
         sortBy: parsed.sortBy || 'default',
         searchHistory: parsed.searchHistory !== undefined ? parsed.searchHistory : true,
         watchHistory: parsed.watchHistory !== undefined ? parsed.watchHistory : true,
@@ -333,10 +361,18 @@ export const settingsStore = {
       localStorage.removeItem(SETTINGS_KEY);
       localStorage.removeItem(SEARCH_HISTORY_KEY);
       localStorage.removeItem(WATCH_HISTORY_KEY);
+      sessionStorage.removeItem('kvideo-session');
+      localStorage.removeItem('kvideo-session');
+      sessionStorage.removeItem('kvideo-unlocked');
+      localStorage.removeItem('kvideo-unlocked');
+      localStorage.removeItem('kvideo_search_cache');
 
-      // Clear all cookies
-      document.cookie.split(";").forEach((c) => {
-        document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/");
+      // Clear script-readable cookies. httpOnly auth cookies are cleared server-side.
+      document.cookie.split(';').forEach((cookie) => {
+        document.cookie = cookie.replace(
+          /^ +/,
+          '',
+        ).replace(/=.*/, `=;expires=${new Date().toUTCString()};path=/`);
       });
 
       // Clear cache if available

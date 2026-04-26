@@ -1,5 +1,26 @@
 import { useCallback, useEffect, useRef, useMemo } from 'react';
 
+type ProgressInteractionEvent =
+    | MouseEvent
+    | TouchEvent
+    | React.MouseEvent<HTMLDivElement>
+    | React.TouchEvent<HTMLDivElement>;
+
+function getClientPosition(event: ProgressInteractionEvent) {
+    if ('touches' in event) {
+        const touch = event.touches[0] ?? event.changedTouches[0];
+        return {
+            x: touch?.clientX ?? 0,
+            y: touch?.clientY ?? 0,
+        };
+    }
+
+    return {
+        x: event.clientX,
+        y: event.clientY,
+    };
+}
+
 interface UseProgressControlsProps {
     videoRef: React.RefObject<HTMLVideoElement | null>;
     progressBarRef: React.RefObject<HTMLDivElement | null>;
@@ -19,10 +40,8 @@ export function useProgressControls({
 }: UseProgressControlsProps) {
     const lastDragTimeRef = useRef<number>(0);
 
-    const getEventPos = useCallback((e: any, rect: DOMRect) => {
-        // Handle both mouse and touch events
-        const clientX = e.clientX || (e.touches && e.touches[0]?.clientX) || 0;
-        const clientY = e.clientY || (e.touches && e.touches[0]?.clientY) || 0;
+    const getEventPos = useCallback((event: ProgressInteractionEvent, rect: DOMRect) => {
+        const { x: clientX, y: clientY } = getClientPosition(event);
 
         if (isRotated) {
             // When rotated 90deg, visual left->right is physical top->bottom
@@ -33,26 +52,26 @@ export function useProgressControls({
         }
     }, [isRotated]);
 
-    const handleProgressClick = useCallback((e: any) => {
+    const handleProgressClick = useCallback((event: React.MouseEvent<HTMLDivElement> | React.TouchEvent<HTMLDivElement>) => {
         if (!videoRef.current || !progressBarRef.current) return;
         const rect = progressBarRef.current.getBoundingClientRect();
-        const pos = getEventPos(e, rect);
+        const pos = getEventPos(event, rect);
         const newTime = pos * duration;
         videoRef.current.currentTime = newTime;
         lastDragTimeRef.current = newTime; // Update ref to prevent snap-back on mouseup
         setCurrentTime(newTime);
     }, [videoRef, progressBarRef, duration, setCurrentTime, getEventPos]);
 
-    const handleProgressMouseDown = useCallback((e: any) => {
-        e.preventDefault();
+    const handleProgressMouseDown = useCallback((event: React.MouseEvent<HTMLDivElement>) => {
+        event.preventDefault();
         isDraggingProgressRef.current = true;
-        handleProgressClick(e);
+        handleProgressClick(event);
     }, [isDraggingProgressRef, handleProgressClick]);
 
-    const handleProgressTouchStart = useCallback((e: any) => {
-        e.preventDefault();
+    const handleProgressTouchStart = useCallback((event: React.TouchEvent<HTMLDivElement>) => {
+        event.preventDefault();
         isDraggingProgressRef.current = true;
-        handleProgressClick(e);
+        handleProgressClick(event);
     }, [isDraggingProgressRef, handleProgressClick]);
 
     useEffect(() => {

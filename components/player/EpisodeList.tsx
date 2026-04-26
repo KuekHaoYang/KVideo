@@ -1,12 +1,12 @@
 'use client';
 
 import { useRef, useCallback, useState, useMemo, useEffect } from 'react';
-import Image from 'next/image';
 import { Card } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { Icons } from '@/components/ui/Icon';
 import { LatencyBadge } from '@/components/ui/LatencyBadge';
 import { Button } from '@/components/ui/Button';
+import { RemotePosterImage } from '@/components/ui/RemotePosterImage';
 import { useKeyboardNavigation } from '@/lib/hooks/useKeyboardNavigation';
 import { settingsStore } from '@/lib/store/settings-store';
 import type { VideoResolutionInfo } from './hooks/useVideoResolution';
@@ -401,17 +401,12 @@ export function EpisodeList({
                                 >
                                   {source.pic && (
                                     <div className="w-10 h-14 rounded-[var(--radius-2xl)] overflow-hidden flex-shrink-0 bg-[color-mix(in_srgb,var(--glass-bg)_50%,transparent)]">
-                                      <Image
+                                      <RemotePosterImage
                                         src={source.pic}
                                         alt=""
                                         width={40}
                                         height={56}
                                         className="w-full h-full object-cover"
-                                        unoptimized
-                                        referrerPolicy="no-referrer"
-                                        onError={(e) => {
-                                          (e.currentTarget as HTMLImageElement).style.display = 'none';
-                                        }}
                                       />
                                     </div>
                                   )}
@@ -480,17 +475,12 @@ export function EpisodeList({
                             >
                               {source.pic && (
                                 <div className="w-10 h-14 rounded-[var(--radius-2xl)] overflow-hidden flex-shrink-0 bg-[color-mix(in_srgb,var(--glass-bg)_50%,transparent)]">
-                                  <Image
+                                  <RemotePosterImage
                                     src={source.pic}
                                     alt=""
                                     width={40}
                                     height={56}
                                     className="w-full h-full object-cover"
-                                    unoptimized
-                                    referrerPolicy="no-referrer"
-                                    onError={(e) => {
-                                      (e.currentTarget as HTMLImageElement).style.display = 'none';
-                                    }}
                                   />
                                 </div>
                               )}

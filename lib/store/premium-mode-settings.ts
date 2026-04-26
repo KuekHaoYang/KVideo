@@ -11,6 +11,7 @@ import {
   type AdFilterMode,
   DEFAULT_SEEK_STEP_SECONDS,
   normalizeSeekStepSeconds,
+  settingsStore,
 } from './settings-store';
 
 const PREMIUM_MODE_SETTINGS_KEY = 'kvideo-premium-mode-settings';
@@ -135,9 +136,6 @@ export function getModeSettings(isPremium: boolean): ModeSettings {
   if (isPremium) {
     return premiumModeSettingsStore.getSettings();
   }
-  // For normal mode, extract ModeSettings-shaped data from the main settingsStore
-  // Import dynamically to avoid circular dependencies
-  const { settingsStore } = require('./settings-store');
   const s = settingsStore.getSettings();
   return {
     sortBy: s.sortBy,
@@ -171,8 +169,6 @@ export function getModeSettingsStore(isPremium: boolean) {
   if (isPremium) {
     return premiumModeSettingsStore;
   }
-  // Return a wrapper around the main settingsStore that conforms to the same interface
-  const { settingsStore } = require('./settings-store');
   return {
     getSettings: () => getModeSettings(false),
     subscribe: (listener: () => void) => settingsStore.subscribe(listener),

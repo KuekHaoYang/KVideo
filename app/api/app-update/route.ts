@@ -12,7 +12,7 @@ import type {
   AppUpdateResponse,
 } from '@/lib/types/app-update';
 
-export const runtime = 'edge';
+export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 const MANIFEST_PATH = 'app-release.json';

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import type { TypeBadge } from '@/lib/types';
 
 /**
@@ -61,21 +61,28 @@ export function useTypeBadges<T extends { type_name?: string }>(videos: T[]) {
       .sort((a, b) => b.count - a.count);
   }, [videos]);
 
+  const effectiveSelectedTypes = useMemo(() => {
+    const availableTypes = new Set(typeBadges.map((badge) => badge.type));
+    return new Set(
+      Array.from(selectedTypes).filter((type) => availableTypes.has(type))
+    );
+  }, [selectedTypes, typeBadges]);
+
   // Filter videos by selected types
   const filteredVideos = useMemo(() => {
-    if (selectedTypes.size === 0) {
+    if (effectiveSelectedTypes.size === 0) {
       return videos;
     }
 
     // Build a set of normalized selected types
     const normalizedSelected = new Set(
-      Array.from(selectedTypes).map(normalizeTypeName)
+      Array.from(effectiveSelectedTypes).map(normalizeTypeName)
     );
 
     return videos.filter(video =>
       video.type_name && normalizedSelected.has(normalizeTypeName(video.type_name.trim()))
     );
-  }, [videos, selectedTypes]);
+  }, [videos, effectiveSelectedTypes]);
 
   // Toggle type selection - useCallback to prevent re-creation
   const toggleType = useCallback((type: string) => {
@@ -91,26 +98,9 @@ export function useTypeBadges<T extends { type_name?: string }>(videos: T[]) {
     });
   }, []);
 
-  // Auto-cleanup: remove selected types that no longer exist in badges
-  useEffect(() => {
-    const availableTypes = new Set(typeBadges.map(b => b.type));
-
-    setSelectedTypes(prev => {
-      const filtered = new Set(
-        Array.from(prev).filter(type => availableTypes.has(type))
-      );
-
-      // Only update if changed
-      if (filtered.size !== prev.size) {
-        return filtered;
-      }
-      return prev;
-    });
-  }, [typeBadges]);
-
   return {
     typeBadges,
-    selectedTypes,
+    selectedTypes: effectiveSelectedTypes,
     filteredVideos,
     toggleType,
   };

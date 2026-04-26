@@ -2,7 +2,17 @@ import { useState, useEffect } from 'react';
 import { DragEndEvent } from '@dnd-kit/core';
 import { arrayMove } from '@dnd-kit/sortable';
 
-const DEFAULT_TAG = { id: 'popular', label: '热门', value: '热门' };
+export interface HomeTag {
+    id: string;
+    label: string;
+    value: string;
+}
+
+interface DoubanTagsResponse {
+    tags?: string[];
+}
+
+const DEFAULT_TAG: HomeTag = { id: 'popular', label: '热门', value: '热门' };
 
 const STORAGE_KEY_PREFIX = 'kvideo_custom_tags_';
 
@@ -13,7 +23,7 @@ export function useTagManager() {
         return saved === 'tv' ? 'tv' : 'movie';
     });
     const [selectedTag, setSelectedTag] = useState(DEFAULT_TAG.value);
-    const [tags, setTags] = useState<any[]>([]);
+    const [tags, setTags] = useState<HomeTag[]>([]);
     const [isLoadingTags, setIsLoadingTags] = useState(false);
     const [newTagInput, setNewTagInput] = useState('');
     const [showTagManager, setShowTagManager] = useState(false);
@@ -32,10 +42,21 @@ export function useTagManager() {
             const saved = localStorage.getItem(storageKey);
             if (saved) {
                 try {
-                    setTags(JSON.parse(saved));
+                    const parsed = JSON.parse(saved) as unknown;
+                    if (Array.isArray(parsed)) {
+                        setTags(parsed.filter((tag): tag is HomeTag => {
+                            return Boolean(
+                                tag &&
+                                typeof tag === 'object' &&
+                                typeof (tag as HomeTag).id === 'string' &&
+                                typeof (tag as HomeTag).label === 'string' &&
+                                typeof (tag as HomeTag).value === 'string'
+                            );
+                        }));
+                    }
                     return;
-                } catch (e) {
-                    console.error('Failed to parse saved tags', e);
+                } catch (error) {
+                    console.error('Failed to parse saved tags', error);
                 }
             }
 
@@ -43,7 +64,7 @@ export function useTagManager() {
             setIsLoadingTags(true);
             try {
                 const response = await fetch(`/api/douban/tags?type=${contentType}`);
-                const data = await response.json();
+                const data = (await response.json()) as DoubanTagsResponse;
                 if (data.tags && Array.isArray(data.tags)) {
                     const mappedTags = data.tags.map((label: string) => ({
                         id: label === '热门' ? 'popular' : `tag_${label}`,
@@ -52,13 +73,11 @@ export function useTagManager() {
                     }));
 
                     // If "热门" isn't in the list, add it to the front
-                    if (!mappedTags.some((t: any) => t.value === '热门')) {
+                    if (!mappedTags.some((tag) => tag.value === '热门')) {
                         mappedTags.unshift(DEFAULT_TAG);
                     }
 
                     setTags(mappedTags);
-                    // Also save to localStorage to avoid repeated fetches if desired
-                    // Actually, let's just keep them in memory for now unless they customize
                 } else {
                     setTags([DEFAULT_TAG]);
                 }
@@ -74,7 +93,7 @@ export function useTagManager() {
         setSelectedTag(DEFAULT_TAG.value);
     }, [contentType, storageKey]);
 
-    const saveTags = (newTags: any[]) => {
+    const saveTags = (newTags: HomeTag[]) => {
         setTags(newTags);
         localStorage.setItem(storageKey, JSON.stringify(newTags));
     };
@@ -104,21 +123,21 @@ export function useTagManager() {
         setIsLoadingTags(true);
         try {
             const response = await fetch(`/api/douban/tags?type=${contentType}`);
-            const data = await response.json();
+            const data = (await response.json()) as DoubanTagsResponse;
             if (data.tags && Array.isArray(data.tags)) {
                 const mappedTags = data.tags.map((label: string) => ({
                     id: label === '热门' ? 'popular' : `tag_${label}`,
                     label,
                     value: label,
                 }));
-                if (!mappedTags.some((t: any) => t.value === '热门')) {
+                if (!mappedTags.some((tag) => tag.value === '热门')) {
                     mappedTags.unshift(DEFAULT_TAG);
                 }
                 setTags(mappedTags);
             } else {
                 setTags([DEFAULT_TAG]);
             }
-        } catch (error) {
+        } catch {
             setTags([DEFAULT_TAG]);
         } finally {
             setIsLoadingTags(false);

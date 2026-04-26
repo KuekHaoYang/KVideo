@@ -29,13 +29,25 @@ export function useResolutionBadge(resolution: VideoResolutionInfo | null) {
 
   // Show badge when resolution first detected or changes
   useEffect(() => {
+    let frameId: number | null = null;
+
     if (resolution) {
-      setVisible(true);
-      startHideTimer();
+      frameId = window.requestAnimationFrame(() => {
+        setVisible(true);
+        startHideTimer();
+      });
     } else {
-      setVisible(false);
       clearTimer();
+      frameId = window.requestAnimationFrame(() => {
+        setVisible(false);
+      });
     }
+
+    return () => {
+      if (frameId !== null) {
+        window.cancelAnimationFrame(frameId);
+      }
+    };
   }, [resolution, startHideTimer, clearTimer]);
 
   // Briefly show badge on user interaction

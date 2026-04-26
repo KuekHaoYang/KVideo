@@ -25,26 +25,34 @@ interface AddSourceModalProps {
 }
 
 export function AddSourceModal({ isOpen, onClose, onAdd, existingIds, initialValues }: AddSourceModalProps) {
+  if (!isOpen) return null;
+
+  return (
+    <AddSourceModalContent
+      key={initialValues?.id ?? 'new-source'}
+      onClose={onClose}
+      onAdd={onAdd}
+      existingIds={existingIds}
+      initialValues={initialValues}
+    />
+  );
+}
+
+function AddSourceModalContent({ onClose, onAdd, existingIds, initialValues }: Omit<AddSourceModalProps, 'isOpen'>) {
   const { name, setName, customId, setCustomId, url, setUrl, error, handleSubmit, isEditing } = useAddSourceForm({
-    isOpen,
     existingIds,
     onAdd,
     onClose,
     initialValues,
   });
 
-  if (!isOpen) return null;
-
   return (
     <>
-      <ModalBackdrop isOpen={isOpen} onClose={onClose} />
+      <ModalBackdrop isOpen={true} onClose={onClose} />
 
       {/* Modal */}
       <div
-        className={`fixed top-1/2 left-1/2 z-[9999] w-[90%] max-w-md -translate-x-1/2 transition-all duration-300 ${isOpen
-          ? 'opacity-100 -translate-y-1/2 scale-100'
-          : 'opacity-0 -translate-y-[40%] scale-95 pointer-events-none'
-          }`}
+        className="fixed top-1/2 left-1/2 z-[9999] w-[90%] max-w-md -translate-x-1/2 transition-all duration-300 opacity-100 -translate-y-1/2 scale-100"
       >
         <div className="bg-[var(--glass-bg)] backdrop-blur-xl border border-[var(--glass-border)] rounded-[var(--radius-2xl)] shadow-[var(--shadow-md)] p-6">
           <ModalHeader title={initialValues ? "编辑视频源" : "添加自定义源"} onClose={onClose} />

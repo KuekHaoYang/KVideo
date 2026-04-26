@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useCallback, useMemo, memo, useEffect } from 'react';
+import { useState, useRef, useCallback, useMemo, memo, useEffect, useSyncExternalStore } from 'react';
 import { usePathname, useSearchParams } from 'next/navigation';
 import { VideoCard } from './VideoCard';
 import { VideoGroupCard, GroupedVideo } from './VideoGroupCard';
@@ -23,16 +23,18 @@ export const VideoGrid = memo(function VideoGrid({
 }: VideoGridProps) {
   const [activeCardId, setActiveCardId] = useState<string | null>(null);
   const [visibleCount, setVisibleCount] = useState(24);
-  const [displayMode, setDisplayMode] = useState<'normal' | 'grouped'>('normal');
   const gridRef = useRef<HTMLDivElement>(null);
   const observerRef = useRef<IntersectionObserver | null>(null);
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const displayMode = useSyncExternalStore(
+    settingsStore.subscribe,
+    () => settingsStore.getSettings().searchDisplayMode,
+    () => settingsStore.getSettings().searchDisplayMode
+  );
 
-  // Load display mode from settings
   useEffect(() => {
     const settings = settingsStore.getSettings();
-    setDisplayMode(settings.searchDisplayMode);
 
     // Initial load: Check for saved scroll position to ensure we render enough items
     const params = searchParams.toString();
@@ -57,22 +59,15 @@ export const VideoGrid = memo(function VideoGrid({
         const neededCount = Math.min(videos.length, estimatedRowsNeeded * itemsPerRow);
 
         if (neededCount > 24) {
-          setVisibleCount(Math.ceil(neededCount / 24) * 24);
+          const nextVisibleCount = Math.ceil(neededCount / 24) * 24;
+          const frameId = window.requestAnimationFrame(() => {
+            setVisibleCount(nextVisibleCount);
+          });
+          return () => window.cancelAnimationFrame(frameId);
         }
       }
     }
-
-    const unsubscribe = settingsStore.subscribe(() => {
-      const newSettings = settingsStore.getSettings();
-      setDisplayMode(newSettings.searchDisplayMode);
-    });
-
-    return () => unsubscribe();
   }, [pathname, searchParams, videos.length]);
-
-  if (videos.length === 0) {
-    return null;
-  }
 
   // Build stable list of videos to probe for resolution
   const videosToProbe = useMemo(() => {
@@ -187,6 +182,10 @@ export const VideoGrid = memo(function VideoGrid({
 
   const totalItems = displayMode === 'grouped' ? groupItems.length : videoItems.length;
 
+  if (videos.length === 0) {
+    return null;
+  }
+
   return (
     <>
       <div
@@ -246,4 +245,3 @@ export const VideoGrid = memo(function VideoGrid({
     </>
   );
 });
-

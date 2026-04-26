@@ -36,6 +36,10 @@ interface HistoryActions {
 
 interface HistoryStore extends HistoryState, HistoryActions { }
 
+interface PersistedHistoryState {
+  viewingHistory?: VideoHistoryItem[];
+}
+
 /**
  * Generate unique identifier for deduplication (source-agnostic)
  */
@@ -210,12 +214,13 @@ const createHistoryStore = (name: string) =>
       {
         name,
         version: 2,
-        migrate: (persistedState: any, version: number) => {
+        migrate: (persistedState: unknown, version: number) => {
+          const safeState = (persistedState ?? {}) as PersistedHistoryState;
           if (version < 2) {
             // Migrate from v1: merge entries with same normalized title
-            const oldHistory = persistedState?.viewingHistory || [];
+            const oldHistory = safeState.viewingHistory || [];
             return {
-              ...persistedState,
+              ...safeState,
               viewingHistory: migrateHistory(oldHistory),
             };
           }

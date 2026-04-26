@@ -5,10 +5,13 @@
   "scripts": {
     "dev": "next dev --port ${PORT:-3000}",
     "build": "next build --webpack",
-    "start": "next start --port ${PORT:-3000}",
+    "start": "node .next/standalone/server.js",
     "lint": "eslint",
-    "test": "tsx --test tests/**/*.test.ts",
-    "pages:build": "next-on-pages"
+    "test": "NODE_OPTIONS=--conditions=react-server tsx --test tests/**/*.test.ts",
+    "test:e2e": "playwright test",
+    "cf:build": "opennextjs-cloudflare build",
+    "cf:preview": "opennextjs-cloudflare build && wrangler dev",
+    "pages:build": "npm run cf:build"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",
@@ -16,27 +19,30 @@
     "@dnd-kit/utilities": "^3.2.2",
     "@upstash/redis": "^1.37.0",
     "@vercel/analytics": "^2.0.1",
-    "hls.js": "^1.6.15",
+    "hls.js": "^1.6.16",
     "lucide-react": "^0.577.0",
-    "next": "16.1.7",
+    "next": "^16.2.4",
     "opencc-js": "^1.0.5",
-    "react": "19.2.4",
-    "react-dom": "19.2.4",
+    "react": "^19.2.5",
+    "react-dom": "^19.2.5",
+    "server-only": "^0.0.1",
     "zustand": "^5.0.12"
   },
   "devDependencies": {
-    "@cloudflare/next-on-pages": "^1.13.16",
-    "@tailwindcss/postcss": "^4",
-    "@types/node": "^25",
+    "@opennextjs/cloudflare": "^1.19.1",
+    "@playwright/test": "^1.56.1",
+    "@tailwindcss/postcss": "^4.2.2",
+    "@types/node": "^25.6.0",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "esbuild": "^0.25.12",
     "eslint": "^9.25.1",
-    "eslint-config-next": "16.1.7",
-    "postcss": "^8.5.8",
-    "postcss-preset-env": "^11.2.0",
-    "tailwindcss": "^4",
+    "eslint-config-next": "^16.2.4",
+    "postcss": "^8.5.10",
+    "postcss-preset-env": "^11.2.1",
+    "tailwindcss": "^4.2.2",
     "tsx": "^4.20.6",
     "typescript": "^5",
-    "vercel": "^47.0.4"
+    "wrangler": "^4.83.0"
   }
 }

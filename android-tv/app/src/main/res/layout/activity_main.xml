@@ -16,16 +16,15 @@
         android:background="#E6101115"
         android:fillViewport="true">
 
-        <LinearLayout
+        <FrameLayout
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:gravity="center"
-            android:orientation="vertical"
             android:padding="32dp">
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:layout_gravity="center"
                 android:background="#F31A1C22"
                 android:elevation="12dp"
                 android:maxWidth="680dp"
@@ -47,6 +46,14 @@
                     android:text="@string/setup_description"
                     android:textColor="#D7DBE5"
                     android:textSize="18sp" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="14dp"
+                    android:text="@string/setup_security_note"
+                    android:textColor="#9FC0FF"
+                    android:textSize="15sp" />
 
                 <EditText
                     android:id="@+id/url_input"
@@ -110,7 +117,7 @@
                     android:textColor="#9EA7BA"
                     android:textSize="15sp" />
             </LinearLayout>
-        </LinearLayout>
+        </FrameLayout>
     </ScrollView>
 
     <FrameLayout

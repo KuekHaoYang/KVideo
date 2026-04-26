@@ -16,6 +16,7 @@ import {
     parseSourcesFromJson,
     fetchSourcesFromUrl
 } from '@/lib/utils/source-import-utils';
+import { clearSession } from '@/lib/store/auth-store';
 
 export function useSettingsPage() {
     const [sources, setSources] = useState<VideoSource[]>([]);
@@ -360,7 +361,14 @@ export function useSettingsPage() {
         setIsRestoreDefaultsDialogOpen(false);
     };
 
-    const handleResetAll = () => {
+    const handleResetAll = async () => {
+        try {
+            await fetch('/api/auth/session', { method: 'DELETE' });
+        } catch {
+            // Clear local state even if the server-side logout request fails.
+        }
+
+        clearSession();
         settingsStore.resetToDefaults();
         setIsResetDialogOpen(false);
         window.location.reload();

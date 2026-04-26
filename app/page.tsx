@@ -1,6 +1,6 @@
 'use client';
 
-import { Suspense, useMemo } from 'react';
+import { Suspense, useMemo, useSyncExternalStore } from 'react';
 import { SearchForm } from '@/components/search/SearchForm';
 import { NoResults } from '@/components/search/NoResults';
 import { PopularFeatures } from '@/components/home/PopularFeatures';
@@ -9,6 +9,31 @@ import { Navbar } from '@/components/layout/Navbar';
 import { SearchResults } from '@/components/home/SearchResults';
 import { useHomePage } from '@/lib/hooks/useHomePage';
 import { useLatencyPing } from '@/lib/hooks/useLatencyPing';
+import { settingsStore } from '@/lib/store/settings-store';
+import { userSourcesStore } from '@/lib/store/user-sources-store';
+import { buildLatencySourceUrls } from '@/lib/utils/latency-source-map';
+
+function subscribeToConfiguredSources(listener: () => void) {
+  const unsubscribeSettings = settingsStore.subscribe(listener);
+  const unsubscribeUserSources = userSourcesStore.subscribe(listener);
+
+  return () => {
+    unsubscribeSettings();
+    unsubscribeUserSources();
+  };
+}
+
+function getConfiguredSourcesSnapshot() {
+  const settings = settingsStore.getSettings();
+  const configuredSources = [...settings.sources, ...userSourcesStore.getSources()]
+    .filter((source) => source.enabled !== false)
+    .map((source) => ({
+      id: source.id,
+      baseUrl: source.baseUrl,
+    }));
+
+  return JSON.stringify(configuredSources);
+}
 
 function HomePage() {
   const {
@@ -24,11 +49,20 @@ function HomePage() {
     handleCancelSearch,
   } = useHomePage();
 
-  // Real-time latency pinging
-  const sourceUrls = useMemo(() =>
-    availableSources.map(s => ({ id: s.id, baseUrl: s.id })), // Using id as baseUrl if not available elsewhere
-    [availableSources]
+  const configuredSourcesSnapshot = useSyncExternalStore(
+    subscribeToConfiguredSources,
+    getConfiguredSourcesSnapshot,
+    () => '[]',
   );
+
+  const sourceUrls = useMemo(() => {
+    const configuredSources = JSON.parse(configuredSourcesSnapshot) as Array<{
+      id: string;
+      baseUrl: string;
+    }>;
+
+    return buildLatencySourceUrls(availableSources, configuredSources);
+  }, [availableSources, configuredSourcesSnapshot]);
 
   const { latencies } = useLatencyPing({
     sourceUrls,
@@ -37,11 +71,9 @@ function HomePage() {
 
   return (
     <div className="min-h-screen">
-      {/* Glass Navbar */}
       <Navbar onReset={handleReset} />
 
-      {/* Search Form - Separate from navbar */}
-      <div className="max-w-7xl mx-auto px-4 mt-6 mb-8 relative" style={{
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 mt-3 sm:mt-5 mb-5 sm:mb-7 relative" style={{
         transform: 'translate3d(0, 0, 0)',
         zIndex: 1000
       }}>
@@ -57,9 +89,7 @@ function HomePage() {
         />
       </div>
 
-      {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-20">
-        {/* Results Section */}
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-16 sm:pb-20">
         {(results.length >= 1 || (!loading && results.length > 0)) && (
           <SearchResults
             results={results}
@@ -69,20 +99,15 @@ function HomePage() {
           />
         )}
 
-        {/* Popular Features - Homepage */}
         {!loading && !hasSearched && (
-          <>
-            <PopularFeatures onSearch={handleSearch} />
-          </>
+          <PopularFeatures onSearch={handleSearch} />
         )}
 
-        {/* No Results */}
         {!loading && hasSearched && results.length === 0 && (
           <NoResults onReset={handleReset} />
         )}
       </main>
 
-      {/* Favorites Sidebar - Left */}
       <FavoritesSidebar />
     </div>
   );

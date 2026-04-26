@@ -1,5 +1,11 @@
 import { useCallback, useEffect, useMemo } from 'react';
 
+type VolumeInteractionEvent = MouseEvent | React.MouseEvent<HTMLDivElement>;
+
+function getVolumeRatio(event: VolumeInteractionEvent, rect: DOMRect) {
+    return Math.max(0, Math.min(1, (event.clientX - rect.left) / rect.width));
+}
+
 interface UseVolumeControlsProps {
     videoRef: React.RefObject<HTMLVideoElement | null>;
     volumeBarRef: React.RefObject<HTMLDivElement | null>;
@@ -47,10 +53,10 @@ export function useVolumeControls({
         }, 1000);
     }, [setShowVolumeBar, volumeBarTimeoutRef]);
 
-    const handleVolumeChange = useCallback((e: any) => {
+    const handleVolumeChange = useCallback((event: VolumeInteractionEvent) => {
         if (!videoRef.current || !volumeBarRef.current) return;
         const rect = volumeBarRef.current.getBoundingClientRect();
-        const pos = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+        const pos = getVolumeRatio(event, rect);
         setVolume(pos);
         videoRef.current.volume = pos;
         videoRef.current.muted = pos === 0;
@@ -59,10 +65,10 @@ export function useVolumeControls({
         localStorage.setItem('kvideo-muted', String(pos === 0));
     }, [videoRef, volumeBarRef, setVolume, setIsMuted]);
 
-    const handleVolumeMouseDown = useCallback((e: any) => {
-        e.preventDefault();
+    const handleVolumeMouseDown = useCallback((event: React.MouseEvent<HTMLDivElement>) => {
+        event.preventDefault();
         isDraggingVolumeRef.current = true;
-        handleVolumeChange(e);
+        handleVolumeChange(event);
     }, [isDraggingVolumeRef, handleVolumeChange]);
 
     useEffect(() => {
@@ -70,7 +76,7 @@ export function useVolumeControls({
             if (!isDraggingVolumeRef.current || !volumeBarRef.current || !videoRef.current) return;
             e.preventDefault();
             const rect = volumeBarRef.current.getBoundingClientRect();
-            const pos = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+            const pos = getVolumeRatio(e, rect);
             setVolume(pos);
             videoRef.current.volume = pos;
             videoRef.current.muted = pos === 0;
