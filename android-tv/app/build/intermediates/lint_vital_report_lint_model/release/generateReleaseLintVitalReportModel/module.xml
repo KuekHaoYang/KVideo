@@ -1,0 +1,18 @@
+<lint-module
+    format="1"
+    dir="/Users/haoyangkuek/development/KVideo/android-tv/app"
+    name=":app"
+    type="APP"
+    maven="KVideo-TV:app:"
+    agpVersion="8.2.0"
+    buildFolder="build"
+    bootClassPath="/opt/homebrew/share/android-commandlinetools/platforms/android-34/android.jar:/opt/homebrew/share/android-commandlinetools/build-tools/34.0.0/core-lambda-stubs.jar"
+    javaSourceLevel="17"
+    compileTarget="android-34">
+  <lintOptions
+      abortOnError="true"
+      absolutePaths="true"
+      checkReleaseBuilds="true"
+      explainIssues="true"/>
+  <variant name="release"/>
+</lint-module>

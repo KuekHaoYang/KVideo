@@ -1,6 +1,6 @@
 {
   "name": "kvideo",
-  "version": "4.9.2",
+  "version": "4.9.3",
   "private": true,
   "scripts": {
     "dev": "next dev --port ${PORT:-3000}",
@@ -11,7 +11,7 @@
     "test:e2e": "playwright test",
     "cf:build": "opennextjs-cloudflare build",
     "cf:preview": "opennextjs-cloudflare build && wrangler dev",
-    "pages:build": "npm run cf:build"
+    "pages:build": "node ./scripts/run-pages-build.mjs"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",
@@ -29,6 +29,7 @@
     "zustand": "^5.0.12"
   },
   "devDependencies": {
+    "@cloudflare/next-on-pages": "^1.13.16",
     "@opennextjs/cloudflare": "^1.19.1",
     "@playwright/test": "^1.56.1",
     "@tailwindcss/postcss": "^4.2.2",

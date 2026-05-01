@@ -8,6 +8,17 @@ export const runtime = 'nodejs';
 
 export const revalidate = 3600; // Cache for 1 hour
 
+function encodeBase64Utf8(value: string): string {
+    const bytes = new TextEncoder().encode(value);
+    let binary = '';
+
+    bytes.forEach((byte) => {
+        binary += String.fromCharCode(byte);
+    });
+
+    return btoa(binary);
+}
+
 interface Category {
     type_id: number;
     type_name: string;
@@ -141,7 +152,7 @@ async function handleTypesRequest(sourceList: VideoSource[]) {
             if (cat.values.length === 0) return;
 
             // Create a unique ID based on the label (using base64 to be safe)
-            const id = Buffer.from(cat.label).toString('base64');
+            const id = encodeBase64Utf8(cat.label);
 
             allTags.push({
                 id,

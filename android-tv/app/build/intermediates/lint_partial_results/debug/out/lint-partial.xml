@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<incidents format="6" by="lint 8.2.0" type="partial_results">
+    <map id="UnsafeIntentLaunch">
+            <map id="unprotected">
+                <entry
+                    name="com.kvideo.tv.MainActivity"
+                    boolean="true"/>
+            </map>
+    </map>
+    <map id="UnusedResources">
+        <entry
+            name="model"
+            string="drawable[tv_banner(U)],id[webview(U),setup_container(U),save_button(U),open_button(U),status_text(U),url_input(U),fullscreen_container(U)],layout[activity_main(U)],mipmap[ic_launcher(U)],string[setup_hint(U),setup_description(U),setup_security_note(U),button_save(U),app_name(U),button_exit(U),status_settings_hint(U),button_open_saved(U),status_first_launch(U),setup_footer(U),status_invalid_url(U),status_ssl_error(U),setup_title(U),status_ready(U),status_load_failed(U),status_blocked_navigation(U)],style[AppTheme(U)];0^9,8^16^b^c^a^17^11^d^13;;;"/>
+    </map>
+
+</incidents>
