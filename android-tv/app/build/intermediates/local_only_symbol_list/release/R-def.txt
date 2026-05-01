@@ -1,0 +1,29 @@
+R_DEF: Internal format may change without notice
+local
+drawable tv_banner
+id fullscreen_container
+id open_button
+id save_button
+id setup_container
+id status_text
+id url_input
+id webview
+layout activity_main
+mipmap ic_launcher
+string app_name
+string button_exit
+string button_open_saved
+string button_save
+string setup_description
+string setup_footer
+string setup_hint
+string setup_security_note
+string setup_title
+string status_blocked_navigation
+string status_first_launch
+string status_invalid_url
+string status_load_failed
+string status_ready
+string status_settings_hint
+string status_ssl_error
+style AppTheme

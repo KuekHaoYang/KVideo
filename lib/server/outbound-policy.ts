@@ -1,8 +1,5 @@
 import 'server-only';
 
-import { lookup } from 'node:dns/promises';
-import { BlockList, isIP } from 'node:net';
-
 export class OutboundPolicyError extends Error {
   constructor(
     message: string,
@@ -14,12 +11,12 @@ export class OutboundPolicyError extends Error {
   }
 }
 
-const IPV4_BLOCKLIST = new BlockList();
-const IPV6_BLOCKLIST = new BlockList();
 const MAX_REDIRECTS = 5;
 const MAX_USER_AGENT_LENGTH = 512;
 const MAX_REFERER_LENGTH = 2048;
 const ALLOWLIST_ENV_KEY = 'KVIDEO_OUTBOUND_PRIVATE_HOST_ALLOWLIST';
+const DNS_OVER_HTTPS_ENDPOINT = 'https://cloudflare-dns.com/dns-query';
+const DNS_CACHE_TTL_MS = 5 * 60 * 1000;
 const DISALLOWED_HEADER_NAMES = new Set([
   'connection',
   'client-ip',
@@ -42,29 +39,193 @@ const DISALLOWED_HEADER_NAMES = new Set([
 ]);
 const BLOCKED_HOSTNAMES = new Set(['localhost']);
 const BLOCKED_HOSTNAME_SUFFIXES = ['.localhost', '.local', '.internal', '.home.arpa'];
-const IPV4_MAPPED_IPV6_PREFIX = '::ffff:';
+const hostnameResolutionCache = new Map<string, { addresses: string[]; expiresAt: number }>();
+const IPV4_RESERVED_RANGES = [
+  { base: '0.0.0.0', prefix: 8 },
+  { base: '10.0.0.0', prefix: 8 },
+  { base: '100.64.0.0', prefix: 10 },
+  { base: '127.0.0.0', prefix: 8 },
+  { base: '169.254.0.0', prefix: 16 },
+  { base: '172.16.0.0', prefix: 12 },
+  { base: '192.0.0.0', prefix: 24 },
+  { base: '192.0.2.0', prefix: 24 },
+  { base: '192.88.99.0', prefix: 24 },
+  { base: '192.168.0.0', prefix: 16 },
+  { base: '198.18.0.0', prefix: 15 },
+  { base: '198.51.100.0', prefix: 24 },
+  { base: '203.0.113.0', prefix: 24 },
+  { base: '224.0.0.0', prefix: 4 },
+].map(({ base, prefix }) => ({
+  base: ipv4PartsToNumber(parseIpv4Parts(base)!),
+  prefix,
+}));
 
-IPV4_BLOCKLIST.addSubnet('0.0.0.0', 8);
-IPV4_BLOCKLIST.addSubnet('10.0.0.0', 8);
-IPV4_BLOCKLIST.addSubnet('100.64.0.0', 10);
-IPV4_BLOCKLIST.addSubnet('127.0.0.0', 8);
-IPV4_BLOCKLIST.addSubnet('169.254.0.0', 16);
-IPV4_BLOCKLIST.addSubnet('172.16.0.0', 12);
-IPV4_BLOCKLIST.addSubnet('192.0.0.0', 24);
-IPV4_BLOCKLIST.addSubnet('192.0.2.0', 24);
-IPV4_BLOCKLIST.addSubnet('192.88.99.0', 24);
-IPV4_BLOCKLIST.addSubnet('192.168.0.0', 16);
-IPV4_BLOCKLIST.addSubnet('198.18.0.0', 15);
-IPV4_BLOCKLIST.addSubnet('198.51.100.0', 24);
-IPV4_BLOCKLIST.addSubnet('203.0.113.0', 24);
-IPV4_BLOCKLIST.addSubnet('224.0.0.0', 4);
+type IpAddressType = 0 | 4 | 6;
 
-IPV6_BLOCKLIST.addSubnet('::', 128, 'ipv6');
-IPV6_BLOCKLIST.addSubnet('::1', 128, 'ipv6');
-IPV6_BLOCKLIST.addSubnet('fc00::', 7, 'ipv6');
-IPV6_BLOCKLIST.addSubnet('fe80::', 10, 'ipv6');
-IPV6_BLOCKLIST.addSubnet('ff00::', 8, 'ipv6');
-IPV6_BLOCKLIST.addSubnet('2001:db8::', 32, 'ipv6');
+function parseIpv4Parts(address: string): number[] | null {
+  const parts = address.split('.');
+
+  if (parts.length !== 4) {
+    return null;
+  }
+
+  const parsed = parts.map((part) => {
+    if (!/^\d+$/.test(part)) {
+      return Number.NaN;
+    }
+
+    return Number(part);
+  });
+
+  return parsed.every((part) => Number.isInteger(part) && part >= 0 && part <= 255) ? parsed : null;
+}
+
+function ipv4PartsToNumber(parts: number[]): number {
+  return (
+    (((parts[0] << 24) >>> 0) |
+      (parts[1] << 16) |
+      (parts[2] << 8) |
+      parts[3]) >>>
+    0
+  );
+}
+
+function parseIpv6Segments(address: string): number[] | null {
+  let normalized = address.toLowerCase();
+  const zoneIndex = normalized.indexOf('%');
+  if (zoneIndex >= 0) {
+    normalized = normalized.slice(0, zoneIndex);
+  }
+
+  if (normalized.includes('.')) {
+    const lastColon = normalized.lastIndexOf(':');
+    if (lastColon === -1) {
+      return null;
+    }
+
+    const ipv4Parts = parseIpv4Parts(normalized.slice(lastColon + 1));
+    if (!ipv4Parts) {
+      return null;
+    }
+
+    normalized = [
+      normalized.slice(0, lastColon),
+      ((ipv4Parts[0] << 8) | ipv4Parts[1]).toString(16),
+      ((ipv4Parts[2] << 8) | ipv4Parts[3]).toString(16),
+    ].join(':');
+  }
+
+  const halves = normalized.split('::');
+  if (halves.length > 2) {
+    return null;
+  }
+
+  const parseHalf = (value: string): number[] | null => {
+    if (!value) {
+      return [];
+    }
+
+    const groups = value.split(':');
+    const parsed = groups.map((group) => {
+      if (!/^[0-9a-f]{1,4}$/i.test(group)) {
+        return Number.NaN;
+      }
+
+      return Number.parseInt(group, 16);
+    });
+
+    return parsed.every((group) => Number.isInteger(group) && group >= 0 && group <= 0xffff)
+      ? parsed
+      : null;
+  };
+
+  const left = parseHalf(halves[0] || '');
+  const right = parseHalf(halves[1] || '');
+
+  if (!left || !right) {
+    return null;
+  }
+
+  if (halves.length === 1) {
+    return left.length === 8 ? left : null;
+  }
+
+  const missing = 8 - (left.length + right.length);
+  if (missing < 1) {
+    return null;
+  }
+
+  return [...left, ...Array(missing).fill(0), ...right];
+}
+
+function getIpAddressType(address: string): IpAddressType {
+  if (parseIpv4Parts(address)) {
+    return 4;
+  }
+
+  return parseIpv6Segments(address) ? 6 : 0;
+}
+
+function isIpv4PrefixMatch(address: number, base: number, prefix: number): boolean {
+  const mask = prefix === 0 ? 0 : ((0xffffffff << (32 - prefix)) >>> 0);
+  return (address & mask) === (base & mask);
+}
+
+function isReservedIpv4Address(address: string): boolean {
+  const parts = parseIpv4Parts(address);
+  if (!parts) {
+    return false;
+  }
+
+  const value = ipv4PartsToNumber(parts);
+  return IPV4_RESERVED_RANGES.some((range) => isIpv4PrefixMatch(value, range.base, range.prefix));
+}
+
+function getMappedIpv4Address(segments: number[]): string | null {
+  const hasMappedPrefix = segments.slice(0, 5).every((segment) => segment === 0) && segments[5] === 0xffff;
+  if (!hasMappedPrefix) {
+    return null;
+  }
+
+  const high = segments[6];
+  const low = segments[7];
+  return [
+    high >> 8,
+    high & 0xff,
+    low >> 8,
+    low & 0xff,
+  ].join('.');
+}
+
+function isReservedIpv6Address(address: string): boolean {
+  const segments = parseIpv6Segments(address);
+  if (!segments) {
+    return false;
+  }
+
+  const mappedIpv4 = getMappedIpv4Address(segments);
+  if (mappedIpv4) {
+    return isReservedIpv4Address(mappedIpv4);
+  }
+
+  if (segments.every((segment) => segment === 0)) {
+    return true;
+  }
+
+  if (segments.slice(0, 7).every((segment) => segment === 0) && segments[7] === 1) {
+    return true;
+  }
+
+  const first = segments[0];
+  const second = segments[1];
+
+  return (
+    (first & 0xfe00) === 0xfc00 ||
+    (first & 0xffc0) === 0xfe80 ||
+    (first & 0xff00) === 0xff00 ||
+    (first === 0x2001 && second === 0x0db8)
+  );
+}
 
 export interface OutboundValidationOptions {
   allowPrivateHosts?: boolean;
@@ -112,26 +273,58 @@ function isBlockedHostname(hostname: string): boolean {
 
 function isPrivateIpAddress(address: string): boolean {
   const normalized = address.toLowerCase();
-  const type = isIP(normalized);
+  const type = getIpAddressType(normalized);
 
-  if (type === 4) {
-    return IPV4_BLOCKLIST.check(normalized, 'ipv4');
+  return type === 4 ? isReservedIpv4Address(normalized) : type === 6 ? isReservedIpv6Address(normalized) : false;
+}
+
+interface DnsJsonResponse {
+  Answer?: Array<{ data?: string }>;
+}
+
+async function resolveViaDnsOverHttps(hostname: string, type: 'A' | 'AAAA'): Promise<string[]> {
+  const dnsUrl = new URL(DNS_OVER_HTTPS_ENDPOINT);
+  dnsUrl.searchParams.set('name', hostname);
+  dnsUrl.searchParams.set('type', type);
+
+  const response = await fetch(dnsUrl, {
+    headers: {
+      accept: 'application/dns-json',
+    },
+    redirect: 'manual',
+  });
+
+  if (!response.ok) {
+    return [];
   }
 
-  if (type === 6) {
-    if (normalized.startsWith(IPV4_MAPPED_IPV6_PREFIX)) {
-      return isPrivateIpAddress(normalized.slice(IPV4_MAPPED_IPV6_PREFIX.length));
-    }
-
-    return IPV6_BLOCKLIST.check(normalized, 'ipv6');
+  const payload = (await response.json()) as DnsJsonResponse;
+  if (!Array.isArray(payload.Answer)) {
+    return [];
   }
 
-  return false;
+  return payload.Answer
+    .map((answer) => answer.data?.trim() || '')
+    .filter((answer) => getIpAddressType(answer) > 0);
 }
 
 async function resolveHostAddresses(hostname: string): Promise<string[]> {
-  const results = await lookup(hostname, { all: true, verbatim: true });
-  return results.map((result) => result.address);
+  const cached = hostnameResolutionCache.get(hostname);
+  if (cached && cached.expiresAt > Date.now()) {
+    return cached.addresses;
+  }
+
+  const [ipv4Addresses, ipv6Addresses] = await Promise.all([
+    resolveViaDnsOverHttps(hostname, 'A'),
+    resolveViaDnsOverHttps(hostname, 'AAAA'),
+  ]);
+
+  const addresses = [...new Set([...ipv4Addresses, ...ipv6Addresses])];
+  hostnameResolutionCache.set(hostname, {
+    addresses,
+    expiresAt: Date.now() + DNS_CACHE_TTL_MS,
+  });
+  return addresses;
 }
 
 export async function assertOutboundUrlAllowed(
@@ -157,7 +350,7 @@ export async function assertOutboundUrlAllowed(
   const hostname = normalizeHostname(parsedUrl.hostname);
   const allowlistedHost = isAllowlistedHostname(hostname);
   const allowPrivate = options.allowPrivateHosts === true || allowlistedHost;
-  const hostIpType = isIP(hostname);
+  const hostIpType = getIpAddressType(hostname);
 
   if (hostIpType > 0) {
     if (!allowPrivate && isPrivateIpAddress(hostname)) {

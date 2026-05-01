@@ -1,0 +1,37 @@
+<variant
+    name="release"
+    package="com.kvideo.tv"
+    minSdkVersion="26"
+    targetSdkVersion="34"
+    shrinking="true"
+    mergedManifest="build/intermediates/merged_manifest/release/AndroidManifest.xml"
+    proguardFiles="build/intermediates/default_proguard_files/global/proguard-android-optimize.txt-8.2.0"
+    partialResultsDir="build/intermediates/lint_vital_partial_results/release/out"
+    desugaredMethodsFiles="/Users/haoyangkuek/.gradle/caches/transforms-3/8adfb29f7bb1d6323c1fddabcbd1890e/transformed/D8BackportedDesugaredMethods.txt">
+  <buildFeatures
+      namespacing="REQUIRED"/>
+  <sourceProviders>
+    <sourceProvider
+        manifests="src/main/AndroidManifest.xml"
+        javaDirectories="src/main/java:src/release/java:src/main/kotlin:src/release/kotlin"
+        resDirectories="src/main/res:src/release/res"
+        assetsDirectories="src/main/assets:src/release/assets"/>
+  </sourceProviders>
+  <testSourceProviders>
+  </testSourceProviders>
+  <testFixturesSourceProviders>
+  </testFixturesSourceProviders>
+  <manifestPlaceholders>
+    <placeholder
+        name="usesCleartextTraffic"
+        value="false" />
+  </manifestPlaceholders>
+  <artifact
+      classOutputs="build/intermediates/javac/release/classes:build/tmp/kotlin-classes/release:build/kotlinToolingMetadata:build/intermediates/compile_and_runtime_not_namespaced_r_class_jar/release/R.jar"
+      type="MAIN"
+      applicationId="com.kvideo.tv"
+      generatedSourceFolders="build/generated/ap_generated_sources/release/out:build/generated/source/buildConfig/release"
+      generatedResourceFolders="build/generated/res/resValues/release"
+      desugaredMethodsFiles="/Users/haoyangkuek/.gradle/caches/transforms-3/8adfb29f7bb1d6323c1fddabcbd1890e/transformed/D8BackportedDesugaredMethods.txt">
+  </artifact>
+</variant>
