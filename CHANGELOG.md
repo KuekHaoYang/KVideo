@@ -1,5 +1,14 @@
 # Changelog
 
+## 4.9.4 - 2026-05-02
+
+- Docker Compose 新增持久化 Redis 服务，默认通过 `REDIS_URL=redis://redis:6379/0` 启用自托管托管账户存储。
+- 服务端 Redis 层新增普通 `redis://` / `rediss://` TCP Redis 支持；Cloudflare / Vercel 等受限托管环境仍使用 Upstash REST 凭据。
+- 新增 `.env.example`，补齐 Docker 托管账户、Redis、Upstash 和中继相关环境变量说明。
+- 会话 Cookie 的 `Secure` 标记改为按请求协议 / `x-forwarded-proto` 自动决定，并新增 `AUTH_COOKIE_SECURE` 强制开关，避免 HTTP Docker 直连登录后浏览器丢弃会话。
+- README、Cloudflare 注释和部署文档补齐 Docker Redis 与 Cloudflare Upstash 的边界说明。
+- 新增 TCP Redis 客户端回归测试，覆盖 JSON 存取、计数器、TTL、删除和缺失键行为。
+
 ## 4.9.3 - 2026-04-15
 
 - 新增 Redis 托管账户模式：支持用户名密码登录、超级管理员账户 CRUD、权限编辑和密码重置。
