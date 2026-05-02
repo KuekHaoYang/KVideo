@@ -6,6 +6,8 @@ import { signSessionPayload } from '@/lib/server/auth-helpers';
 process.env.AUTH_SECRET = 'route-test-secret';
 delete process.env.UPSTASH_REDIS_REST_URL;
 delete process.env.UPSTASH_REDIS_REST_TOKEN;
+delete process.env.KVIDEO_REDIS_URL;
+delete process.env.REDIS_URL;
 
 async function createSessionCookie(): Promise<string> {
   return signSessionPayload({

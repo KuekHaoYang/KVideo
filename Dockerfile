@@ -28,18 +28,6 @@ COPY . .
 # Uncomment the following line in case you want to disable telemetry during the build.
 # ENV NEXT_TELEMETRY_DISABLED 1
 
-# Debug: Show build environment
-RUN echo "=== Build Environment ===" && \
-  pwd && \
-  echo "=== Files in /app ===" && \
-  ls -la && \
-  echo "=== Lockfiles ===" && \
-  ls -la | grep -E "lock|yarn" || echo "No lockfiles" && \
-  echo "=== Node version ===" && \
-  node --version && \
-  echo "=== NPM version ===" && \
-  npm --version
-
 # Build Next.js application
 RUN set -ex && \
   if [ -f yarn.lock ]; then \
@@ -57,6 +45,7 @@ FROM base AS runner
 WORKDIR /app
 
 ENV NODE_ENV=production
+ENV NEXT_TELEMETRY_DISABLED=1
 # Uncomment the following line in case you want to disable telemetry during runtime.
 # ENV NEXT_TELEMETRY_DISABLED 1
 
@@ -66,8 +55,7 @@ RUN adduser --system --uid 1001 nextjs
 COPY --from=builder /app/public ./public
 
 # Set the correct permission for prerender cache
-RUN mkdir .next
-RUN chown nextjs:nodejs .next
+RUN mkdir .next && chown nextjs:nodejs .next
 
 # Automatically leverage output traces to reduce image size
 # https://nextjs.org/docs/advanced-features/output-file-tracing
@@ -81,5 +69,8 @@ EXPOSE 3000
 ENV PORT=3000
 # set hostname to localhost
 ENV HOSTNAME="0.0.0.0"
+
+HEALTHCHECK --interval=30s --timeout=5s --start-period=30s --retries=3 \
+  CMD wget --spider --quiet "http://127.0.0.1:${PORT}/" || exit 1
 
 CMD ["node", "server.js"]

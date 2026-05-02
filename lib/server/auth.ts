@@ -75,6 +75,7 @@ const ACCOUNTS = process.env.ACCOUNTS || '';
 const AUTH_SECRET = process.env.AUTH_SECRET?.trim() || '';
 const PREMIUM_PASSWORD = process.env.PREMIUM_PASSWORD || '';
 const PERSIST_SESSION = process.env.PERSIST_SESSION !== 'false';
+const AUTH_COOKIE_SECURE = process.env.AUTH_COOKIE_SECURE?.trim().toLowerCase() || '';
 const SUBSCRIPTION_SOURCES = process.env.SUBSCRIPTION_SOURCES || process.env.NEXT_PUBLIC_SUBSCRIPTION_SOURCES || '';
 const IPTV_SOURCES = process.env.IPTV_SOURCES || process.env.NEXT_PUBLIC_IPTV_SOURCES || '';
 const MERGE_SOURCES = process.env.MERGE_SOURCES || process.env.NEXT_PUBLIC_MERGE_SOURCES || '';
@@ -255,6 +256,26 @@ function sessionPayloadToServerSession(payload: SessionPayload): ServerAuthSessi
   };
 }
 
+function shouldUseSecureCookie(request?: NextRequest): boolean {
+  if (AUTH_COOKIE_SECURE === 'true') return true;
+  if (AUTH_COOKIE_SECURE === 'false') return false;
+
+  const forwardedProto = request?.headers.get('x-forwarded-proto')
+    ?.split(',')[0]
+    ?.trim()
+    .toLowerCase();
+
+  if (forwardedProto) {
+    return forwardedProto === 'https';
+  }
+
+  if (request) {
+    return request.nextUrl.protocol === 'https:';
+  }
+
+  return process.env.NODE_ENV === 'production';
+}
+
 export function toPublicSession(session: ServerAuthSession): PublicSessionData {
   return {
     accountId: session.accountId,
@@ -302,11 +323,11 @@ export async function getServerSession(request: NextRequest): Promise<ServerAuth
   return sessionPayloadToServerSession(payload);
 }
 
-function applySessionCookie(response: NextResponse, token: string, persist: boolean): void {
+function applySessionCookie(response: NextResponse, token: string, persist: boolean, request?: NextRequest): void {
   response.cookies.set(SESSION_COOKIE_NAME, token, {
     httpOnly: true,
     sameSite: 'lax',
-    secure: process.env.NODE_ENV === 'production',
+    secure: shouldUseSecureCookie(request),
     path: '/',
     ...(persist ? { maxAge: SESSION_MAX_AGE_SECONDS } : {}),
   });
@@ -440,7 +461,7 @@ export async function validatePremiumAccess(
   return authenticateLegacyAdminCredential(body.password);
 }
 
-export async function createLoginResponse(session: ServerAuthSession): Promise<NextResponse> {
+export async function createLoginResponse(session: ServerAuthSession, request?: NextRequest): Promise<NextResponse> {
   const config = await getPublicAuthConfig();
   if (config.authError) {
     return NextResponse.json({ valid: false, message: config.authError }, { status: 503 });
@@ -457,7 +478,7 @@ export async function createLoginResponse(session: ServerAuthSession): Promise<N
     ...config,
   });
 
-  applySessionCookie(response, token, PERSIST_SESSION);
+  applySessionCookie(response, token, PERSIST_SESSION, request);
   return response;
 }
 

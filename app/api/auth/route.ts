@@ -66,7 +66,7 @@ export async function POST(request: NextRequest) {
     }
 
     await clearAuthFailures(request, username, type);
-    return createLoginResponse(session);
+    return createLoginResponse(session, request);
   } catch {
     return NextResponse.json({ valid: false, message: 'Invalid request' }, { status: 400 });
   }
