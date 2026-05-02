@@ -16,7 +16,7 @@ import {
     sortableKeyboardCoordinates,
     horizontalListSortingStrategy,
 } from '@dnd-kit/sortable';
-import { SortableTag, Tag } from './SortableTag';
+import { PlainTag, SortableTag, Tag } from './SortableTag';
 import { useState, useRef, useEffect } from 'react';
 import { Icons } from '@/components/ui/Icon';
 
@@ -38,32 +38,9 @@ interface TagListProps {
     recommendTag?: RecommendTagConfig;
 }
 
-export function TagList({
-    tags,
-    selectedTag,
-    showTagManager,
-    justAddedTag,
-    onTagSelect,
-    onTagDelete,
-    onDragEnd,
-    onJustAddedTagHandled,
-    recommendTag,
-}: TagListProps) {
+function useTagScroller(justAddedTag: boolean, onJustAddedTagHandled: () => void) {
     const scrollContainerRef = useRef<HTMLDivElement>(null);
-    const [activeId, setActiveId] = useState<string | null>(null);
 
-    const sensors = useSensors(
-        useSensor(PointerSensor, {
-            activationConstraint: {
-                distance: 8,
-            },
-        }),
-        useSensor(KeyboardSensor, {
-            coordinateGetter: sortableKeyboardCoordinates,
-        })
-    );
-
-    // Auto-scroll to end when new tag is added
     useEffect(() => {
         if (justAddedTag && scrollContainerRef.current) {
             scrollContainerRef.current.scrollTo({
@@ -74,7 +51,6 @@ export function TagList({
         }
     }, [justAddedTag, onJustAddedTagHandled]);
 
-    // Handle horizontal scroll with mouse wheel
     useEffect(() => {
         const container = scrollContainerRef.current;
         if (!container) return;
@@ -94,6 +70,83 @@ export function TagList({
             container.removeEventListener('wheel', handleWheel);
         };
     }, []);
+
+    return scrollContainerRef;
+}
+
+function RecommendationTag({ recommendTag }: { recommendTag: RecommendTagConfig }) {
+    return (
+        <div className="relative flex-shrink-0">
+            <button
+                onClick={recommendTag.onSelect}
+                className={`
+                    px-6 py-2.5 text-sm font-semibold transition-all whitespace-nowrap rounded-[var(--radius-full)] cursor-pointer select-none flex items-center gap-1.5
+                    ${recommendTag.isSelected
+                        ? 'bg-[var(--accent-color)] text-white shadow-md scale-105'
+                        : 'bg-[var(--glass-bg)] backdrop-blur-xl text-[var(--text-color)] border border-[var(--glass-border)] hover:border-[var(--accent-color)] hover:scale-105'
+                    }
+                `}
+            >
+                <Icons.Sparkles size={14} />
+                {recommendTag.label}
+            </button>
+        </div>
+    );
+}
+
+function PlainTagList({
+    tags,
+    selectedTag,
+    justAddedTag,
+    onTagSelect,
+    onJustAddedTagHandled,
+    recommendTag,
+}: TagListProps) {
+    const scrollContainerRef = useTagScroller(justAddedTag, onJustAddedTagHandled);
+
+    return (
+        <div
+            ref={scrollContainerRef}
+            className="mb-8 flex items-center gap-3 overflow-x-auto pb-3 pt-2 px-1 scrollbar-hide"
+        >
+            {recommendTag && <RecommendationTag recommendTag={recommendTag} />}
+
+            {tags.map((tag) => (
+                <PlainTag
+                    key={tag.id}
+                    tag={tag}
+                    selectedTag={selectedTag}
+                    onTagSelect={onTagSelect}
+                />
+            ))}
+        </div>
+    );
+}
+
+function ManagedTagList({
+    tags,
+    selectedTag,
+    showTagManager,
+    justAddedTag,
+    onTagSelect,
+    onTagDelete,
+    onDragEnd,
+    onJustAddedTagHandled,
+    recommendTag,
+}: TagListProps) {
+    const scrollContainerRef = useTagScroller(justAddedTag, onJustAddedTagHandled);
+    const [activeId, setActiveId] = useState<string | null>(null);
+
+    const sensors = useSensors(
+        useSensor(PointerSensor, {
+            activationConstraint: {
+                distance: 8,
+            },
+        }),
+        useSensor(KeyboardSensor, {
+            coordinateGetter: sortableKeyboardCoordinates,
+        })
+    );
 
     const handleDragStart = (event: DragStartEvent) => {
         setActiveId(event.active.id as string);
@@ -117,24 +170,7 @@ export function TagList({
                 ref={scrollContainerRef}
                 className="mb-8 flex items-center gap-3 overflow-x-auto pb-3 pt-2 px-1 scrollbar-hide"
             >
-                {/* Recommendation Tag — non-draggable, rendered before sortable tags */}
-                {recommendTag && (
-                    <div className="relative flex-shrink-0">
-                        <button
-                            onClick={recommendTag.onSelect}
-                            className={`
-                                px-6 py-2.5 text-sm font-semibold transition-all whitespace-nowrap rounded-[var(--radius-full)] cursor-pointer select-none flex items-center gap-1.5
-                                ${recommendTag.isSelected
-                                    ? 'bg-[var(--accent-color)] text-white shadow-md scale-105'
-                                    : 'bg-[var(--glass-bg)] backdrop-blur-xl text-[var(--text-color)] border border-[var(--glass-border)] hover:border-[var(--accent-color)] hover:scale-105'
-                                }
-                            `}
-                        >
-                            <Icons.Sparkles size={14} />
-                            {recommendTag.label}
-                        </button>
-                    </div>
-                )}
+                {recommendTag && <RecommendationTag recommendTag={recommendTag} />}
                 <SortableContext
                     items={tags.map((t) => t.id)}
                     strategy={horizontalListSortingStrategy}
@@ -163,4 +199,8 @@ export function TagList({
             </DragOverlay>
         </DndContext>
     );
+}
+
+export function TagList(props: TagListProps) {
+    return props.showTagManager ? <ManagedTagList {...props} /> : <PlainTagList {...props} />;
 }

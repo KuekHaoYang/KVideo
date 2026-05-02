@@ -5,7 +5,7 @@
 import type { VideoSource, SourceSubscription } from '@/lib/types';
 import { DEFAULT_SOURCES } from '@/lib/api/default-sources';
 import { PREMIUM_SOURCES } from '@/lib/api/premium-sources';
-import { createSubscription } from '@/lib/utils/source-import-utils';
+import { createSubscription, mergeSources } from '@/lib/utils/source-import-utils';
 
 export type LocaleOption = 'zh-CN' | 'zh-TW';
 
@@ -105,6 +105,100 @@ function isStoredVideoSource(value: unknown): value is VideoSource {
   );
 }
 
+function normalizeHeaders(value: unknown): Record<string, string> | undefined {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) {
+    return undefined;
+  }
+
+  const headers: Record<string, string> = {};
+  for (const [key, headerValue] of Object.entries(value)) {
+    if (typeof headerValue === 'string' && key.trim()) {
+      headers[key.trim()] = headerValue;
+    }
+  }
+
+  return Object.keys(headers).length > 0 ? headers : undefined;
+}
+
+function normalizeEnvSource(value: unknown): VideoSource | null {
+  if (!value || typeof value !== 'object') {
+    return null;
+  }
+
+  const source = value as Partial<VideoSource>;
+  const id = typeof source.id === 'string' ? source.id.trim().toLowerCase() : '';
+  const name = typeof source.name === 'string' ? source.name.trim() : '';
+  const baseUrl = typeof source.baseUrl === 'string' ? source.baseUrl.trim() : '';
+
+  if (!id || !name || !baseUrl) {
+    return null;
+  }
+
+  return {
+    id,
+    name,
+    baseUrl,
+    searchPath: typeof source.searchPath === 'string' ? source.searchPath.trim() : '',
+    detailPath: typeof source.detailPath === 'string' ? source.detailPath.trim() : '',
+    headers: normalizeHeaders(source.headers),
+    enabled: source.enabled !== false,
+    priority: typeof source.priority === 'number' && Number.isFinite(source.priority) ? source.priority : 1,
+    group: source.group === 'premium' ? 'premium' : 'normal',
+  };
+}
+
+function extractEnvSourceArray(raw: unknown): unknown[] {
+  if (Array.isArray(raw)) {
+    return raw;
+  }
+
+  if (!raw || typeof raw !== 'object') {
+    return [];
+  }
+
+  const sourceEnvelope = raw as { sources?: unknown; list?: unknown };
+  if (Array.isArray(sourceEnvelope.sources)) {
+    return sourceEnvelope.sources;
+  }
+
+  if (Array.isArray(sourceEnvelope.list)) {
+    return sourceEnvelope.list;
+  }
+
+  return [];
+}
+
+export function parseEnvSources(rawEnvValue: string): {
+  normalSources: VideoSource[];
+  premiumSources: VideoSource[];
+} {
+  const envValue = rawEnvValue.trim();
+  if (!envValue) {
+    return { normalSources: [], premiumSources: [] };
+  }
+
+  try {
+    const parsed = JSON.parse(envValue);
+    const sources = extractEnvSourceArray(parsed)
+      .map(normalizeEnvSource)
+      .filter((source): source is VideoSource => source !== null);
+
+    return {
+      normalSources: sources.filter((source) => source.group !== 'premium'),
+      premiumSources: sources.filter((source) => source.group === 'premium'),
+    };
+  } catch {
+    return { normalSources: [], premiumSources: [] };
+  }
+}
+
+function getEnvSources(customValue?: string): {
+  normalSources: VideoSource[];
+  premiumSources: VideoSource[];
+} {
+  return parseEnvSources(customValue || process.env.SOURCES || process.env.NEXT_PUBLIC_SOURCES || '');
+}
+
 function getEnvSubscriptions(customValue?: string): SourceSubscription[] {
   const envValue = (customValue || process.env.SUBSCRIPTION_SOURCES || process.env.NEXT_PUBLIC_SUBSCRIPTION_SOURCES || '').trim();
   if (!envValue) return [];
@@ -148,9 +242,11 @@ function getEnvSubscriptions(customValue?: string): SourceSubscription[] {
 
 // Shared default settings factory to avoid code duplication
 function getDefaultAppSettings(): AppSettings {
+  const envSources = getEnvSources();
+
   return {
-    sources: getDefaultSources(),
-    premiumSources: getDefaultPremiumSources(),
+    sources: mergeSources(getDefaultSources(), envSources.normalSources),
+    premiumSources: mergeSources(getDefaultPremiumSources(), envSources.premiumSources),
     subscriptions: getEnvSubscriptions(),
     sortBy: 'default',
     searchHistory: true,
@@ -216,7 +312,8 @@ export const settingsStore = {
 
     try {
       const parsed = JSON.parse(stored);
-      // Get ENV subscriptions
+      // Get ENV sources and subscriptions
+      const envSources = getEnvSources();
       const envSubscriptions = getEnvSubscriptions();
 
       // Parse stored subscriptions
@@ -245,11 +342,15 @@ export const settingsStore = {
       });
 
       // Filter out invalid sources (missing baseUrl etc)
-      const validSources = (Array.isArray(parsed.sources) ? parsed.sources : getDefaultSources())
-        .filter(isStoredVideoSource);
+      const validSources = mergeSources(
+        (Array.isArray(parsed.sources) ? parsed.sources : getDefaultSources()).filter(isStoredVideoSource),
+        envSources.normalSources,
+      );
 
-      const validPremiumSources = (Array.isArray(parsed.premiumSources) ? parsed.premiumSources : getDefaultPremiumSources())
-        .filter(isStoredVideoSource);
+      const validPremiumSources = mergeSources(
+        (Array.isArray(parsed.premiumSources) ? parsed.premiumSources : getDefaultPremiumSources()).filter(isStoredVideoSource),
+        envSources.premiumSources,
+      );
 
       // Validate that parsed data has all required properties
       return {
@@ -352,6 +453,30 @@ export const settingsStore = {
       this.saveSettings({
         ...currentSettings,
         subscriptions: mergedSubscriptions
+      });
+    }
+  },
+
+  syncEnvSources(rawEnvValue: string): void {
+    if (typeof window === 'undefined') return;
+
+    const currentSettings = this.getSettings();
+    const envSources = parseEnvSources(rawEnvValue);
+
+    if (envSources.normalSources.length === 0 && envSources.premiumSources.length === 0) {
+      return;
+    }
+
+    const sources = mergeSources(currentSettings.sources, envSources.normalSources);
+    const premiumSources = mergeSources(currentSettings.premiumSources, envSources.premiumSources);
+    const changed = JSON.stringify(sources) !== JSON.stringify(currentSettings.sources) ||
+      JSON.stringify(premiumSources) !== JSON.stringify(currentSettings.premiumSources);
+
+    if (changed) {
+      this.saveSettings({
+        ...currentSettings,
+        sources,
+        premiumSources,
       });
     }
   },

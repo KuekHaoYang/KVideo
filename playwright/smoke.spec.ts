@@ -86,3 +86,10 @@ test('home still renders in reduced motion mode', async ({ page }) => {
   await login(page);
   await expect(page.getByRole('textbox', { name: /搜索/i }).or(page.getByPlaceholder(/搜索/i)).first()).toBeVisible();
 });
+
+test('direct search URL renders without the tag drag runtime', async ({ page }) => {
+  await login(page);
+  await page.goto('/?q=test');
+  await expect(page.getByRole('textbox', { name: /搜索/i }).or(page.getByPlaceholder(/搜索/i)).first()).toBeVisible();
+  await expect(page.getByText(/Runtime Error|Cannot read properties of undefined/)).toHaveCount(0);
+});

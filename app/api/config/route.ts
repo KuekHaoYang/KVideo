@@ -9,9 +9,11 @@ import { NextResponse } from 'next/server';
 export const runtime = 'nodejs';
 
 const SUBSCRIPTION_SOURCES = process.env.SUBSCRIPTION_SOURCES || process.env.NEXT_PUBLIC_SUBSCRIPTION_SOURCES || '';
+const SOURCES = process.env.SOURCES || process.env.NEXT_PUBLIC_SOURCES || '';
 
 export async function GET() {
     return NextResponse.json({
+        sources: SOURCES,
         subscriptionSources: SUBSCRIPTION_SOURCES,
     });
 }

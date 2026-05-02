@@ -62,11 +62,16 @@ function syncDanmakuApiUrl(rawValue: string) {
 }
 
 function applyRuntimeConfig(data: {
+  sources?: string;
   subscriptionSources?: string;
   iptvSources?: string;
   mergeSources?: string;
   danmakuApiUrl?: string;
 }) {
+  if (data.sources) {
+    settingsStore.syncEnvSources(data.sources);
+  }
+
   if (data.subscriptionSources) {
     settingsStore.syncEnvSubscriptions(data.subscriptionSources);
   }

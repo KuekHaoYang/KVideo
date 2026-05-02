@@ -17,6 +17,11 @@ const nextConfig: NextConfig = {
   },
 
   images: {
+    localPatterns: [
+      {
+        pathname: '/api/douban/image',
+      },
+    ],
     remotePatterns: [
       {
         protocol: 'https',

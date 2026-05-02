@@ -18,6 +18,29 @@ interface SortableTagProps {
     onTagDelete: (id: string) => void;
 }
 
+export function PlainTag({
+    tag,
+    selectedTag,
+    onTagSelect,
+}: Pick<SortableTagProps, 'tag' | 'selectedTag' | 'onTagSelect'>) {
+    return (
+        <div className="relative flex-shrink-0">
+            <button
+                onClick={() => onTagSelect(tag.id)}
+                className={`
+                    px-6 py-2.5 text-sm font-semibold transition-all whitespace-nowrap rounded-[var(--radius-full)] cursor-pointer select-none
+                    ${selectedTag === tag.id
+                        ? 'bg-[var(--accent-color)] text-white shadow-md scale-105'
+                        : 'bg-[var(--glass-bg)] backdrop-blur-xl text-[var(--text-color)] border border-[var(--glass-border)] hover:border-[var(--accent-color)] hover:scale-105'
+                    }
+                `}
+            >
+                {tag.label}
+            </button>
+        </div>
+    );
+}
+
 export function SortableTag({
     tag,
     selectedTag,

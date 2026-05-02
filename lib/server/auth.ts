@@ -41,6 +41,7 @@ export interface PublicAuthConfig {
   loginMode: LoginMode;
   authError?: string;
   persistSession: boolean;
+  sources: string;
   subscriptionSources: string;
   iptvSources: string;
   mergeSources: string;
@@ -76,6 +77,7 @@ const AUTH_SECRET = process.env.AUTH_SECRET?.trim() || '';
 const PREMIUM_PASSWORD = process.env.PREMIUM_PASSWORD || '';
 const PERSIST_SESSION = process.env.PERSIST_SESSION !== 'false';
 const AUTH_COOKIE_SECURE = process.env.AUTH_COOKIE_SECURE?.trim().toLowerCase() || '';
+const SOURCES = process.env.SOURCES || process.env.NEXT_PUBLIC_SOURCES || '';
 const SUBSCRIPTION_SOURCES = process.env.SUBSCRIPTION_SOURCES || process.env.NEXT_PUBLIC_SUBSCRIPTION_SOURCES || '';
 const IPTV_SOURCES = process.env.IPTV_SOURCES || process.env.NEXT_PUBLIC_IPTV_SOURCES || '';
 const MERGE_SOURCES = process.env.MERGE_SOURCES || process.env.NEXT_PUBLIC_MERGE_SOURCES || '';
@@ -194,6 +196,7 @@ function getPublicRuntimeConfig(): Omit<PublicAuthConfig, 'hasAuth' | 'hasPremiu
 
   return {
     persistSession: PERSIST_SESSION,
+    sources: SOURCES,
     subscriptionSources: SUBSCRIPTION_SOURCES,
     iptvSources: runtimeFeatures.iptvEnabled ? IPTV_SOURCES : '',
     mergeSources: MERGE_SOURCES,
@@ -202,7 +205,7 @@ function getPublicRuntimeConfig(): Omit<PublicAuthConfig, 'hasAuth' | 'hasPremiu
 }
 
 function getAuthConfigurationError(loginMode: LoginMode): string | undefined {
-  if (loginMode !== 'none' && !AUTH_SECRET) {
+  if (loginMode !== 'none' && !resolveSessionSecret()) {
     return 'AUTH_SECRET is required when auth is enabled';
   }
 
@@ -240,7 +243,16 @@ async function generateLegacyProfileId(password: string): Promise<string> {
 }
 
 function resolveSessionSecret(): string | null {
-  return AUTH_SECRET || null;
+  if (AUTH_SECRET) {
+    return AUTH_SECRET;
+  }
+
+  const legacySecretInput = effectiveAdminPassword || ACCOUNTS;
+  if (!legacySecretInput) {
+    return null;
+  }
+
+  return `kvideo-legacy-session:${legacySecretInput}`;
 }
 
 function sessionPayloadToServerSession(payload: SessionPayload): ServerAuthSession {
