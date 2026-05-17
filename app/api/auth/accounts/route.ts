@@ -7,9 +7,14 @@ import {
   listAccountInfo,
 } from '@/lib/server/auth';
 
-export const runtime = 'edge';
+export const runtime = 'nodejs';
 
 async function requireSuperAdmin(request: NextRequest) {
+  const config = await getPublicAuthConfig();
+  if (config.authError) {
+    return { error: NextResponse.json({ error: config.authError }, { status: 503 }) };
+  }
+
   const session = await getServerSession(request);
   if (!session) {
     return { error: NextResponse.json({ error: 'Authentication required' }, { status: 401 }) };

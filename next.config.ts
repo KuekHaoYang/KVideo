@@ -18,7 +18,6 @@ const nextConfig: NextConfig = {
 
   images: {
     remotePatterns: [
-      // Douban images
       {
         protocol: 'https',
         hostname: 'img3.doubanio.com',
@@ -35,81 +34,7 @@ const nextConfig: NextConfig = {
         protocol: 'https',
         hostname: 'img9.doubanio.com',
       },
-      // Video source images - allow all subdomains with wildcards
-      {
-        protocol: 'http',
-        hostname: '**.com',
-      },
-      {
-        protocol: 'https',
-        hostname: '**.com',
-      },
-      {
-        protocol: 'http',
-        hostname: '**.cn',
-      },
-      {
-        protocol: 'https',
-        hostname: '**.cn',
-      },
-      {
-        protocol: 'http',
-        hostname: '**.net',
-      },
-      {
-        protocol: 'https',
-        hostname: '**.net',
-      },
-      {
-        protocol: 'http',
-        hostname: '**.org',
-      },
-      {
-        protocol: 'https',
-        hostname: '**.org',
-      },
-      {
-        protocol: 'http',
-        hostname: '**.tv',
-      },
-      {
-        protocol: 'https',
-        hostname: '**.tv',
-      },
-      {
-        protocol: 'http',
-        hostname: '**.io',
-      },
-      {
-        protocol: 'https',
-        hostname: '**.io',
-      },
-      {
-        protocol: 'http',
-        hostname: '**.xyz',
-      },
-      {
-        protocol: 'https',
-        hostname: '**.xyz',
-      },
-      {
-        protocol: 'http',
-        hostname: '**.online',
-      },
-      {
-        protocol: 'https',
-        hostname: '**.online',
-      },
-      {
-        protocol: 'http',
-        hostname: '**.top',
-      },
-      {
-        protocol: 'https',
-        hostname: '**.top',
-      },
     ],
-    // Add image optimization for better performance
     formats: ['image/webp'],
     minimumCacheTTL: 60,
   },

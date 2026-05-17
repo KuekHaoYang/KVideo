@@ -6,7 +6,7 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { TagManager } from './TagManager';
 import { MovieGrid } from './MovieGrid';
 import { useTagManager } from './hooks/useTagManager';
@@ -46,19 +46,8 @@ export function PopularFeatures({ onSearch }: PopularFeaturesProps) {
     loadMoreRef: recommendLoadMoreRef,
   } = usePersonalizedRecommendations(false);
 
-  // Track whether the recommendation tab is active
-  const [isRecommendSelected, setIsRecommendSelected] = useState(hasHistory);
-
-  // Sync selection when hasHistory changes after Zustand hydration from localStorage.
-  // On first render the store is empty (hasHistory=false), so useState captures false.
-  // Once hydration completes and hasHistory becomes true, auto-select the recommendation tab.
-  useEffect(() => {
-    if (hasHistory) {
-      setIsRecommendSelected(true);
-    }
-  }, [hasHistory]);
-
-  const effectiveRecommendSelected = hasHistory && isRecommendSelected;
+  const [selectionMode, setSelectionMode] = useState<'recommend' | 'tag'>('recommend');
+  const effectiveRecommendSelected = hasHistory && selectionMode === 'recommend';
 
   const {
     movies,
@@ -72,14 +61,14 @@ export function PopularFeatures({ onSearch }: PopularFeaturesProps) {
     contentType
   );
 
-  const handleMovieClick = (movie: any) => {
+  const handleMovieClick = (movie: { title: string }) => {
     if (onSearch) {
       onSearch(movie.title);
     }
   };
 
   const handleRecommendSelect = () => {
-    setIsRecommendSelected(true);
+    setSelectionMode('recommend');
   };
 
   const handleRegularTagSelect = (tagId: string) => {
@@ -87,7 +76,7 @@ export function PopularFeatures({ onSearch }: PopularFeaturesProps) {
       window.location.href = '/premium';
       return;
     }
-    setIsRecommendSelected(false);
+    setSelectionMode('tag');
     setSelectedTag(tagId);
   };
 
@@ -95,8 +84,8 @@ export function PopularFeatures({ onSearch }: PopularFeaturesProps) {
     <div className="animate-fade-in">
       {/* Content Type Toggle (Capsule Liquid Glass - Fixed & Centered) */}
       {!effectiveRecommendSelected && (
-        <div className="mb-10 flex justify-center">
-          <div className="relative w-80 p-1 bg-[var(--glass-bg)] border border-[var(--glass-border)] rounded-full grid grid-cols-2 backdrop-blur-2xl shadow-lg ring-1 ring-white/10 overflow-hidden">
+        <div className="mb-6 sm:mb-8 flex justify-center">
+          <div className="relative w-full max-w-xs p-1 bg-[var(--glass-bg)] border border-[var(--glass-border)] rounded-full grid grid-cols-2 backdrop-blur-2xl shadow-lg ring-1 ring-white/10 overflow-hidden">
             {/* Sliding Indicator */}
             <div
               className="absolute top-1 bottom-1 w-[calc(50%-4px)] bg-[var(--accent-color)] rounded-full transition-transform duration-400 cubic-bezier(0.4, 0, 0.2, 1) shadow-[0_0_15px_rgba(0,122,255,0.4)]"
@@ -107,14 +96,14 @@ export function PopularFeatures({ onSearch }: PopularFeaturesProps) {
 
             <button
               onClick={() => setContentType('movie')}
-              className={`relative z-10 py-2.5 text-sm font-bold transition-colors duration-300 cursor-pointer flex justify-center items-center ${contentType === 'movie' ? 'text-white' : 'text-[var(--text-color-secondary)] hover:text-[var(--text-color)]'
+              className={`relative z-10 py-2 text-sm font-bold transition-colors duration-300 cursor-pointer flex justify-center items-center ${contentType === 'movie' ? 'text-white' : 'text-[var(--text-color-secondary)] hover:text-[var(--text-color)]'
                 }`}
             >
               电影
             </button>
             <button
               onClick={() => setContentType('tv')}
-              className={`relative z-10 py-2.5 text-sm font-bold transition-colors duration-300 cursor-pointer flex justify-center items-center ${contentType === 'tv' ? 'text-white' : 'text-[var(--text-color-secondary)] hover:text-[var(--text-color)]'
+              className={`relative z-10 py-2 text-sm font-bold transition-colors duration-300 cursor-pointer flex justify-center items-center ${contentType === 'tv' ? 'text-white' : 'text-[var(--text-color-secondary)] hover:text-[var(--text-color)]'
                 }`}
             >
               电视剧

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useSyncExternalStore } from 'react';
 import { usePathname } from 'next/navigation';
 
 import { settingsStore } from '@/lib/store/settings-store';
@@ -28,6 +28,19 @@ interface VideoTogetherControllerProps {
 
 function isSupportedRoute(pathname: string | null): boolean {
   return pathname?.startsWith('/player') === true || pathname?.startsWith('/iptv') === true;
+}
+
+function normalizeHttpsUrl(rawUrl?: string): string | null {
+  if (!rawUrl) {
+    return null;
+  }
+
+  try {
+    const parsedUrl = new URL(rawUrl);
+    return parsedUrl.protocol === 'https:' ? parsedUrl.toString() : null;
+  } catch {
+    return null;
+  }
 }
 
 function syncMinimizedDefaults(forceCurrentPageMinimized: boolean) {
@@ -82,19 +95,20 @@ export function VideoTogetherController({
   settingUrl,
 }: VideoTogetherControllerProps) {
   const pathname = usePathname();
-  const [videoTogetherEnabled, setVideoTogetherEnabled] = useState(false);
-
-  useEffect(() => {
-    const sync = () => {
-      setVideoTogetherEnabled(settingsStore.getSettings().videoTogetherEnabled);
-    };
-
-    sync();
-    return settingsStore.subscribe(sync);
-  }, []);
+  const videoTogetherEnabled = useSyncExternalStore(
+    (listener) => settingsStore.subscribe(listener),
+    () => settingsStore.getSettings().videoTogetherEnabled,
+    () => false,
+  );
+  const normalizedScriptUrl = useMemo(() => normalizeHttpsUrl(scriptUrl), [scriptUrl]);
+  const normalizedSettingUrl = useMemo(() => normalizeHttpsUrl(settingUrl), [settingUrl]);
 
   const supportedRoute = isSupportedRoute(pathname);
-  const shouldActivate = envEnabled && videoTogetherEnabled && supportedRoute;
+  const shouldActivate =
+    envEnabled &&
+    Boolean(normalizedScriptUrl) &&
+    videoTogetherEnabled &&
+    supportedRoute;
 
   useEffect(() => {
     if (!envEnabled || !videoTogetherEnabled) {
@@ -114,8 +128,8 @@ export function VideoTogetherController({
       return;
     }
 
-    if (settingUrl) {
-      window.videoTogetherWebsiteSettingUrl = settingUrl;
+    if (normalizedSettingUrl) {
+      window.videoTogetherWebsiteSettingUrl = normalizedSettingUrl;
     }
 
     if (
@@ -130,11 +144,11 @@ export function VideoTogetherController({
 
     const script = document.createElement('script');
     script.id = SCRIPT_ID;
-    script.src = scriptUrl;
+    script.src = normalizedScriptUrl!;
     script.async = true;
 
     document.body.appendChild(script);
-  }, [scriptUrl, settingUrl, shouldActivate]);
+  }, [normalizedScriptUrl, normalizedSettingUrl, shouldActivate]);
 
   return null;
 }

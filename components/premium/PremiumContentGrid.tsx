@@ -2,10 +2,10 @@
 
 import Link from 'next/link';
 import { Video } from '@/lib/types';
-import Image from 'next/image';
 import React from 'react';
 import { Card } from '@/components/ui/Card';
 import { Icons } from '@/components/ui/Icon';
+import { RemotePosterImage } from '@/components/ui/RemotePosterImage';
 
 interface PremiumContentGridProps {
     videos: Video[];
@@ -54,14 +54,11 @@ export function PremiumContentGrid({
                         <Card hover={false} className="p-0 h-full shadow-[0_2px_8px_var(--shadow-color)] hover:shadow-[0_8px_24px_var(--shadow-color)] transition-shadow duration-200 ease-out" blur={false}>
                             <div className="relative aspect-[2/3] bg-[var(--glass-bg)] rounded-[var(--radius-2xl)]">
                                 {video.vod_pic ? (
-                                    <Image
+                                    <RemotePosterImage
                                         src={video.vod_pic}
                                         alt={video.vod_name}
-                                        fill
-                                        sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, (max-width: 1024px) 25vw, 20vw"
+                                        absoluteFill
                                         className="object-cover transition-transform duration-300 group-hover:scale-105 rounded-[var(--radius-2xl)]"
-                                        loading="eager"
-                                        unoptimized
                                     />
                                 ) : (
                                     <div className="w-full h-full flex items-center justify-center text-[var(--text-color-secondary)]">

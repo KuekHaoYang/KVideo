@@ -37,6 +37,10 @@ interface InterleavedMovie extends DoubanMovie {
   sourceLabel: string;
 }
 
+interface DoubanRecommendResponse {
+  subjects?: Array<Partial<DoubanMovie>>;
+}
+
 const CACHE_DURATION = 30 * 60 * 1000; // 30 minutes
 const ITEMS_PER_PAGE = 18; // How many to fetch per query per page
 const MAX_ROUNDS = 8; // Max times to regenerate queries before giving up
@@ -75,13 +79,13 @@ export function usePersonalizedRecommendations(isPremium = false) {
             `/api/douban/recommend?tag=${encodeURIComponent(query.tag)}&type=${query.type}&page_limit=${ITEMS_PER_PAGE}&page_start=${offset}`
           );
           if (!res.ok) return { label: query.label, movies: [] as DoubanMovie[] };
-          const data = await res.json();
-          const movies: DoubanMovie[] = (data.subjects || []).map((s: any) => ({
-            id: s.id,
-            title: s.title,
-            cover: s.cover,
-            rate: s.rate,
-            url: s.url,
+          const data = (await res.json()) as DoubanRecommendResponse;
+          const movies: DoubanMovie[] = (data.subjects || []).map((subject) => ({
+            id: subject.id || '',
+            title: subject.title || '',
+            cover: subject.cover || '',
+            rate: subject.rate || '',
+            url: subject.url || '',
           }));
           return { label: query.label, movies };
         } catch {

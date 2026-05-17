@@ -60,6 +60,7 @@ export function useFloatingButtonPosition({
   const dragStateRef = useRef<DragState>(INITIAL_DRAG_STATE);
   const positionRef = useRef<FloatingButtonPosition | null>(null);
   const suppressClickRef = useRef(false);
+  const listenerAbortControllerRef = useRef<AbortController | null>(null);
 
   const clampPosition = useCallback((x: number, y: number, width: number, height: number) => ({
     x: clamp(x, margin, Math.max(margin, width - buttonSize - margin)),
@@ -192,18 +193,16 @@ export function useFloatingButtonPosition({
     }
 
     finishDrag();
-    window.removeEventListener('pointermove', handlePointerMove);
-    window.removeEventListener('pointerup', handlePointerUp);
-    window.removeEventListener('pointercancel', handlePointerUp);
-  }, [finishDrag, handlePointerMove]);
+    listenerAbortControllerRef.current?.abort();
+    listenerAbortControllerRef.current = null;
+  }, [finishDrag]);
 
   useEffect(() => {
     return () => {
-      window.removeEventListener('pointermove', handlePointerMove);
-      window.removeEventListener('pointerup', handlePointerUp);
-      window.removeEventListener('pointercancel', handlePointerUp);
+      listenerAbortControllerRef.current?.abort();
+      listenerAbortControllerRef.current = null;
     };
-  }, [handlePointerMove, handlePointerUp]);
+  }, []);
 
   const onPointerDown = useCallback((event: React.PointerEvent<HTMLElement>) => {
     if (event.button !== 0) return;
@@ -221,9 +220,16 @@ export function useFloatingButtonPosition({
       offsetY: event.clientY - rect.top,
     };
 
-    window.addEventListener('pointermove', handlePointerMove, { passive: false });
-    window.addEventListener('pointerup', handlePointerUp);
-    window.addEventListener('pointercancel', handlePointerUp);
+    listenerAbortControllerRef.current?.abort();
+    const abortController = new AbortController();
+    listenerAbortControllerRef.current = abortController;
+
+    window.addEventListener('pointermove', handlePointerMove, {
+      passive: false,
+      signal: abortController.signal,
+    });
+    window.addEventListener('pointerup', handlePointerUp, { signal: abortController.signal });
+    window.addEventListener('pointercancel', handlePointerUp, { signal: abortController.signal });
   }, [handlePointerMove, handlePointerUp]);
 
   const consumeSyntheticClick = useCallback((event: React.MouseEvent<HTMLElement>) => {

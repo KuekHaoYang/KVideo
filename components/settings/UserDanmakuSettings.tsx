@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useSyncExternalStore } from 'react';
 import { SettingsSection } from './SettingsSection';
 import { Icons } from '@/components/ui/Icon';
 import { userSourcesStore, type DanmakuApiEntry } from '@/lib/store/user-sources-store';
@@ -8,29 +8,26 @@ import { settingsStore } from '@/lib/store/settings-store';
 import { hasPermission } from '@/lib/store/auth-store';
 
 export function UserDanmakuSettings() {
-  const [apis, setApis] = useState<DanmakuApiEntry[]>([]);
-  const [activeId, setActiveId] = useState<string | null>(null);
-  const [systemApiUrl, setSystemApiUrl] = useState('');
+  const danmakuSnapshot = useSyncExternalStore(
+    (listener) => userSourcesStore.subscribe(listener),
+    () => JSON.stringify(userSourcesStore.getState()),
+    () => JSON.stringify({ danmakuApis: [], activeDanmakuApiId: null }),
+  );
+  const settingsSnapshot = useSyncExternalStore(
+    (listener) => settingsStore.subscribe(listener),
+    () => settingsStore.getSettings().danmakuApiUrl,
+    () => '',
+  );
   const [name, setName] = useState('');
   const [url, setUrl] = useState('');
   const [error, setError] = useState('');
-
-  useEffect(() => {
-    const state = userSourcesStore.getState();
-    setApis(state.danmakuApis);
-    setActiveId(state.activeDanmakuApiId);
-    setSystemApiUrl(settingsStore.getSettings().danmakuApiUrl);
-
-    const unsub = userSourcesStore.subscribe(() => {
-      const s = userSourcesStore.getState();
-      setApis(s.danmakuApis);
-      setActiveId(s.activeDanmakuApiId);
-    });
-    const unsub2 = settingsStore.subscribe(() => {
-      setSystemApiUrl(settingsStore.getSettings().danmakuApiUrl);
-    });
-    return () => { unsub(); unsub2(); };
-  }, []);
+  const parsedDanmakuState = JSON.parse(danmakuSnapshot) as {
+    danmakuApis: DanmakuApiEntry[];
+    activeDanmakuApiId: string | null;
+  };
+  const apis = parsedDanmakuState.danmakuApis;
+  const activeId = parsedDanmakuState.activeDanmakuApiId;
+  const systemApiUrl = settingsSnapshot;
 
   const handleAdd = (e: React.FormEvent) => {
     e.preventDefault();

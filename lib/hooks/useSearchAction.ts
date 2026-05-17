@@ -1,18 +1,17 @@
 import { useRef, useCallback } from 'react';
-import { SOURCE_IDS } from '@/lib/utils/source-names';
 import { sortVideos } from '@/lib/utils/sort';
 import { binaryInsertVideos } from '@/lib/utils/sorted-insert';
 import { processSearchStream } from '@/lib/utils/search-stream';
 import type { SortOption } from '@/lib/store/settings-store';
 import { settingsStore } from '@/lib/store/settings-store';
-import type { Video } from '@/lib/types';
+import type { SourceBadge, Video, VideoSource } from '@/lib/types';
 import { useSearchState } from './useSearchState';
 
 type SearchState = ReturnType<typeof useSearchState>;
 
 interface UseSearchActionProps {
     state: SearchState;
-    onCacheUpdate: (query: string, results: any[], sources: any[]) => void;
+    onCacheUpdate: (query: string, results: Video[], sources: SourceBadge[]) => void;
     onUrlUpdate: (query: string) => void;
 }
 
@@ -34,19 +33,16 @@ export function useSearchAction({ state, onCacheUpdate, onUrlUpdate }: UseSearch
 
     const abortControllerRef = useRef<AbortController | null>(null);
     // Keep track of the last search params so loadMore can re-use them
-    const lastSearchParamsRef = useRef<{ query: string; sources: any[]; sortBy: SortOption } | null>(null);
+    const lastSearchParamsRef = useRef<{ query: string; sources: VideoSource[]; sortBy: SortOption } | null>(null);
 
-    const performSearch = useCallback(async (searchQuery: string, sources: any[] = [], sortBy: SortOption = 'default') => {
+    const performSearch = useCallback(async (searchQuery: string, sources: VideoSource[] = [], sortBy: SortOption = 'default') => {
         if (!searchQuery.trim()) return;
 
         // Resolve sources if not provided
         let targetSources = sources;
         if (!targetSources || targetSources.length === 0) {
             const settings = settingsStore.getSettings();
-            targetSources = [
-                ...settings.sources,
-                ...settings.subscriptions.filter(s => (s as any).enabled !== false), // Include valid subscriptions
-            ].filter(s => (s as any).enabled !== false);
+            targetSources = settings.sources.filter((source) => source.enabled !== false);
         }
 
         // Abort any ongoing search
@@ -113,7 +109,7 @@ export function useSearchAction({ state, onCacheUpdate, onUrlUpdate }: UseSearch
                         id: id,
                         name: info.name,
                         count: info.count,
-                    }));
+                    })) satisfies SourceBadge[];
                     setAvailableSources(sources);
 
                     // Apply final sorting after all results are received

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 
 interface ExportModalProps {
   isOpen: boolean;
@@ -9,38 +9,36 @@ interface ExportModalProps {
 }
 
 export function ExportModal({ isOpen, onClose, onExport }: ExportModalProps) {
+  if (!isOpen) return null;
+
+  return (
+    <ExportModalContent
+      onClose={onClose}
+      onExport={onExport}
+    />
+  );
+}
+
+function ExportModalContent({ onClose, onExport }: Omit<ExportModalProps, 'isOpen'>) {
   const [includeSearchHistory, setIncludeSearchHistory] = useState(true);
   const [includeWatchHistory, setIncludeWatchHistory] = useState(true);
-
-  useEffect(() => {
-    if (isOpen) {
-      setIncludeSearchHistory(true);
-      setIncludeWatchHistory(true);
-    }
-  }, [isOpen]);
 
   const handleExport = () => {
     onExport(includeSearchHistory, includeWatchHistory);
     onClose();
   };
 
-  if (!isOpen) return null;
-
   return (
     <>
       {/* Backdrop */}
       <div
-        className={`fixed inset-0 z-[9998] bg-black/30 backdrop-blur-md transition-opacity duration-300 ${isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
-          }`}
+        className="fixed inset-0 z-[9998] bg-black/30 backdrop-blur-md transition-opacity duration-300 opacity-100"
         onClick={onClose}
       />
 
       {/* Modal */}
       <div
-        className={`fixed top-1/2 left-1/2 z-[9999] w-[90%] max-w-md -translate-x-1/2 transition-all duration-300 ${isOpen
-            ? 'opacity-100 -translate-y-1/2 scale-100'
-            : 'opacity-0 -translate-y-[40%] scale-95 pointer-events-none'
-          }`}
+        className="fixed top-1/2 left-1/2 z-[9999] w-[90%] max-w-md -translate-x-1/2 transition-all duration-300 opacity-100 -translate-y-1/2 scale-100"
       >
         <div className="bg-[var(--glass-bg)] backdrop-blur-xl border border-[var(--glass-border)] rounded-[var(--radius-2xl)] shadow-[var(--shadow-md)] p-6">
           <div className="flex items-center justify-between mb-6">

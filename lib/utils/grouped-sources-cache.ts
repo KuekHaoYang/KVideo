@@ -13,7 +13,7 @@ const MAX_CACHE_SIZE = 100;
 /**
  * Store grouped sources data and return a short cache key.
  */
-export function storeGroupedSources(data: any[]): string {
+export function storeGroupedSources<T>(data: T): string {
   if (typeof window === 'undefined') return '';
 
   const key = generateKey();
@@ -33,12 +33,12 @@ export function storeGroupedSources(data: any[]): string {
 /**
  * Retrieve grouped sources data by cache key.
  */
-export function retrieveGroupedSources(key: string): any[] | null {
+export function retrieveGroupedSources<T>(key: string): T | null {
   if (typeof window === 'undefined' || !key) return null;
   try {
     const raw = sessionStorage.getItem(`${CACHE_PREFIX}${key}`);
     if (!raw) return null;
-    const parsed = JSON.parse(raw);
+    const parsed = JSON.parse(raw) as { data?: T };
     return parsed?.data || null;
   } catch {
     return null;

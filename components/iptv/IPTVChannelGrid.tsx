@@ -7,6 +7,7 @@
 
 import { useState, useMemo } from 'react';
 import { Icons } from '@/components/ui/Icon';
+import { RemotePosterImage } from '@/components/ui/RemotePosterImage';
 import type { M3UChannel } from '@/lib/utils/m3u-parser';
 import type { IPTVSource } from '@/lib/store/iptv-store';
 
@@ -191,13 +192,10 @@ export function IPTVChannelGrid({ channels, groups, onSelect, activeChannel, cha
           >
             <div className="flex items-center gap-2">
               {channel.logo ? (
-                <img
+                <RemotePosterImage
                   src={channel.logo}
                   alt=""
                   className="w-8 h-8 rounded object-contain bg-black/10 flex-shrink-0"
-                  onError={(e) => {
-                    (e.target as HTMLImageElement).style.display = 'none';
-                  }}
                 />
               ) : (
                 <div className={`w-8 h-8 rounded flex items-center justify-center flex-shrink-0 ${

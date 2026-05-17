@@ -21,9 +21,6 @@ import { resolveSiteIconSrc } from '@/lib/server/site-icon';
 import fs from 'fs';
 import path from 'path';
 
-const DEFAULT_VIDEOTOGETHER_SCRIPT_URL =
-  'https://fastly.jsdelivr.net/gh/VideoTogether/VideoTogether@latest/release/extension.website.user.js';
-
 // Server Component specifically for reading env/file (async for best practices)
 async function AdKeywordsWrapper() {
   let keywords: string[] = [];
@@ -82,10 +79,9 @@ export default async function RootLayout({
 }>) {
   const siteIconSrc = await resolveSiteIconSrc();
   const runtimeFeatures = getRuntimeFeatures();
-  const videoTogetherScriptUrl =
-    process.env.VIDEOTOGETHER_SCRIPT_URL?.trim() || DEFAULT_VIDEOTOGETHER_SCRIPT_URL;
+  const videoTogetherScriptUrl = process.env.VIDEOTOGETHER_SCRIPT_URL?.trim() || '';
   const videoTogetherSettingUrl = process.env.VIDEOTOGETHER_SETTING_URL?.trim();
-  const videoTogetherEnvEnabled = process.env.VIDEOTOGETHER_ENABLED !== 'false';
+  const videoTogetherEnvEnabled = process.env.VIDEOTOGETHER_ENABLED === 'true';
 
   return (
     <html lang="zh-CN" suppressHydrationWarning>

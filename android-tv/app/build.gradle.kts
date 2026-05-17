@@ -22,11 +22,19 @@ android {
         versionName = "1.0.0"
 
         buildConfigField("String", "DEFAULT_KVIDEO_URL", "\"$defaultKVideoUrl\"")
+        buildConfigField("boolean", "ALLOW_CLEARTEXT", "false")
+        manifestPlaceholders["usesCleartextTraffic"] = "false"
     }
 
     buildTypes {
+        debug {
+            buildConfigField("boolean", "ALLOW_CLEARTEXT", "true")
+            manifestPlaceholders["usesCleartextTraffic"] = "true"
+        }
         release {
             isMinifyEnabled = true
+            buildConfigField("boolean", "ALLOW_CLEARTEXT", "false")
+            manifestPlaceholders["usesCleartextTraffic"] = "false"
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt")
             )
@@ -48,7 +56,7 @@ android {
 }
 
 dependencies {
-    implementation("androidx.core:core-ktx:1.12.0")
-    implementation("androidx.activity:activity-ktx:1.8.2")
-    implementation("androidx.webkit:webkit:1.9.0")
+    implementation("androidx.core:core-ktx:1.13.1")
+    implementation("androidx.activity:activity-ktx:1.9.3")
+    implementation("androidx.webkit:webkit:1.14.0")
 }

@@ -1,0 +1,20 @@
+{
+    "logs": [
+        {
+            "outputFile": "com.kvideo.tv.app-mergeDebugResources-19:/values-v21/values-v21.xml",
+            "map": [
+                {
+                    "source": "/Users/haoyangkuek/.gradle/caches/transforms-3/a325e913df52f42e28c65f4f8e03b4c0/transformed/core-1.13.1/res/values-v21/values-v21.xml",
+                    "from": {
+                        "startLines": "2,3,4,5,6,7,8,9,10,13",
+                        "startColumns": "4,4,4,4,4,4,4,4,4,4",
+                        "startOffsets": "55,173,237,304,368,484,610,736,864,1036",
+                        "endLines": "2,3,4,5,6,7,8,9,12,17",
+                        "endColumns": "117,63,66,63,115,125,125,127,12,12",
+                        "endOffsets": "168,232,299,363,479,605,731,859,1031,1383"
+                    }
+                }
+            ]
+        }
+    ]
+}

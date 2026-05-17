@@ -4,6 +4,7 @@
  */
 
 import { Icons } from '@/components/ui/Icon';
+import { RemotePosterImage } from '@/components/ui/RemotePosterImage';
 import { formatDate } from '@/lib/utils/format-utils';
 import { getSourceName } from '@/lib/utils/source-names';
 import { storeGroupedSources } from '@/lib/utils/grouped-sources-cache';
@@ -40,7 +41,7 @@ export function FavoritesItem({ item, onRemove, isPremium = false }: FavoritesIt
         return `/player?${params.toString()}`;
     };
 
-    const handleClick = (event: React.MouseEvent) => {
+    const handleClick = (event: React.MouseEvent<HTMLAnchorElement>) => {
         // Middle mouse or Ctrl/Cmd+click opens in new tab
         if (event.button === 1 || event.ctrlKey || event.metaKey) {
             event.preventDefault();
@@ -55,27 +56,22 @@ export function FavoritesItem({ item, onRemove, isPremium = false }: FavoritesIt
                 href={getVideoUrl()}
                 onClick={(e) => {
                     e.preventDefault();
-                    handleClick(e as any);
+                    handleClick(e);
                     if (!e.ctrlKey && !e.metaKey) {
                         window.location.href = getVideoUrl();
                     }
                 }}
-                onAuxClick={(e) => handleClick(e as any)}
+                onAuxClick={handleClick}
                 className="block"
             >
                 <div className="flex gap-3">
                     {/* Poster - Same size as HistoryItem */}
                     <div className="relative w-28 h-16 flex-shrink-0 bg-[var(--glass-bg)] rounded-[var(--radius-2xl)] overflow-hidden">
                         {item.poster ? (
-                            <img
+                            <RemotePosterImage
                                 src={item.poster}
                                 alt={item.title}
                                 className="w-full h-full object-cover"
-                                referrerPolicy="no-referrer"
-                                onError={(e) => {
-                                    const target = e.currentTarget as HTMLImageElement;
-                                    target.style.display = 'none';
-                                }}
                             />
                         ) : null}
                         {/* Fallback icon */}

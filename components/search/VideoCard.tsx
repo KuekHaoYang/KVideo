@@ -2,12 +2,12 @@
 
 import { memo } from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
 import { Card } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { Icons } from '@/components/ui/Icon';
 import { LatencyBadge } from '@/components/ui/LatencyBadge';
 import { FavoriteButton } from '@/components/favorites/FavoriteButton';
+import { RemotePosterImage } from '@/components/ui/RemotePosterImage';
 
 import { Video } from '@/lib/types';
 import { parseVideoTitle } from '@/lib/utils/video';
@@ -65,21 +65,13 @@ export const VideoCard = memo<VideoCardProps>(({
                     }}
                 >
                     {/* Poster */}
-                    <div className="relative aspect-[2/3] bg-[color-mix(in_srgb,var(--glass-bg)_50%,transparent)] rounded-[var(--radius-2xl)] overflow-hidden">
+                        <div className="relative aspect-[2/3] bg-[color-mix(in_srgb,var(--glass-bg)_50%,transparent)] rounded-[var(--radius-2xl)] overflow-hidden">
                         {video.vod_pic ? (
-                            <Image
+                            <RemotePosterImage
                                 src={video.vod_pic}
                                 alt={video.vod_name}
-                                fill
+                                absoluteFill
                                 className="object-cover rounded-[var(--radius-2xl)]"
-                                sizes="(max-width: 640px) 33vw, (max-width: 1024px) 20vw, 16vw"
-                                loading="eager"
-                                unoptimized
-                                referrerPolicy="no-referrer"
-                                onError={(e) => {
-                                    const target = e.currentTarget as HTMLImageElement;
-                                    target.style.opacity = '0';
-                                }}
                             />
                         ) : (
                             <div className="w-full h-full flex items-center justify-center">
@@ -196,4 +188,3 @@ export const VideoCard = memo<VideoCardProps>(({
 });
 
 VideoCard.displayName = 'VideoCard';
-

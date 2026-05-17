@@ -1,6 +1,6 @@
-import { Redis } from '@upstash/redis';
 import { NextRequest, NextResponse } from 'next/server';
 import { getRuntimeFeatures } from '@/lib/server/runtime-features';
+import { getRedisClient } from '@/lib/server/redis-client';
 import {
   createStoredAccount,
   ensureUniqueUsername,
@@ -39,6 +39,7 @@ export interface PublicAuthConfig {
   hasAuth: boolean;
   hasPremiumAuth: boolean;
   loginMode: LoginMode;
+  authError?: string;
   persistSession: boolean;
   subscriptionSources: string;
   iptvSources: string;
@@ -71,9 +72,10 @@ const MANAGED_ACCOUNTS_KEY = 'auth:accounts:v1';
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || '';
 const ACCESS_PASSWORD = process.env.ACCESS_PASSWORD || '';
 const ACCOUNTS = process.env.ACCOUNTS || '';
-const AUTH_SECRET = process.env.AUTH_SECRET || '';
+const AUTH_SECRET = process.env.AUTH_SECRET?.trim() || '';
 const PREMIUM_PASSWORD = process.env.PREMIUM_PASSWORD || '';
 const PERSIST_SESSION = process.env.PERSIST_SESSION !== 'false';
+const AUTH_COOKIE_SECURE = process.env.AUTH_COOKIE_SECURE?.trim().toLowerCase() || '';
 const SUBSCRIPTION_SOURCES = process.env.SUBSCRIPTION_SOURCES || process.env.NEXT_PUBLIC_SUBSCRIPTION_SOURCES || '';
 const IPTV_SOURCES = process.env.IPTV_SOURCES || process.env.NEXT_PUBLIC_IPTV_SOURCES || '';
 const MERGE_SOURCES = process.env.MERGE_SOURCES || process.env.NEXT_PUBLIC_MERGE_SOURCES || '';
@@ -82,24 +84,8 @@ const SESSION_MAX_AGE_SECONDS = 60 * 60 * 24 * 30;
 
 const effectiveAdminPassword = ADMIN_PASSWORD || ACCESS_PASSWORD;
 
-let cachedRedis: Redis | null | undefined;
-
-function getRedisClient(): Redis | null {
-  if (cachedRedis !== undefined) {
-    return cachedRedis;
-  }
-
-  if (!process.env.UPSTASH_REDIS_REST_URL || !process.env.UPSTASH_REDIS_REST_TOKEN) {
-    cachedRedis = null;
-    return cachedRedis;
-  }
-
-  cachedRedis = Redis.fromEnv();
-  return cachedRedis;
-}
-
 function isManagedAuthEnabled(): boolean {
-  return !!AUTH_SECRET && !!getRedisClient();
+  return !!getRedisClient();
 }
 
 function isLegacyAuthConfigured(): boolean {
@@ -203,7 +189,7 @@ async function getManagedAccountCount(): Promise<number> {
   return getBootstrapSeeds().length;
 }
 
-function getPublicRuntimeConfig(): Omit<PublicAuthConfig, 'hasAuth' | 'hasPremiumAuth' | 'loginMode'> {
+function getPublicRuntimeConfig(): Omit<PublicAuthConfig, 'hasAuth' | 'hasPremiumAuth' | 'loginMode' | 'authError'> {
   const runtimeFeatures = getRuntimeFeatures();
 
   return {
@@ -213,6 +199,14 @@ function getPublicRuntimeConfig(): Omit<PublicAuthConfig, 'hasAuth' | 'hasPremiu
     mergeSources: MERGE_SOURCES,
     danmakuApiUrl: DANMAKU_API_URL,
   };
+}
+
+function getAuthConfigurationError(loginMode: LoginMode): string | undefined {
+  if (loginMode !== 'none' && !AUTH_SECRET) {
+    return 'AUTH_SECRET is required when auth is enabled';
+  }
+
+  return undefined;
 }
 
 export async function getPublicAuthConfig(): Promise<PublicAuthConfig> {
@@ -227,6 +221,7 @@ export async function getPublicAuthConfig(): Promise<PublicAuthConfig> {
     hasAuth: loginMode !== 'none',
     hasPremiumAuth: !!PREMIUM_PASSWORD,
     loginMode,
+    authError: getAuthConfigurationError(loginMode),
     ...getPublicRuntimeConfig(),
   };
 }
@@ -244,16 +239,8 @@ async function generateLegacyProfileId(password: string): Promise<string> {
     .join('');
 }
 
-function resolveSessionSecret(loginMode: LoginMode): string | null {
-  if (AUTH_SECRET) {
-    return AUTH_SECRET;
-  }
-
-  if (loginMode === 'legacy_password' && isLegacyAuthConfigured()) {
-    return `legacy:${effectiveAdminPassword}:${ACCOUNTS}:${PREMIUM_PASSWORD}`;
-  }
-
-  return null;
+function resolveSessionSecret(): string | null {
+  return AUTH_SECRET || null;
 }
 
 function sessionPayloadToServerSession(payload: SessionPayload): ServerAuthSession {
@@ -269,6 +256,26 @@ function sessionPayloadToServerSession(payload: SessionPayload): ServerAuthSessi
   };
 }
 
+function shouldUseSecureCookie(request?: NextRequest): boolean {
+  if (AUTH_COOKIE_SECURE === 'true') return true;
+  if (AUTH_COOKIE_SECURE === 'false') return false;
+
+  const forwardedProto = request?.headers.get('x-forwarded-proto')
+    ?.split(',')[0]
+    ?.trim()
+    .toLowerCase();
+
+  if (forwardedProto) {
+    return forwardedProto === 'https';
+  }
+
+  if (request) {
+    return request.nextUrl.protocol === 'https:';
+  }
+
+  return process.env.NODE_ENV === 'production';
+}
+
 export function toPublicSession(session: ServerAuthSession): PublicSessionData {
   return {
     accountId: session.accountId,
@@ -281,8 +288,8 @@ export function toPublicSession(session: ServerAuthSession): PublicSessionData {
   };
 }
 
-async function signSession(session: ServerAuthSession, loginMode: LoginMode): Promise<string | null> {
-  const secret = resolveSessionSecret(loginMode);
+async function signSession(session: ServerAuthSession): Promise<string | null> {
+  const secret = resolveSessionSecret();
   if (!secret) return null;
 
   return signSessionPayload(
@@ -305,7 +312,9 @@ export async function getServerSession(request: NextRequest): Promise<ServerAuth
   if (!token) return null;
 
   const config = await getPublicAuthConfig();
-  const secret = resolveSessionSecret(config.loginMode);
+  if (config.authError) return null;
+
+  const secret = resolveSessionSecret();
   if (!secret) return null;
 
   const payload = await verifySessionToken(token, secret);
@@ -314,11 +323,11 @@ export async function getServerSession(request: NextRequest): Promise<ServerAuth
   return sessionPayloadToServerSession(payload);
 }
 
-function applySessionCookie(response: NextResponse, token: string, persist: boolean): void {
+function applySessionCookie(response: NextResponse, token: string, persist: boolean, request?: NextRequest): void {
   response.cookies.set(SESSION_COOKIE_NAME, token, {
     httpOnly: true,
     sameSite: 'lax',
-    secure: process.env.NODE_ENV === 'production',
+    secure: shouldUseSecureCookie(request),
     path: '/',
     ...(persist ? { maxAge: SESSION_MAX_AGE_SECONDS } : {}),
   });
@@ -452,9 +461,13 @@ export async function validatePremiumAccess(
   return authenticateLegacyAdminCredential(body.password);
 }
 
-export async function createLoginResponse(session: ServerAuthSession): Promise<NextResponse> {
+export async function createLoginResponse(session: ServerAuthSession, request?: NextRequest): Promise<NextResponse> {
   const config = await getPublicAuthConfig();
-  const token = await signSession(session, config.loginMode);
+  if (config.authError) {
+    return NextResponse.json({ valid: false, message: config.authError }, { status: 503 });
+  }
+
+  const token = await signSession(session);
   if (!token) {
     return NextResponse.json({ valid: false, message: 'Session signing unavailable' }, { status: 500 });
   }
@@ -465,7 +478,7 @@ export async function createLoginResponse(session: ServerAuthSession): Promise<N
     ...config,
   });
 
-  applySessionCookie(response, token, PERSIST_SESSION);
+  applySessionCookie(response, token, PERSIST_SESSION, request);
   return response;
 }
 

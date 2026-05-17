@@ -1,14 +1,32 @@
 import { NextResponse } from 'next/server';
+import type { VideoSource } from '@/lib/types';
+import { fetchWithPolicy } from '@/lib/server/outbound-policy';
+import { normalizeSourceConfigList } from '@/lib/server/source-validation';
 
-export const runtime = 'edge';
-// We still import this type but won't rely on the empty array
+export const runtime = 'nodejs';
 import { PREMIUM_SOURCES } from '@/lib/api/premium-sources';
 
-/**
- * Shared handler for fetching content
- */
+interface PremiumCategoryVideo {
+    vod_id: string | number;
+    vod_name: string;
+    vod_pic?: string;
+    vod_remarks?: string;
+    type_name?: string;
+    source: string;
+}
+
+interface PremiumCategoryResponse {
+    list?: Array<{
+        vod_id: string | number;
+        vod_name: string;
+        vod_pic?: string;
+        vod_remarks?: string;
+        type_name?: string;
+    }>;
+}
+
 async function handleCategoryRequest(
-    sourceList: any[],
+    sourceList: VideoSource[],
     categoryParam: string,
     page: number,
     limit: number
@@ -43,11 +61,12 @@ async function handleCategoryRequest(
             return NextResponse.json({ videos: [], error: 'No enabled sources provided or found' }, { status: 500 });
         }
 
-        const fetchPromises = targetSources.map(async (source: any) => {
+        const fetchPromises = targetSources.map(async (source): Promise<PremiumCategoryVideo[]> => {
             try {
                 const url = new URL(source.baseUrl);
                 url.searchParams.set('ac', 'detail');
                 url.searchParams.set('pg', page.toString());
+                url.searchParams.set('limit', limit.toString());
 
                 if (sourceMap.has(source.id)) {
                     url.searchParams.set('t', sourceMap.get(source.id)!);
@@ -56,20 +75,19 @@ async function handleCategoryRequest(
                 const controller = new AbortController();
                 const timeoutId = setTimeout(() => controller.abort(), 8000);
 
-                const response = await fetch(url.toString(), {
+                const response = await fetchWithPolicy(url, {
                     signal: controller.signal,
                     headers: {
                         'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36',
                     },
-                    next: { revalidate: 1800 },
                 });
 
                 clearTimeout(timeoutId);
 
                 if (!response.ok) return [];
 
-                const data = await response.json();
-                return (data.list || []).map((item: any) => ({
+                const data = (await response.json()) as PremiumCategoryResponse;
+                return (data.list || []).map((item) => ({
                     vod_id: item.vod_id,
                     vod_name: item.vod_name,
                     vod_pic: item.vod_pic,
@@ -85,7 +103,7 @@ async function handleCategoryRequest(
 
         const results = await Promise.all(fetchPromises);
 
-        const interleavedVideos = [];
+        const interleavedVideos: PremiumCategoryVideo[] = [];
         const maxLen = Math.max(...results.map(r => r.length));
 
         for (let i = 0; i < maxLen; i++) {
@@ -111,26 +129,24 @@ export async function POST(request: Request) {
     try {
         const body = await request.json();
         const { sources, category, page, limit } = body;
+        const normalizedSources = await normalizeSourceConfigList(sources);
 
-        // Use provided sources
         return await handleCategoryRequest(
-            sources || [],
+            normalizedSources,
             category || '',
             parseInt(page || '1'),
             parseInt(limit || '20')
         );
-    } catch (error) {
+    } catch {
         return NextResponse.json({ error: 'Invalid request' }, { status: 400 });
     }
 }
 
 export async function GET(request: Request) {
-    // Legacy GET support - currently BROKEN since ADULT_SOURCES is empty
-    // But kept for structure. It will likely return 500 "No enabled sources"
     const { searchParams } = new URL(request.url);
     const categoryParam = searchParams.get('category') || '';
     const page = parseInt(searchParams.get('page') || '1');
     const limit = parseInt(searchParams.get('limit') || '20');
 
-    return await handleCategoryRequest(PREMIUM_SOURCES, categoryParam, page, limit);
+    return await handleCategoryRequest(await normalizeSourceConfigList(PREMIUM_SOURCES), categoryParam, page, limit);
 }

@@ -1,6 +1,12 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useInfiniteScroll } from '@/lib/hooks/useInfiniteScroll';
 
+interface HomeTag {
+    id: string;
+    label: string;
+    value: string;
+}
+
 interface DoubanMovie {
     id: string;
     title: string;
@@ -9,9 +15,13 @@ interface DoubanMovie {
     url: string;
 }
 
+interface DoubanRecommendResponse {
+    subjects?: DoubanMovie[];
+}
+
 const PAGE_LIMIT = 20;
 
-export function usePopularMovies(selectedTag: string, tags: any[], contentType: 'movie' | 'tv' = 'movie') {
+export function usePopularMovies(selectedTag: string, tags: HomeTag[], contentType: 'movie' | 'tv' = 'movie') {
     const [movies, setMovies] = useState<DoubanMovie[]>([]);
     const [loading, setLoading] = useState(false);
     const [hasMore, setHasMore] = useState(true);
@@ -29,7 +39,7 @@ export function usePopularMovies(selectedTag: string, tags: any[], contentType: 
 
             if (!response.ok) throw new Error('Failed to fetch');
 
-            const data = await response.json();
+            const data = (await response.json()) as DoubanRecommendResponse;
             const newMovies = data.subjects || [];
 
             setMovies(prev => append ? [...prev, ...newMovies] : newMovies);

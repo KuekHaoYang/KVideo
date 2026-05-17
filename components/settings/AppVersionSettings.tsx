@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useEffect, useEffectEvent, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { ExternalLink, RefreshCw } from 'lucide-react';
 import { SettingsSection } from './SettingsSection';
 import type { AppReleaseEntry, AppUpdateResponse } from '@/lib/types/app-update';
@@ -109,7 +109,7 @@ export function AppVersionSettings() {
   const [hasLoaded, setHasLoaded] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
-  const fetchUpdateInfo = useEffectEvent(async (manual: boolean = false) => {
+  const fetchUpdateInfo = useCallback(async (manual: boolean = false) => {
     if (manual) {
       setIsRefreshing(true);
     }
@@ -147,13 +147,13 @@ export function AppVersionSettings() {
     } finally {
       if (manual) {
         setIsRefreshing(false);
+        }
       }
-    }
-  });
+  }, []);
 
   useEffect(() => {
     void fetchUpdateInfo(false);
-  }, []);
+  }, [fetchUpdateInfo]);
 
   const handleRefresh = () => {
     void fetchUpdateInfo(true);

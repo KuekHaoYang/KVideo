@@ -5,13 +5,11 @@
  * so they persist across browsers, devices, and PWA installs.
  */
 
-import { Redis } from '@upstash/redis';
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from '@/lib/server/auth';
+import { getRedisClient } from '@/lib/server/redis-client';
 
-export const runtime = 'edge';
-
-const redis = Redis.fromEnv();
+export const runtime = 'nodejs';
 
 function redisKey(profileId: string): string {
   const safe = profileId.replace(/[^a-zA-Z0-9_-]/g, '');
@@ -24,6 +22,11 @@ export async function GET(request: NextRequest) {
 
   if (!profileId) {
     return NextResponse.json({ error: 'Missing profileId' }, { status: 400 });
+  }
+
+  const redis = getRedisClient();
+  if (!redis) {
+    return NextResponse.json({ success: true, data: null, synced: false });
   }
 
   try {
@@ -46,6 +49,11 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Missing profileId' }, { status: 400 });
   }
 
+  const redis = getRedisClient();
+  if (!redis) {
+    return NextResponse.json({ success: true, synced: false });
+  }
+
   try {
     const body = await request.json();
     const key = redisKey(profileId);
@@ -56,7 +64,7 @@ export async function POST(request: NextRequest) {
 
     await redis.set(key, merged);
 
-    return NextResponse.json({ success: true });
+    return NextResponse.json({ success: true, synced: true });
   } catch (error) {
     console.error('Config write error:', error);
     return NextResponse.json(

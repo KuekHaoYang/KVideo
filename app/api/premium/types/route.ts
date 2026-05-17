@@ -1,28 +1,40 @@
 import { NextResponse } from 'next/server';
+import type { VideoSource } from '@/lib/types';
 import { PREMIUM_SOURCES } from '@/lib/api/premium-sources';
+import { fetchWithPolicy } from '@/lib/server/outbound-policy';
+import { normalizeSourceConfigList } from '@/lib/server/source-validation';
 
-export const runtime = 'edge';
+export const runtime = 'nodejs';
 
 export const revalidate = 3600; // Cache for 1 hour
+
+function encodeBase64Utf8(value: string): string {
+    const bytes = new TextEncoder().encode(value);
+    let binary = '';
+
+    bytes.forEach((byte) => {
+        binary += String.fromCharCode(byte);
+    });
+
+    return btoa(binary);
+}
 
 interface Category {
     type_id: number;
     type_name: string;
 }
 
-interface SourceCategories {
-    sourceId: string;
-    sourceName: string;
-    categories: Category[];
+interface PremiumTypesResponse {
+    class?: Category[];
 }
 
 // Shared handler
-async function handleTypesRequest(sourceList: any[]) {
+async function handleTypesRequest(sourceList: VideoSource[]) {
     try {
         const enabledSources = sourceList.filter(s => s.enabled);
 
         const results = await Promise.allSettled(
-            enabledSources.map(async (source: any) => {
+            enabledSources.map(async (source) => {
                 try {
                     const url = new URL(source.baseUrl);
                     url.searchParams.set('ac', 'list');
@@ -30,12 +42,11 @@ async function handleTypesRequest(sourceList: any[]) {
                     const controller = new AbortController();
                     const timeoutId = setTimeout(() => controller.abort(), 5000); // 5s timeout
 
-                    const response = await fetch(url.toString(), {
+                    const response = await fetchWithPolicy(url, {
                         signal: controller.signal,
                         headers: {
                             'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36',
                         },
-                        next: { revalidate: 3600 }
                     });
 
                     clearTimeout(timeoutId);
@@ -44,7 +55,7 @@ async function handleTypesRequest(sourceList: any[]) {
                         throw new Error(`HTTP ${response.status}`);
                     }
 
-                    const data = await response.json();
+                    const data = (await response.json()) as PremiumTypesResponse;
                     return {
                         sourceId: source.id,
                         sourceName: source.name,
@@ -141,7 +152,7 @@ async function handleTypesRequest(sourceList: any[]) {
             if (cat.values.length === 0) return;
 
             // Create a unique ID based on the label (using base64 to be safe)
-            const id = Buffer.from(cat.label).toString('base64');
+            const id = encodeBase64Utf8(cat.label);
 
             allTags.push({
                 id,
@@ -164,12 +175,12 @@ export async function POST(request: Request) {
     try {
         const body = await request.json();
         const { sources } = body;
-        return await handleTypesRequest(sources || []);
-    } catch (error) {
+        return await handleTypesRequest(await normalizeSourceConfigList(sources));
+    } catch {
         return NextResponse.json({ error: 'Invalid request' }, { status: 400 });
     }
 }
 
 export async function GET() {
-    return await handleTypesRequest(PREMIUM_SOURCES);
+    return await handleTypesRequest(await normalizeSourceConfigList(PREMIUM_SOURCES));
 }

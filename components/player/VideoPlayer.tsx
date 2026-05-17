@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useEffect, useCallback } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useHistory } from '@/lib/store/history-store';
 import { CustomVideoPlayer } from './CustomVideoPlayer';
@@ -46,7 +46,7 @@ export function VideoPlayer({
   const [shouldAutoPlay, setShouldAutoPlay] = useState(true);
   const [retryCount, setRetryCount] = useState(0);
   const MAX_MANUAL_RETRIES = 20;
-  const lastSaveTimeRef = useRef(0);
+  const lastSavedPlaybackTimeRef = useRef(0);
   const currentTimeRef = useRef(0);
   const durationRef = useRef(0);
   const SAVE_INTERVAL = 5000; // 5 seconds throttle
@@ -86,7 +86,7 @@ export function VideoPlayer({
   };
 
   // Save progress function (used by throttle and beforeunload)
-  const saveProgress = useCallback((currentTime: number, duration: number) => {
+  const saveProgress = (currentTime: number, duration: number) => {
     if (!videoId || !playUrl || duration === 0 || currentTime <= 1) return;
     addToHistory(
       videoId,
@@ -99,10 +99,10 @@ export function VideoPlayer({
       undefined,
       []
     );
-  }, [videoId, playUrl, title, currentEpisode, source, addToHistory]);
+  };
 
   // Handle time updates and save progress (throttled to every 5 seconds)
-  const handleTimeUpdate = useCallback((currentTime: number, duration: number) => {
+  const handleTimeUpdate = (currentTime: number, duration: number) => {
     // Always track current time for beforeunload
     currentTimeRef.current = currentTime;
     durationRef.current = duration;
@@ -111,13 +111,12 @@ export function VideoPlayer({
 
     if (!videoId || !playUrl || duration === 0) return;
 
-    const now = Date.now();
-    // Only save if enough time has passed since last save
-    if (currentTime > 1 && now - lastSaveTimeRef.current >= SAVE_INTERVAL) {
-      lastSaveTimeRef.current = now;
+    // Only save if enough playback time has passed since the last persisted checkpoint.
+    if (currentTime > 1 && currentTime - lastSavedPlaybackTimeRef.current >= SAVE_INTERVAL / 1000) {
+      lastSavedPlaybackTimeRef.current = currentTime;
       saveProgress(currentTime, duration);
     }
-  }, [videoId, playUrl, saveProgress]);
+  };
 
   // Save on page leave/refresh
   useEffect(() => {
@@ -130,7 +129,7 @@ export function VideoPlayer({
 
     window.addEventListener('beforeunload', handleBeforeUnload);
     return () => window.removeEventListener('beforeunload', handleBeforeUnload);
-  }, [saveProgress]);
+  }, [addToHistory, currentEpisode, playUrl, source, title, videoId]);
 
   // Handle video errors
   const handleVideoError = (error: string) => {

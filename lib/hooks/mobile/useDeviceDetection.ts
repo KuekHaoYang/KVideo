@@ -1,5 +1,9 @@
 import { useState, useEffect } from 'react';
 
+type IOSWindow = Window & {
+    MSStream?: unknown;
+};
+
 /**
  * Hook to detect if the device is mobile
  */
@@ -31,7 +35,8 @@ export function useIsIOS() {
 
     useEffect(() => {
         const checkIOS = () => {
-            const ios = /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream;
+            const iosWindow = window as IOSWindow;
+            const ios = /iPad|iPhone|iPod/.test(navigator.userAgent) && !iosWindow.MSStream;
             setIsIOS(ios);
         };
 

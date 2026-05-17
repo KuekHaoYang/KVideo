@@ -1,0 +1,1440 @@
+{
+    "logs": [
+        {
+            "outputFile": "com.kvideo.tv.app-merged_res-21:/values-eu_values-eu.arsc.flat",
+            "map": [
+                {
+                    "source": "/Users/haoyangkuek/.gradle/caches/transforms-3/a325e913df52f42e28c65f4f8e03b4c0/transformed/core-1.13.1/res/values-eu/values-eu.xml",
+                    "from": {
+                        "startLines": "2,3,4,5,6,7,8,9",
+                        "startColumns": "4,4,4,4,4,4,4,4",
+                        "startOffsets": "55,153,256,356,459,564,667,786",
+                        "endColumns": "97,102,99,102,104,102,118,100",
+                        "endOffsets": "148,251,351,454,559,662,781,882"
+                    }
+                }
+            ]
+        },
+        {
+            "outputFile": "com.kvideo.tv.app-merged_res-21:/values-nl_values-nl.arsc.flat",
+            "map": [
+                {
+                    "source": "/Users/haoyangkuek/.gradle/caches/transforms-3/a325e913df52f42e28c65f4f8e03b4c0/transformed/core-1.13.1/res/values-nl/values-nl.xml",
+                    "from": {
+                        "startLines": "2,3,4,5,6,7,8,9",
+                        "startColumns": "4,4,4,4,4,4,4,4",
+                        "startOffsets": "55,157,259,359,459,566,670,789",
+                        "endColumns": "101,101,99,99,106,103,118,100",
+                        "endOffsets": "152,254,354,454,561,665,784,885"
+                    }
+                }
+            ]
+        },
+        {
+            "outputFile": "com.kvideo.tv.app-merged_res-21:/values-my_values-my.arsc.flat",
+            "map": [
+                {
+                    "source": "/Users/haoyangkuek/.gradle/caches/transforms-3/a325e913df52f42e28c65f4f8e03b4c0/transformed/core-1.13.1/res/values-my/values-my.xml",
+                    "from": {
+                        "startLines": "2,3,4,5,6,7,8,9",
+                        "startColumns": "4,4,4,4,4,4,4,4",
+                        "startOffsets": "55,158,262,365,467,572,678,797",
+                        "endColumns": "102,103,102,101,104,105,118,100",
+                        "endOffsets": "153,257,360,462,567,673,792,893"
+                    }
+                }
+            ]
+        },
+        {
+            "outputFile": "com.kvideo.tv.app-merged_res-21:/values-ur_values-ur.arsc.flat",
+            "map": [
+                {
+                    "source": "/Users/haoyangkuek/.gradle/caches/transforms-3/a325e913df52f42e28c65f4f8e03b4c0/transformed/core-1.13.1/res/values-ur/values-ur.xml",
+                    "from": {
+                        "startLines": "2,3,4,5,6,7,8,9",
+                        "startColumns": "4,4,4,4,4,4,4,4",
+                        "startOffsets": "55,153,255,357,461,564,662,776",
+                        "endColumns": "97,101,101,103,102,97,113,100",
+                        "endOffsets": "148,250,352,456,559,657,771,872"
+                    }
+                }
+            ]
+        },
+        {
+            "outputFile": "com.kvideo.tv.app-merged_res-21:/values-de_values-de.arsc.flat",
+            "map": [
+                {
+                    "source": "/Users/haoyangkuek/.gradle/caches/transforms-3/a325e913df52f42e28c65f4f8e03b4c0/transformed/core-1.13.1/res/values-de/values-de.xml",
+                    "from": {
+                        "startLines": "2,3,4,5,6,7,8,9",
+                        "startColumns": "4,4,4,4,4,4,4,4",
+                        "startOffsets": "55,153,255,355,455,563,668,786",
+                        "endColumns": "97,101,99,99,107,104,117,100",
+                        "endOffsets": "148,250,350,450,558,663,781,882"
+                    }
+                }
+            ]
+        },
+        {
+            "outputFile": "com.kvideo.tv.app-merged_res-21:/values-bg_values-bg.arsc.flat",
+            "map": [
+                {
+                    "source": "/Users/haoyangkuek/.gradle/caches/transforms-3/a325e913df52f42e28c65f4f8e03b4c0/transformed/core-1.13.1/res/values-bg/values-bg.xml",
+                    "from": {
+                        "startLines": "2,3,4,5,6,7,8,9",
+                        "startColumns": "4,4,4,4,4,4,4,4",
+                        "startOffsets": "55,152,262,364,465,572,677,796",
+                        "endColumns": "96,109,101,100,106,104,118,100",
+                        "endOffsets": "147,257,359,460,567,672,791,892"
+                    }
+                }
+            ]
+        },
+        {
+            "outputFile": "com.kvideo.tv.app-merged_res-21:/values-tr_values-tr.arsc.flat",
+            "map": [
+                {
+                    "source": "/Users/haoyangkuek/.gradle/caches/transforms-3/a325e913df52f42e28c65f4f8e03b4c0/transformed/core-1.13.1/res/values-tr/values-tr.xml",
+                    "from": {
+                        "startLines": "2,3,4,5,6,7,8,9",
+                        "startColumns": "4,4,4,4,4,4,4,4",
+                        "startOffsets": "55,152,254,352,449,551,657,768",
+                        "endColumns": "96,101,97,96,101,105,110,100",
+                        "endOffsets": "147,249,347,444,546,652,763,864"
+                    }
+                }
+            ]
+        },
+        {
+            "outputFile": "com.kvideo.tv.app-merged_res-21:/values-kk_values-kk.arsc.flat",
+            "map": [
+                {
+                    "source": "/Users/haoyangkuek/.gradle/caches/transforms-3/a325e913df52f42e28c65f4f8e03b4c0/transformed/core-1.13.1/res/values-kk/values-kk.xml",
+                    "from": {
+                        "startLines": "2,3,4,5,6,7,8,9",
+                        "startColumns": "4,4,4,4,4,4,4,4",
+                        "startOffsets": "55,150,252,354,457,561,658,769",
+                        "endColumns": "94,101,101,102,103,96,110,100",
+                        "endOffsets": "145,247,349,452,556,653,764,865"
+                    }
+                }
+            ]
+        },
+        {
+            "outputFile": "com.kvideo.tv.app-merged_res-21:/values-sv_values-sv.arsc.flat",
+            "map": [
+                {
+                    "source": "/Users/haoyangkuek/.gradle/caches/transforms-3/a325e913df52f42e28c65f4f8e03b4c0/transformed/core-1.13.1/res/values-sv/values-sv.xml",
+                    "from": {
+                        "startLines": "2,3,4,5,6,7,8,9",
+                        "startColumns": "4,4,4,4,4,4,4,4",
+                        "startOffsets": "55,150,252,350,449,557,662,783",
+                        "endColumns": "94,101,97,98,107,104,120,100",
+                        "endOffsets": "145,247,345,444,552,657,778,879"
+                    }
+                }
+            ]
+        },
+        {
+            "outputFile": "com.kvideo.tv.app-merged_res-21:/values-ml_values-ml.arsc.flat",
+            "map": [
+                {
+                    "source": "/Users/haoyangkuek/.gradle/caches/transforms-3/a325e913df52f42e28c65f4f8e03b4c0/transformed/core-1.13.1/res/values-ml/values-ml.xml",
+                    "from": {
+                        "startLines": "2,3,4,5,6,7,8,9",
+                        "startColumns": "4,4,4,4,4,4,4,4",
+                        "startOffsets": "55,157,260,362,466,569,670,792",
+                        "endColumns": "101,102,101,103,102,100,121,100",
+                        "endOffsets": "152,255,357,461,564,665,787,888"
+                    }
+                }
+            ]
+        },
+        {
+            "outputFile": "com.kvideo.tv.app-merged_res-21:/values-it_values-it.arsc.flat",
+            "map": [
+                {
+                    "source": "/Users/haoyangkuek/.gradle/caches/transforms-3/a325e913df52f42e28c65f4f8e03b4c0/transformed/core-1.13.1/res/values-it/values-it.xml",
+                    "from": {
+                        "startLines": "2,3,4,5,6,7,8,9",
+                        "startColumns": "4,4,4,4,4,4,4,4",
+                        "startOffsets": "55,153,255,354,456,565,672,802",
+                        "endColumns": "97,101,98,101,108,106,129,100",
+                        "endOffsets": "148,250,349,451,560,667,797,898"
+                    }
+                }
+            ]
+        },
+        {
+            "outputFile": "com.kvideo.tv.app-merged_res-21:/values-b+sr+Latn_values-b+sr+Latn.arsc.flat",
+            "map": [
+                {
+                    "source": "/Users/haoyangkuek/.gradle/caches/transforms-3/a325e913df52f42e28c65f4f8e03b4c0/transformed/core-1.13.1/res/values-b+sr+Latn/values-b+sr+Latn.xml",
+                    "from": {
+                        "startLines": "2,3,4,5,6,7,8,9",
+                        "startColumns": "4,4,4,4,4,4,4,4",
+                        "startOffsets": "55,153,255,352,456,560,665,781",
+                        "endColumns": "97,101,96,103,103,104,115,100",
+                        "endOffsets": "148,250,347,451,555,660,776,877"
+                    }
+                }
+            ]
+        },
+        {
+            "outputFile": "com.kvideo.tv.app-merged_res-21:/values-es_values-es.arsc.flat",
+            "map": [
+                {
+                    "source": "/Users/haoyangkuek/.gradle/caches/transforms-3/a325e913df52f42e28c65f4f8e03b4c0/transformed/core-1.13.1/res/values-es/values-es.xml",
+                    "from": {
+                        "startLines": "2,3,4,5,6,7,8,9",
+                        "startColumns": "4,4,4,4,4,4,4,4",
+                        "startOffsets": "55,154,256,356,454,561,667,787",
+                        "endColumns": "98,101,99,97,106,105,119,100",
+                        "endOffsets": "149,251,351,449,556,662,782,883"
+                    }
+                }
+            ]
+        },
+        {
+            "outputFile": "com.kvideo.tv.app-merged_res-21:/values-ne_values-ne.arsc.flat",
+            "map": [
+                {
+                    "source": "/Users/haoyangkuek/.gradle/caches/transforms-3/a325e913df52f42e28c65f4f8e03b4c0/transformed/core-1.13.1/res/values-ne/values-ne.xml",
+                    "from": {
+                        "startLines": "2,3,4,5,6,7,8,9",
+                        "startColumns": "4,4,4,4,4,4,4,4",
+                        "startOffsets": "55,158,261,363,469,567,667,775",
+                        "endColumns": "102,102,101,105,97,99,107,100",
+                        "endOffsets": "153,256,358,464,562,662,770,871"
+                    }
+                }
+            ]
+        },
+        {
+            "outputFile": "com.kvideo.tv.app-merged_res-21:/values-pa_values-pa.arsc.flat",
+            "map": [
+                {
+                    "source": "/Users/haoyangkuek/.gradle/caches/transforms-3/a325e913df52f42e28c65f4f8e03b4c0/transformed/core-1.13.1/res/values-pa/values-pa.xml",
+                    "from": {
+                        "startLines": "2,3,4,5,6,7,8,9",
+                        "startColumns": "4,4,4,4,4,4,4,4",
+                        "startOffsets": "55,153,255,358,459,561,659,788",
+                        "endColumns": "97,101,102,100,101,97,128,100",
+                        "endOffsets": "148,250,353,454,556,654,783,884"
+                    }
+                }
+            ]
+        },
+        {
+            "outputFile": "com.kvideo.tv.app-merged_res-21:/values-da_values-da.arsc.flat",
+            "map": [
+                {
+                    "source": "/Users/haoyangkuek/.gradle/caches/transforms-3/a325e913df52f42e28c65f4f8e03b4c0/transformed/core-1.13.1/res/values-da/values-da.xml",
+                    "from": {
+                        "startLines": "2,3,4,5,6,7,8,9",
+                        "startColumns": "4,4,4,4,4,4,4,4",
+                        "startOffsets": "55,151,253,350,448,555,664,782",
+                        "endColumns": "95,101,96,97,106,108,117,100",
+                        "endOffsets": "146,248,345,443,550,659,777,878"
+                    }
+                }
+            ]
+        },
+        {
+            "outputFile": "com.kvideo.tv.app-merged_res-21:/values-zh-rCN_values-zh-rCN.arsc.flat",
+            "map": [
+                {
+                    "source": "/Users/haoyangkuek/.gradle/caches/transforms-3/a325e913df52f42e28c65f4f8e03b4c0/transformed/core-1.13.1/res/values-zh-rCN/values-zh-rCN.xml",
+                    "from": {
+                        "startLines": "2,3,4,5,6,7,8,9",
+                        "startColumns": "4,4,4,4,4,4,4,4",
+                        "startOffsets": "55,147,248,342,436,529,623,719",
+                        "endColumns": "91,100,93,93,92,93,95,100",
+                        "endOffsets": "142,243,337,431,524,618,714,815"
+                    }
+                }
+            ]
+        },
+        {
+            "outputFile": "com.kvideo.tv.app-merged_res-21:/values-sr_values-sr.arsc.flat",
+            "map": [
+                {
+                    "source": "/Users/haoyangkuek/.gradle/caches/transforms-3/a325e913df52f42e28c65f4f8e03b4c0/transformed/core-1.13.1/res/values-sr/values-sr.xml",
+                    "from": {
+                        "startLines": "2,3,4,5,6,7,8,9",
+                        "startColumns": "4,4,4,4,4,4,4,4",
+                        "startOffsets": "55,153,255,352,456,560,665,781",
+                        "endColumns": "97,101,96,103,103,104,115,100",
+                        "endOffsets": "148,250,347,451,555,660,776,877"
+                    }
+                }
+            ]
+        },
+        {
+            "outputFile": "com.kvideo.tv.app-merged_res-21:/values-bn_values-bn.arsc.flat",
+            "map": [
+                {
+                    "source": "/Users/haoyangkuek/.gradle/caches/transforms-3/a325e913df52f42e28c65f4f8e03b4c0/transformed/core-1.13.1/res/values-bn/values-bn.xml",
+                    "from": {
+                        "startLines": "2,3,4,5,6,7,8,9",
+                        "startColumns": "4,4,4,4,4,4,4,4",
+                        "startOffsets": "55,154,256,358,461,562,664,784",
+                        "endColumns": "98,101,101,102,100,101,119,100",
+                        "endOffsets": "149,251,353,456,557,659,779,880"
+                    }
+                }
+            ]
+        },
+        {
+            "outputFile": "com.kvideo.tv.app-merged_res-21:/values-sk_values-sk.arsc.flat",
+            "map": [
+                {
+                    "source": "/Users/haoyangkuek/.gradle/caches/transforms-3/a325e913df52f42e28c65f4f8e03b4c0/transformed/core-1.13.1/res/values-sk/values-sk.xml",
+                    "from": {
+                        "startLines": "2,3,4,5,6,7,8,9",
+                        "startColumns": "4,4,4,4,4,4,4,4",
+                        "startOffsets": "55,151,253,354,452,562,670,792",
+                        "endColumns": "95,101,100,97,109,107,121,100",
+                        "endOffsets": "146,248,349,447,557,665,787,888"
+                    }
+                }
+            ]
+        },
+        {
+            "outputFile": "com.kvideo.tv.app-merged_res-21:/values-ky_values-ky.arsc.flat",
+            "map": [
+                {
+                    "source": "/Users/haoyangkuek/.gradle/caches/transforms-3/a325e913df52f42e28c65f4f8e03b4c0/transformed/core-1.13.1/res/values-ky/values-ky.xml",
+                    "from": {
+                        "startLines": "2,3,4,5,6,7,8,9",
+                        "startColumns": "4,4,4,4,4,4,4,4",
+                        "startOffsets": "55,155,257,360,467,571,675,786",
+                        "endColumns": "99,101,102,106,103,103,110,100",
+                        "endOffsets": "150,252,355,462,566,670,781,882"
+                    }
+                }
+            ]
+        },
+        {
+            "outputFile": "com.kvideo.tv.app-merged_res-21:/values-el_values-el.arsc.flat",
+            "map": [
+                {
+                    "source": "/Users/haoyangkuek/.gradle/caches/transforms-3/a325e913df52f42e28c65f4f8e03b4c0/transformed/core-1.13.1/res/values-el/values-el.xml",
+                    "from": {
+                        "startLines": "2,3,4,5,6,7,8,9",
+                        "startColumns": "4,4,4,4,4,4,4,4",
+                        "startOffsets": "55,153,256,356,459,567,673,790",
+                        "endColumns": "97,102,99,102,107,105,116,100",
+                        "endOffsets": "148,251,351,454,562,668,785,886"
+                    }
+                }
+            ]
+        },
+        {
+            "outputFile": "com.kvideo.tv.app-merged_res-21:/values-vi_values-vi.arsc.flat",
+            "map": [
+                {
+                    "source": "/Users/haoyangkuek/.gradle/caches/transforms-3/a325e913df52f42e28c65f4f8e03b4c0/transformed/core-1.13.1/res/values-vi/values-vi.xml",
+                    "from": {
+                        "startLines": "2,3,4,5,6,7,8,9",
+                        "startColumns": "4,4,4,4,4,4,4,4",
+                        "startOffsets": "55,152,254,353,453,556,669,785",
+                        "endColumns": "96,101,98,99,102,112,115,100",
+                        "endOffsets": "147,249,348,448,551,664,780,881"
+                    }
+                }
+            ]
+        },
+        {
+            "outputFile": "com.kvideo.tv.app-merged_res-21:/values-sq_values-sq.arsc.flat",
+            "map": [
+                {
+                    "source": "/Users/haoyangkuek/.gradle/caches/transforms-3/a325e913df52f42e28c65f4f8e03b4c0/transformed/core-1.13.1/res/values-sq/values-sq.xml",
+                    "from": {
+                        "startLines": "2,3,4,5,6,7,8,9",
+                        "startColumns": "4,4,4,4,4,4,4,4",
+                        "startOffsets": "55,154,256,354,451,559,670,792",
+                        "endColumns": "98,101,97,96,107,110,121,100",
+                        "endOffsets": "149,251,349,446,554,665,787,888"
+                    }
+                }
+            ]
+        },
+        {
+            "outputFile": "com.kvideo.tv.app-merged_res-21:/values-fr-rCA_values-fr-rCA.arsc.flat",
+            "map": [
+                {
+                    "source": "/Users/haoyangkuek/.gradle/caches/transforms-3/a325e913df52f42e28c65f4f8e03b4c0/transformed/core-1.13.1/res/values-fr-rCA/values-fr-rCA.xml",
+                    "from": {
+                        "startLines": "2,3,4,5,6,7,8,9",
+                        "startColumns": "4,4,4,4,4,4,4,4",
+                        "startOffsets": "55,153,255,354,456,560,664,778",
+                        "endColumns": "97,101,98,101,103,103,113,100",
+                        "endOffsets": "148,250,349,451,555,659,773,874"
+                    }
+                }
+            ]
+        },
+        {
+            "outputFile": "com.kvideo.tv.app-merged_res-21:/values-ms_values-ms.arsc.flat",
+            "map": [
+                {
+                    "source": "/Users/haoyangkuek/.gradle/caches/transforms-3/a325e913df52f42e28c65f4f8e03b4c0/transformed/core-1.13.1/res/values-ms/values-ms.xml",
+                    "from": {
+                        "startLines": "2,3,4,5,6,7,8,9",
+                        "startColumns": "4,4,4,4,4,4,4,4",
+                        "startOffsets": "55,150,252,349,459,565,683,798",
+                        "endColumns": "94,101,96,109,105,117,114,100",
+                        "endOffsets": "145,247,344,454,560,678,793,894"
+                    }
+                }
+            ]
+        },
+        {
+            "outputFile": "com.kvideo.tv.app-merged_res-21:/values-zu_values-zu.arsc.flat",
+            "map": [
+                {
+                    "source": "/Users/haoyangkuek/.gradle/caches/transforms-3/a325e913df52f42e28c65f4f8e03b4c0/transformed/core-1.13.1/res/values-zu/values-zu.xml",
+                    "from": {
+                        "startLines": "2,3,4,5,6,7,8,9",
+                        "startColumns": "4,4,4,4,4,4,4,4",
+                        "startOffsets": "55,153,257,356,459,565,672,785",
+                        "endColumns": "97,103,98,102,105,106,112,100",
+                        "endOffsets": "148,252,351,454,560,667,780,881"
+                    }
+                }
+            ]
+        },
+        {
+            "outputFile": "com.kvideo.tv.app-merged_res-21:/values-en-rIN_values-en-rIN.arsc.flat",
+            "map": [
+                {
+                    "source": "/Users/haoyangkuek/.gradle/caches/transforms-3/a325e913df52f42e28c65f4f8e03b4c0/transformed/core-1.13.1/res/values-en-rIN/values-en-rIN.xml",
+                    "from": {
+                        "startLines": "2,3,4,5,6,7,8,9",
+                        "startColumns": "4,4,4,4,4,4,4,4",
+                        "startOffsets": "55,151,253,352,451,555,658,774",
+                        "endColumns": "95,101,98,98,103,102,115,100",
+                        "endOffsets": "146,248,347,446,550,653,769,870"
+                    }
+                }
+            ]
+        },
+        {
+            "outputFile": "com.kvideo.tv.app-merged_res-21:/values-pl_values-pl.arsc.flat",
+            "map": [
+                {
+                    "source": "/Users/haoyangkuek/.gradle/caches/transforms-3/a325e913df52f42e28c65f4f8e03b4c0/transformed/core-1.13.1/res/values-pl/values-pl.xml",
+                    "from": {
+                        "startLines": "2,3,4,5,6,7,8,9",
+                        "startColumns": "4,4,4,4,4,4,4,4",
+                        "startOffsets": "55,152,254,352,451,565,670,792",
+                        "endColumns": "96,101,97,98,113,104,121,100",
+                        "endOffsets": "147,249,347,446,560,665,787,888"
+                    }
+                }
+            ]
+        },
+        {
+            "outputFile": "com.kvideo.tv.app-merged_res-21:/values-uk_values-uk.arsc.flat",
+            "map": [
+                {
+                    "source": "/Users/haoyangkuek/.gradle/caches/transforms-3/a325e913df52f42e28c65f4f8e03b4c0/transformed/core-1.13.1/res/values-uk/values-uk.xml",
+                    "from": {
+                        "startLines": "2,3,4,5,6,7,8,9",
+                        "startColumns": "4,4,4,4,4,4,4,4",
+                        "startOffsets": "55,155,257,358,459,564,669,782",
+                        "endColumns": "99,101,100,100,104,104,112,100",
+                        "endOffsets": "150,252,353,454,559,664,777,878"
+                    }
+                }
+            ]
+        },
+        {
+            "outputFile": "com.kvideo.tv.app-merged_res-21:/values-az_values-az.arsc.flat",
+            "map": [
+                {
+                    "source": "/Users/haoyangkuek/.gradle/caches/transforms-3/a325e913df52f42e28c65f4f8e03b4c0/transformed/core-1.13.1/res/values-az/values-az.xml",
+                    "from": {
+                        "startLines": "2,3,4,5,6,7,8,9",
+                        "startColumns": "4,4,4,4,4,4,4,4",
+                        "startOffsets": "55,156,258,361,465,566,671,782",
+                        "endColumns": "100,101,102,103,100,104,110,100",
+                        "endOffsets": "151,253,356,460,561,666,777,878"
+                    }
+                }
+            ]
+        },
+        {
+            "outputFile": "com.kvideo.tv.app-merged_res-21:/values-kn_values-kn.arsc.flat",
+            "map": [
+                {
+                    "source": "/Users/haoyangkuek/.gradle/caches/transforms-3/a325e913df52f42e28c65f4f8e03b4c0/transformed/core-1.13.1/res/values-kn/values-kn.xml",
+                    "from": {
+                        "startLines": "2,3,4,5,6,7,8,9",
+                        "startColumns": "4,4,4,4,4,4,4,4",
+                        "startOffsets": "55,153,256,357,463,564,672,800",
+                        "endColumns": "97,102,100,105,100,107,127,100",
+                        "endOffsets": "148,251,352,458,559,667,795,896"
+                    }
+                }
+            ]
+        },
+        {
+            "outputFile": "com.kvideo.tv.app-merged_res-21:/values_values.arsc.flat",
+            "map": [
+                {
+                    "source": "/Users/haoyangkuek/.gradle/caches/transforms-3/15ac6c2fc90b7fde5da8d10f11d05bd8/transformed/savedstate-1.2.1/res/values/values.xml",
+                    "from": {
+                        "startLines": "2",
+                        "startColumns": "4",
+                        "startOffsets": "55",
+                        "endColumns": "53",
+                        "endOffsets": "104"
+                    },
+                    "to": {
+                        "startLines": "87",
+                        "startColumns": "4",
+                        "startOffsets": "5201",
+                        "endColumns": "53",
+                        "endOffsets": "5250"
+                    }
+                },
+                {
+                    "source": "/Users/haoyangkuek/.gradle/caches/transforms-3/a325e913df52f42e28c65f4f8e03b4c0/transformed/core-1.13.1/res/values/values.xml",
+                    "from": {
+                        "startLines": "2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62,63,64,65,66,67,68,69,70,71,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88,89,90,91,92,93,94,98,99,103,104,105,106,112,122,155,176,209",
+                        "startColumns": "4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4",
+                        "startOffsets": "55,115,187,275,340,406,475,538,608,676,748,818,879,953,1026,1087,1148,1210,1274,1336,1397,1465,1565,1625,1691,1764,1833,1890,1942,2004,2076,2152,2217,2276,2335,2395,2455,2515,2575,2635,2695,2755,2815,2875,2935,2994,3054,3114,3174,3234,3294,3354,3414,3474,3534,3594,3653,3713,3773,3832,3891,3950,4009,4068,4127,4162,4197,4252,4315,4370,4428,4486,4547,4610,4667,4718,4768,4829,4886,4952,4986,5021,5056,5126,5193,5265,5334,5403,5477,5549,5637,5708,5825,6026,6136,6337,6466,6538,6605,6808,7109,8840,9521,10203",
+                        "endLines": "2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62,63,64,65,66,67,68,69,70,71,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88,89,90,91,92,93,97,98,102,103,104,105,111,121,154,175,208,214",
+                        "endColumns": "59,71,87,64,65,68,62,69,67,71,69,60,73,72,60,60,61,63,61,60,67,99,59,65,72,68,56,51,61,71,75,64,58,58,59,59,59,59,59,59,59,59,59,59,58,59,59,59,59,59,59,59,59,59,59,58,59,59,58,58,58,58,58,58,34,34,54,62,54,57,57,60,62,56,50,49,60,56,65,33,34,34,69,66,71,68,68,73,71,87,70,116,12,109,12,128,71,66,24,24,24,24,24,24",
+                        "endOffsets": "110,182,270,335,401,470,533,603,671,743,813,874,948,1021,1082,1143,1205,1269,1331,1392,1460,1560,1620,1686,1759,1828,1885,1937,1999,2071,2147,2212,2271,2330,2390,2450,2510,2570,2630,2690,2750,2810,2870,2930,2989,3049,3109,3169,3229,3289,3349,3409,3469,3529,3589,3648,3708,3768,3827,3886,3945,4004,4063,4122,4157,4192,4247,4310,4365,4423,4481,4542,4605,4662,4713,4763,4824,4881,4947,4981,5016,5051,5121,5188,5260,5329,5398,5472,5544,5632,5703,5820,6021,6131,6332,6461,6533,6600,6803,7104,8835,9516,10198,10365"
+                    },
+                    "to": {
+                        "startLines": "2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62,63,64,65,66,67,69,70,71,72,73,74,75,76,77,78,79,80,81,82,83,84,89,95,96,97,98,99,100,101,107,120,121,125,126,130,131,132,133,139,149,182,203,236",
+                        "startColumns": "4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4",
+                        "startOffsets": "55,115,187,275,340,406,475,538,608,676,748,818,879,953,1026,1087,1148,1210,1274,1336,1397,1465,1565,1625,1691,1764,1833,1890,1942,2004,2076,2152,2217,2276,2335,2395,2455,2515,2575,2635,2695,2755,2815,2875,2935,2994,3054,3114,3174,3234,3294,3354,3414,3474,3534,3594,3653,3713,3773,3832,3891,3950,4009,4068,4127,4162,4239,4294,4357,4412,4470,4528,4589,4652,4709,4760,4810,4871,4928,4994,5028,5063,5305,5648,5715,5787,5856,5925,5999,6071,6570,7431,7548,7749,7859,8060,8189,8261,8328,8531,8832,10563,11244,11926",
+                        "endLines": "2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62,63,64,65,66,67,69,70,71,72,73,74,75,76,77,78,79,80,81,82,83,84,89,95,96,97,98,99,100,101,107,120,124,125,129,130,131,132,138,148,181,202,235,241",
+                        "endColumns": "59,71,87,64,65,68,62,69,67,71,69,60,73,72,60,60,61,63,61,60,67,99,59,65,72,68,56,51,61,71,75,64,58,58,59,59,59,59,59,59,59,59,59,59,58,59,59,59,59,59,59,59,59,59,59,58,59,59,58,58,58,58,58,58,34,34,54,62,54,57,57,60,62,56,50,49,60,56,65,33,34,34,69,66,71,68,68,73,71,87,70,116,12,109,12,128,71,66,24,24,24,24,24,24",
+                        "endOffsets": "110,182,270,335,401,470,533,603,671,743,813,874,948,1021,1082,1143,1205,1269,1331,1392,1460,1560,1620,1686,1759,1828,1885,1937,1999,2071,2147,2212,2271,2330,2390,2450,2510,2570,2630,2690,2750,2810,2870,2930,2989,3049,3109,3169,3229,3289,3349,3409,3469,3529,3589,3648,3708,3768,3827,3886,3945,4004,4063,4122,4157,4192,4289,4352,4407,4465,4523,4584,4647,4704,4755,4805,4866,4923,4989,5023,5058,5093,5370,5710,5782,5851,5920,5994,6066,6154,6636,7543,7744,7854,8055,8184,8256,8323,8526,8827,10558,11239,11921,12088"
+                    }
+                },
+                {
+                    "source": "/Users/haoyangkuek/.gradle/caches/transforms-3/31e9e517a20236676d5acc877ff77140/transformed/lifecycle-runtime-2.6.2/res/values/values.xml",
+                    "from": {
+                        "startLines": "2",
+                        "startColumns": "4",
+                        "startOffsets": "55",
+                        "endColumns": "42",
+                        "endOffsets": "93"
+                    },
+                    "to": {
+                        "startLines": "85",
+                        "startColumns": "4",
+                        "startOffsets": "5098",
+                        "endColumns": "42",
+                        "endOffsets": "5136"
+                    }
+                },
+                {
+                    "source": "/Users/haoyangkuek/.gradle/caches/transforms-3/81db2a4187fe53e87fd523503e867a03/transformed/activity-1.9.3/res/values/values.xml",
+                    "from": {
+                        "startLines": "2,3",
+                        "startColumns": "4,4",
+                        "startOffsets": "55,97",
+                        "endColumns": "41,59",
+                        "endOffsets": "92,152"
+                    },
+                    "to": {
+                        "startLines": "68,86",
+                        "startColumns": "4,4",
+                        "startOffsets": "4197,5141",
+                        "endColumns": "41,59",
+                        "endOffsets": "4234,5196"
+                    }
+                },
+                {
+                    "source": "/Users/haoyangkuek/development/KVideo/android-tv/app/src/main/res/values/strings.xml",
+                    "from": {
+                        "startLines": "1,9,7,8,3,6,5,4,2,14,11,12,16,10,13,15",
+                        "startColumns": "4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4",
+                        "startOffsets": "16,574,474,528,115,377,318,231,63,921,664,735,1076,617,843,1011",
+                        "endColumns": "46,42,53,45,115,96,58,86,51,89,70,107,72,46,77,64",
+                        "endOffsets": "58,612,523,569,226,469,372,313,110,1006,730,838,1144,659,916,1071"
+                    },
+                    "to": {
+                        "startLines": "91,92,93,94,102,103,104,105,106,108,109,110,111,112,113,114",
+                        "startColumns": "4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4",
+                        "startOffsets": "5458,5505,5548,5602,6159,6275,6372,6431,6518,6641,6731,6802,6910,6983,7030,7108",
+                        "endColumns": "46,42,53,45,115,96,58,86,51,89,70,107,72,46,77,64",
+                        "endOffsets": "5500,5543,5597,5643,6270,6367,6426,6513,6565,6726,6797,6905,6978,7025,7103,7168"
+                    }
+                },
+                {
+                    "source": "/Users/haoyangkuek/.gradle/caches/transforms-3/15e500b8555a9e8f170adfeb4b6f9cd7/transformed/lifecycle-viewmodel-2.6.2/res/values/values.xml",
+                    "from": {
+                        "startLines": "2",
+                        "startColumns": "4",
+                        "startOffsets": "55",
+                        "endColumns": "49",
+                        "endOffsets": "100"
+                    },
+                    "to": {
+                        "startLines": "88",
+                        "startColumns": "4",
+                        "startOffsets": "5255",
+                        "endColumns": "49",
+                        "endOffsets": "5300"
+                    }
+                },
+                {
+                    "source": "/Users/haoyangkuek/development/KVideo/android-tv/app/src/main/res/values/styles.xml",
+                    "from": {
+                        "startLines": "1",
+                        "startColumns": "4",
+                        "startOffsets": "16",
+                        "endLines": "5",
+                        "endColumns": "12",
+                        "endOffsets": "269"
+                    },
+                    "to": {
+                        "startLines": "115",
+                        "startColumns": "4",
+                        "startOffsets": "7173",
+                        "endLines": "119",
+                        "endColumns": "12",
+                        "endOffsets": "7426"
+                    }
+                },
+                {
+                    "source": "/Users/haoyangkuek/.gradle/caches/transforms-3/c81c4a461a30fb5231ba36a4a83e3fef/transformed/startup-runtime-1.1.1/res/values/values.xml",
+                    "from": {
+                        "startLines": "2",
+                        "startColumns": "4",
+                        "startOffsets": "55",
+                        "endColumns": "82",
+                        "endOffsets": "133"
+                    },
+                    "to": {
+                        "startLines": "90",
+                        "startColumns": "4",
+                        "startOffsets": "5375",
+                        "endColumns": "82",
+                        "endOffsets": "5453"
+                    }
+                }
+            ]
+        },
+        {
+            "outputFile": "com.kvideo.tv.app-merged_res-21:/values-be_values-be.arsc.flat",
+            "map": [
+                {
+                    "source": "/Users/haoyangkuek/.gradle/caches/transforms-3/a325e913df52f42e28c65f4f8e03b4c0/transformed/core-1.13.1/res/values-be/values-be.xml",
+                    "from": {
+                        "startLines": "2,3,4,5,6,7,8,9",
+                        "startColumns": "4,4,4,4,4,4,4,4",
+                        "startOffsets": "55,153,255,355,456,562,665,786",
+                        "endColumns": "97,101,99,100,105,102,120,100",
+                        "endOffsets": "148,250,350,451,557,660,781,882"
+                    }
+                }
+            ]
+        },
+        {
+            "outputFile": "com.kvideo.tv.app-merged_res-21:/values-th_values-th.arsc.flat",
+            "map": [
+                {
+                    "source": "/Users/haoyangkuek/.gradle/caches/transforms-3/a325e913df52f42e28c65f4f8e03b4c0/transformed/core-1.13.1/res/values-th/values-th.xml",
+                    "from": {
+                        "startLines": "2,3,4,5,6,7,8,9",
+                        "startColumns": "4,4,4,4,4,4,4,4",
+                        "startOffsets": "55,151,254,352,450,553,658,770",
+                        "endColumns": "95,102,97,97,102,104,111,100",
+                        "endOffsets": "146,249,347,445,548,653,765,866"
+                    }
+                }
+            ]
+        },
+        {
+            "outputFile": "com.kvideo.tv.app-merged_res-21:/values-pt-rPT_values-pt-rPT.arsc.flat",
+            "map": [
+                {
+                    "source": "/Users/haoyangkuek/.gradle/caches/transforms-3/a325e913df52f42e28c65f4f8e03b4c0/transformed/core-1.13.1/res/values-pt-rPT/values-pt-rPT.xml",
+                    "from": {
+                        "startLines": "2,3,4,5,6,7,8,9",
+                        "startColumns": "4,4,4,4,4,4,4,4",
+                        "startOffsets": "55,152,254,353,453,560,666,787",
+                        "endColumns": "96,101,98,99,106,105,120,100",
+                        "endOffsets": "147,249,348,448,555,661,782,883"
+                    }
+                }
+            ]
+        },
+        {
+            "outputFile": "com.kvideo.tv.app-merged_res-21:/values-fa_values-fa.arsc.flat",
+            "map": [
+                {
+                    "source": "/Users/haoyangkuek/.gradle/caches/transforms-3/a325e913df52f42e28c65f4f8e03b4c0/transformed/core-1.13.1/res/values-fa/values-fa.xml",
+                    "from": {
+                        "startLines": "2,3,4,5,6,7,8,9",
+                        "startColumns": "4,4,4,4,4,4,4,4",
+                        "startOffsets": "55,154,256,355,455,556,662,779",
+                        "endColumns": "98,101,98,99,100,105,116,100",
+                        "endOffsets": "149,251,350,450,551,657,774,875"
+                    }
+                }
+            ]
+        },
+        {
+            "outputFile": "com.kvideo.tv.app-merged_res-21:/values-ro_values-ro.arsc.flat",
+            "map": [
+                {
+                    "source": "/Users/haoyangkuek/.gradle/caches/transforms-3/a325e913df52f42e28c65f4f8e03b4c0/transformed/core-1.13.1/res/values-ro/values-ro.xml",
+                    "from": {
+                        "startLines": "2,3,4,5,6,7,8,9",
+                        "startColumns": "4,4,4,4,4,4,4,4",
+                        "startOffsets": "55,153,255,355,454,556,665,782",
+                        "endColumns": "97,101,99,98,101,108,116,100",
+                        "endOffsets": "148,250,350,449,551,660,777,878"
+                    }
+                }
+            ]
+        },
+        {
+            "outputFile": "com.kvideo.tv.app-merged_res-21:/values-mn_values-mn.arsc.flat",
+            "map": [
+                {
+                    "source": "/Users/haoyangkuek/.gradle/caches/transforms-3/a325e913df52f42e28c65f4f8e03b4c0/transformed/core-1.13.1/res/values-mn/values-mn.xml",
+                    "from": {
+                        "startLines": "2,3,4,5,6,7,8,9",
+                        "startColumns": "4,4,4,4,4,4,4,4",
+                        "startOffsets": "55,153,255,356,454,559,671,790",
+                        "endColumns": "97,101,100,97,104,111,118,100",
+                        "endOffsets": "148,250,351,449,554,666,785,886"
+                    }
+                }
+            ]
+        },
+        {
+            "outputFile": "com.kvideo.tv.app-merged_res-21:/values-hr_values-hr.arsc.flat",
+            "map": [
+                {
+                    "source": "/Users/haoyangkuek/.gradle/caches/transforms-3/a325e913df52f42e28c65f4f8e03b4c0/transformed/core-1.13.1/res/values-hr/values-hr.xml",
+                    "from": {
+                        "startLines": "2,3,4,5,6,7,8,9",
+                        "startColumns": "4,4,4,4,4,4,4,4",
+                        "startOffsets": "55,153,260,357,456,560,664,781",
+                        "endColumns": "97,106,96,98,103,103,116,100",
+                        "endOffsets": "148,255,352,451,555,659,776,877"
+                    }
+                }
+            ]
+        },
+        {
+            "outputFile": "com.kvideo.tv.app-merged_res-21:/values-en-rXC_values-en-rXC.arsc.flat",
+            "map": [
+                {
+                    "source": "/Users/haoyangkuek/.gradle/caches/transforms-3/a325e913df52f42e28c65f4f8e03b4c0/transformed/core-1.13.1/res/values-en-rXC/values-en-rXC.xml",
+                    "from": {
+                        "startLines": "2,3,4,5,6,7,8,9",
+                        "startColumns": "4,4,4,4,4,4,4,4",
+                        "startOffsets": "55,251,456,657,858,1065,1270,1482",
+                        "endColumns": "195,204,200,200,206,204,211,203",
+                        "endOffsets": "246,451,652,853,1060,1265,1477,1681"
+                    }
+                }
+            ]
+        },
+        {
+            "outputFile": "com.kvideo.tv.app-merged_res-21:/values-en-rGB_values-en-rGB.arsc.flat",
+            "map": [
+                {
+                    "source": "/Users/haoyangkuek/.gradle/caches/transforms-3/a325e913df52f42e28c65f4f8e03b4c0/transformed/core-1.13.1/res/values-en-rGB/values-en-rGB.xml",
+                    "from": {
+                        "startLines": "2,3,4,5,6,7,8,9",
+                        "startColumns": "4,4,4,4,4,4,4,4",
+                        "startOffsets": "55,151,253,352,451,555,658,774",
+                        "endColumns": "95,101,98,98,103,102,115,100",
+                        "endOffsets": "146,248,347,446,550,653,769,870"
+                    }
+                }
+            ]
+        },
+        {
+            "outputFile": "com.kvideo.tv.app-merged_res-21:/values-sl_values-sl.arsc.flat",
+            "map": [
+                {
+                    "source": "/Users/haoyangkuek/.gradle/caches/transforms-3/a325e913df52f42e28c65f4f8e03b4c0/transformed/core-1.13.1/res/values-sl/values-sl.xml",
+                    "from": {
+                        "startLines": "2,3,4,5,6,7,8,9",
+                        "startColumns": "4,4,4,4,4,4,4,4",
+                        "startOffsets": "55,152,254,352,456,559,661,778",
+                        "endColumns": "96,101,97,103,102,101,116,100",
+                        "endOffsets": "147,249,347,451,554,656,773,874"
+                    }
+                }
+            ]
+        },
+        {
+            "outputFile": "com.kvideo.tv.app-merged_res-21:/values-es-rUS_values-es-rUS.arsc.flat",
+            "map": [
+                {
+                    "source": "/Users/haoyangkuek/.gradle/caches/transforms-3/a325e913df52f42e28c65f4f8e03b4c0/transformed/core-1.13.1/res/values-es-rUS/values-es-rUS.xml",
+                    "from": {
+                        "startLines": "2,3,4,5,6,7,8,9",
+                        "startColumns": "4,4,4,4,4,4,4,4",
+                        "startOffsets": "55,154,256,356,454,561,667,787",
+                        "endColumns": "98,101,99,97,106,105,119,100",
+                        "endOffsets": "149,251,351,449,556,662,782,883"
+                    }
+                }
+            ]
+        },
+        {
+            "outputFile": "com.kvideo.tv.app-merged_res-21:/values-iw_values-iw.arsc.flat",
+            "map": [
+                {
+                    "source": "/Users/haoyangkuek/.gradle/caches/transforms-3/a325e913df52f42e28c65f4f8e03b4c0/transformed/core-1.13.1/res/values-iw/values-iw.xml",
+                    "from": {
+                        "startLines": "2,3,4,5,6,7,8,9",
+                        "startColumns": "4,4,4,4,4,4,4,4",
+                        "startOffsets": "55,149,251,348,445,546,646,752",
+                        "endColumns": "93,101,96,96,100,99,105,100",
+                        "endOffsets": "144,246,343,440,541,641,747,848"
+                    }
+                }
+            ]
+        },
+        {
+            "outputFile": "com.kvideo.tv.app-merged_res-21:/values-ja_values-ja.arsc.flat",
+            "map": [
+                {
+                    "source": "/Users/haoyangkuek/.gradle/caches/transforms-3/a325e913df52f42e28c65f4f8e03b4c0/transformed/core-1.13.1/res/values-ja/values-ja.xml",
+                    "from": {
+                        "startLines": "2,3,4,5,6,7,8,9",
+                        "startColumns": "4,4,4,4,4,4,4,4",
+                        "startOffsets": "55,147,247,341,437,530,623,724",
+                        "endColumns": "91,99,93,95,92,92,100,100",
+                        "endOffsets": "142,242,336,432,525,618,719,820"
+                    }
+                }
+            ]
+        },
+        {
+            "outputFile": "com.kvideo.tv.app-merged_res-21:/values-fi_values-fi.arsc.flat",
+            "map": [
+                {
+                    "source": "/Users/haoyangkuek/.gradle/caches/transforms-3/a325e913df52f42e28c65f4f8e03b4c0/transformed/core-1.13.1/res/values-fi/values-fi.xml",
+                    "from": {
+                        "startLines": "2,3,4,5,6,7,8,9",
+                        "startColumns": "4,4,4,4,4,4,4,4",
+                        "startOffsets": "55,151,253,351,456,561,673,789",
+                        "endColumns": "95,101,97,104,104,111,115,100",
+                        "endOffsets": "146,248,346,451,556,668,784,885"
+                    }
+                }
+            ]
+        },
+        {
+            "outputFile": "com.kvideo.tv.app-merged_res-21:/values-ta_values-ta.arsc.flat",
+            "map": [
+                {
+                    "source": "/Users/haoyangkuek/.gradle/caches/transforms-3/a325e913df52f42e28c65f4f8e03b4c0/transformed/core-1.13.1/res/values-ta/values-ta.xml",
+                    "from": {
+                        "startLines": "2,3,4,5,6,7,8,9",
+                        "startColumns": "4,4,4,4,4,4,4,4",
+                        "startOffsets": "55,151,254,353,451,558,673,801",
+                        "endColumns": "95,102,98,97,106,114,127,100",
+                        "endOffsets": "146,249,348,446,553,668,796,897"
+                    }
+                }
+            ]
+        },
+        {
+            "outputFile": "com.kvideo.tv.app-merged_res-21:/values-et_values-et.arsc.flat",
+            "map": [
+                {
+                    "source": "/Users/haoyangkuek/.gradle/caches/transforms-3/a325e913df52f42e28c65f4f8e03b4c0/transformed/core-1.13.1/res/values-et/values-et.xml",
+                    "from": {
+                        "startLines": "2,3,4,5,6,7,8,9",
+                        "startColumns": "4,4,4,4,4,4,4,4",
+                        "startOffsets": "55,150,252,350,453,559,664,784",
+                        "endColumns": "94,101,97,102,105,104,119,100",
+                        "endOffsets": "145,247,345,448,554,659,779,880"
+                    }
+                }
+            ]
+        },
+        {
+            "outputFile": "com.kvideo.tv.app-merged_res-21:/values-as_values-as.arsc.flat",
+            "map": [
+                {
+                    "source": "/Users/haoyangkuek/.gradle/caches/transforms-3/a325e913df52f42e28c65f4f8e03b4c0/transformed/core-1.13.1/res/values-as/values-as.xml",
+                    "from": {
+                        "startLines": "2,3,4,5,6,7,8,9",
+                        "startColumns": "4,4,4,4,4,4,4,4",
+                        "startOffsets": "55,156,259,367,472,576,676,805",
+                        "endColumns": "100,102,107,104,103,99,128,100",
+                        "endOffsets": "151,254,362,467,571,671,800,901"
+                    }
+                }
+            ]
+        },
+        {
+            "outputFile": "com.kvideo.tv.app-merged_res-21:/values-hy_values-hy.arsc.flat",
+            "map": [
+                {
+                    "source": "/Users/haoyangkuek/.gradle/caches/transforms-3/a325e913df52f42e28c65f4f8e03b4c0/transformed/core-1.13.1/res/values-hy/values-hy.xml",
+                    "from": {
+                        "startLines": "2,3,4,5,6,7,8,9",
+                        "startColumns": "4,4,4,4,4,4,4,4",
+                        "startOffsets": "55,155,260,358,457,562,664,775",
+                        "endColumns": "99,104,97,98,104,101,110,100",
+                        "endOffsets": "150,255,353,452,557,659,770,871"
+                    }
+                }
+            ]
+        },
+        {
+            "outputFile": "com.kvideo.tv.app-merged_res-21:/values-uz_values-uz.arsc.flat",
+            "map": [
+                {
+                    "source": "/Users/haoyangkuek/.gradle/caches/transforms-3/a325e913df52f42e28c65f4f8e03b4c0/transformed/core-1.13.1/res/values-uz/values-uz.xml",
+                    "from": {
+                        "startLines": "2,3,4,5,6,7,8,9",
+                        "startColumns": "4,4,4,4,4,4,4,4",
+                        "startOffsets": "55,157,259,360,460,568,672,791",
+                        "endColumns": "101,101,100,99,107,103,118,100",
+                        "endOffsets": "152,254,355,455,563,667,786,887"
+                    }
+                }
+            ]
+        },
+        {
+            "outputFile": "com.kvideo.tv.app-merged_res-21:/values-zh-rHK_values-zh-rHK.arsc.flat",
+            "map": [
+                {
+                    "source": "/Users/haoyangkuek/.gradle/caches/transforms-3/a325e913df52f42e28c65f4f8e03b4c0/transformed/core-1.13.1/res/values-zh-rHK/values-zh-rHK.xml",
+                    "from": {
+                        "startLines": "2,3,4,5,6,7,8,9",
+                        "startColumns": "4,4,4,4,4,4,4,4",
+                        "startOffsets": "55,147,246,340,434,527,620,716",
+                        "endColumns": "91,98,93,93,92,92,95,100",
+                        "endOffsets": "142,241,335,429,522,615,711,812"
+                    }
+                }
+            ]
+        },
+        {
+            "outputFile": "com.kvideo.tv.app-merged_res-21:/values-fr_values-fr.arsc.flat",
+            "map": [
+                {
+                    "source": "/Users/haoyangkuek/.gradle/caches/transforms-3/a325e913df52f42e28c65f4f8e03b4c0/transformed/core-1.13.1/res/values-fr/values-fr.xml",
+                    "from": {
+                        "startLines": "2,3,4,5,6,7,8,9",
+                        "startColumns": "4,4,4,4,4,4,4,4",
+                        "startOffsets": "55,153,255,354,456,560,664,782",
+                        "endColumns": "97,101,98,101,103,103,117,100",
+                        "endOffsets": "148,250,349,451,555,659,777,878"
+                    }
+                }
+            ]
+        },
+        {
+            "outputFile": "com.kvideo.tv.app-merged_res-21:/values-nb_values-nb.arsc.flat",
+            "map": [
+                {
+                    "source": "/Users/haoyangkuek/.gradle/caches/transforms-3/a325e913df52f42e28c65f4f8e03b4c0/transformed/core-1.13.1/res/values-nb/values-nb.xml",
+                    "from": {
+                        "startLines": "2,3,4,5,6,7,8,9",
+                        "startColumns": "4,4,4,4,4,4,4,4",
+                        "startOffsets": "55,149,251,348,447,555,661,781",
+                        "endColumns": "93,101,96,98,107,105,119,100",
+                        "endOffsets": "144,246,343,442,550,656,776,877"
+                    }
+                }
+            ]
+        },
+        {
+            "outputFile": "com.kvideo.tv.app-merged_res-21:/values-tl_values-tl.arsc.flat",
+            "map": [
+                {
+                    "source": "/Users/haoyangkuek/.gradle/caches/transforms-3/a325e913df52f42e28c65f4f8e03b4c0/transformed/core-1.13.1/res/values-tl/values-tl.xml",
+                    "from": {
+                        "startLines": "2,3,4,5,6,7,8,9",
+                        "startColumns": "4,4,4,4,4,4,4,4",
+                        "startOffsets": "55,152,254,355,452,559,667,789",
+                        "endColumns": "96,101,100,96,106,107,121,100",
+                        "endOffsets": "147,249,350,447,554,662,784,885"
+                    }
+                }
+            ]
+        },
+        {
+            "outputFile": "com.kvideo.tv.app-merged_res-21:/values-bs_values-bs.arsc.flat",
+            "map": [
+                {
+                    "source": "/Users/haoyangkuek/.gradle/caches/transforms-3/a325e913df52f42e28c65f4f8e03b4c0/transformed/core-1.13.1/res/values-bs/values-bs.xml",
+                    "from": {
+                        "startLines": "2,3,4,5,6,7,8,9",
+                        "startColumns": "4,4,4,4,4,4,4,4",
+                        "startOffsets": "55,153,255,353,457,561,663,780",
+                        "endColumns": "97,101,97,103,103,101,116,100",
+                        "endOffsets": "148,250,348,452,556,658,775,876"
+                    }
+                }
+            ]
+        },
+        {
+            "outputFile": "com.kvideo.tv.app-merged_res-21:/values-en-rCA_values-en-rCA.arsc.flat",
+            "map": [
+                {
+                    "source": "/Users/haoyangkuek/.gradle/caches/transforms-3/a325e913df52f42e28c65f4f8e03b4c0/transformed/core-1.13.1/res/values-en-rCA/values-en-rCA.xml",
+                    "from": {
+                        "startLines": "2,3,4,5,6,7,8,9",
+                        "startColumns": "4,4,4,4,4,4,4,4",
+                        "startOffsets": "55,151,253,352,451,555,657,773",
+                        "endColumns": "95,101,98,98,103,101,115,100",
+                        "endOffsets": "146,248,347,446,550,652,768,869"
+                    }
+                }
+            ]
+        },
+        {
+            "outputFile": "com.kvideo.tv.app-merged_res-21:/values-en-rAU_values-en-rAU.arsc.flat",
+            "map": [
+                {
+                    "source": "/Users/haoyangkuek/.gradle/caches/transforms-3/a325e913df52f42e28c65f4f8e03b4c0/transformed/core-1.13.1/res/values-en-rAU/values-en-rAU.xml",
+                    "from": {
+                        "startLines": "2,3,4,5,6,7,8,9",
+                        "startColumns": "4,4,4,4,4,4,4,4",
+                        "startOffsets": "55,151,253,352,451,555,658,774",
+                        "endColumns": "95,101,98,98,103,102,115,100",
+                        "endOffsets": "146,248,347,446,550,653,769,870"
+                    }
+                }
+            ]
+        },
+        {
+            "outputFile": "com.kvideo.tv.app-merged_res-21:/values-ka_values-ka.arsc.flat",
+            "map": [
+                {
+                    "source": "/Users/haoyangkuek/.gradle/caches/transforms-3/a325e913df52f42e28c65f4f8e03b4c0/transformed/core-1.13.1/res/values-ka/values-ka.xml",
+                    "from": {
+                        "startLines": "2,3,4,5,6,7,8,9",
+                        "startColumns": "4,4,4,4,4,4,4,4",
+                        "startOffsets": "55,151,253,352,451,557,661,779",
+                        "endColumns": "95,101,98,98,105,103,117,100",
+                        "endOffsets": "146,248,347,446,552,656,774,875"
+                    }
+                }
+            ]
+        },
+        {
+            "outputFile": "com.kvideo.tv.app-merged_res-21:/values-in_values-in.arsc.flat",
+            "map": [
+                {
+                    "source": "/Users/haoyangkuek/.gradle/caches/transforms-3/a325e913df52f42e28c65f4f8e03b4c0/transformed/core-1.13.1/res/values-in/values-in.xml",
+                    "from": {
+                        "startLines": "2,3,4,5,6,7,8,9",
+                        "startColumns": "4,4,4,4,4,4,4,4",
+                        "startOffsets": "55,150,252,349,446,552,670,785",
+                        "endColumns": "94,101,96,96,105,117,114,100",
+                        "endOffsets": "145,247,344,441,547,665,780,881"
+                    }
+                }
+            ]
+        },
+        {
+            "outputFile": "com.kvideo.tv.app-merged_res-21:/values-hi_values-hi.arsc.flat",
+            "map": [
+                {
+                    "source": "/Users/haoyangkuek/.gradle/caches/transforms-3/a325e913df52f42e28c65f4f8e03b4c0/transformed/core-1.13.1/res/values-hi/values-hi.xml",
+                    "from": {
+                        "startLines": "2,3,4,5,6,7,8,9",
+                        "startColumns": "4,4,4,4,4,4,4,4",
+                        "startOffsets": "55,153,256,361,462,575,681,808",
+                        "endColumns": "97,102,104,100,112,105,126,100",
+                        "endOffsets": "148,251,356,457,570,676,803,904"
+                    }
+                }
+            ]
+        },
+        {
+            "outputFile": "com.kvideo.tv.app-merged_res-21:/values-hu_values-hu.arsc.flat",
+            "map": [
+                {
+                    "source": "/Users/haoyangkuek/.gradle/caches/transforms-3/a325e913df52f42e28c65f4f8e03b4c0/transformed/core-1.13.1/res/values-hu/values-hu.xml",
+                    "from": {
+                        "startLines": "2,3,4,5,6,7,8,9",
+                        "startColumns": "4,4,4,4,4,4,4,4",
+                        "startOffsets": "55,152,254,356,457,560,667,777",
+                        "endColumns": "96,101,101,100,102,106,109,100",
+                        "endOffsets": "147,249,351,452,555,662,772,873"
+                    }
+                }
+            ]
+        },
+        {
+            "outputFile": "com.kvideo.tv.app-merged_res-21:/values-mk_values-mk.arsc.flat",
+            "map": [
+                {
+                    "source": "/Users/haoyangkuek/.gradle/caches/transforms-3/a325e913df52f42e28c65f4f8e03b4c0/transformed/core-1.13.1/res/values-mk/values-mk.xml",
+                    "from": {
+                        "startLines": "2,3,4,5,6,7,8,9",
+                        "startColumns": "4,4,4,4,4,4,4,4",
+                        "startOffsets": "55,153,255,352,450,555,658,774",
+                        "endColumns": "97,101,96,97,104,102,115,100",
+                        "endOffsets": "148,250,347,445,550,653,769,870"
+                    }
+                }
+            ]
+        },
+        {
+            "outputFile": "com.kvideo.tv.app-merged_res-21:/values-sw_values-sw.arsc.flat",
+            "map": [
+                {
+                    "source": "/Users/haoyangkuek/.gradle/caches/transforms-3/a325e913df52f42e28c65f4f8e03b4c0/transformed/core-1.13.1/res/values-sw/values-sw.xml",
+                    "from": {
+                        "startLines": "2,3,4,5,6,7,8,9",
+                        "startColumns": "4,4,4,4,4,4,4,4",
+                        "startOffsets": "55,149,251,348,449,556,663,778",
+                        "endColumns": "93,101,96,100,106,106,114,100",
+                        "endOffsets": "144,246,343,444,551,658,773,874"
+                    }
+                }
+            ]
+        },
+        {
+            "outputFile": "com.kvideo.tv.app-merged_res-21:/values-cs_values-cs.arsc.flat",
+            "map": [
+                {
+                    "source": "/Users/haoyangkuek/.gradle/caches/transforms-3/a325e913df52f42e28c65f4f8e03b4c0/transformed/core-1.13.1/res/values-cs/values-cs.xml",
+                    "from": {
+                        "startLines": "2,3,4,5,6,7,8,9",
+                        "startColumns": "4,4,4,4,4,4,4,4",
+                        "startOffsets": "55,153,255,356,455,560,667,786",
+                        "endColumns": "97,101,100,98,104,106,118,100",
+                        "endOffsets": "148,250,351,450,555,662,781,882"
+                    }
+                }
+            ]
+        },
+        {
+            "outputFile": "com.kvideo.tv.app-merged_res-21:/values-zh-rTW_values-zh-rTW.arsc.flat",
+            "map": [
+                {
+                    "source": "/Users/haoyangkuek/.gradle/caches/transforms-3/a325e913df52f42e28c65f4f8e03b4c0/transformed/core-1.13.1/res/values-zh-rTW/values-zh-rTW.xml",
+                    "from": {
+                        "startLines": "2,3,4,5,6,7,8,9",
+                        "startColumns": "4,4,4,4,4,4,4,4",
+                        "startOffsets": "55,147,246,340,434,527,620,716",
+                        "endColumns": "91,98,93,93,92,92,95,100",
+                        "endOffsets": "142,241,335,429,522,615,711,812"
+                    }
+                }
+            ]
+        },
+        {
+            "outputFile": "com.kvideo.tv.app-merged_res-21:/values-pt_values-pt.arsc.flat",
+            "map": [
+                {
+                    "source": "/Users/haoyangkuek/.gradle/caches/transforms-3/a325e913df52f42e28c65f4f8e03b4c0/transformed/core-1.13.1/res/values-pt/values-pt.xml",
+                    "from": {
+                        "startLines": "2,3,4,5,6,7,8,9",
+                        "startColumns": "4,4,4,4,4,4,4,4",
+                        "startOffsets": "55,152,254,353,453,560,670,790",
+                        "endColumns": "96,101,98,99,106,109,119,100",
+                        "endOffsets": "147,249,348,448,555,665,785,886"
+                    }
+                }
+            ]
+        },
+        {
+            "outputFile": "com.kvideo.tv.app-merged_res-21:/values-gl_values-gl.arsc.flat",
+            "map": [
+                {
+                    "source": "/Users/haoyangkuek/.gradle/caches/transforms-3/a325e913df52f42e28c65f4f8e03b4c0/transformed/core-1.13.1/res/values-gl/values-gl.xml",
+                    "from": {
+                        "startLines": "2,3,4,5,6,7,8,9",
+                        "startColumns": "4,4,4,4,4,4,4,4",
+                        "startOffsets": "55,154,256,356,454,561,667,783",
+                        "endColumns": "98,101,99,97,106,105,115,100",
+                        "endOffsets": "149,251,351,449,556,662,778,879"
+                    }
+                }
+            ]
+        },
+        {
+            "outputFile": "com.kvideo.tv.app-merged_res-21:/values-ca_values-ca.arsc.flat",
+            "map": [
+                {
+                    "source": "/Users/haoyangkuek/.gradle/caches/transforms-3/a325e913df52f42e28c65f4f8e03b4c0/transformed/core-1.13.1/res/values-ca/values-ca.xml",
+                    "from": {
+                        "startLines": "2,3,4,5,6,7,8,9",
+                        "startColumns": "4,4,4,4,4,4,4,4",
+                        "startOffsets": "55,151,253,352,449,555,660,786",
+                        "endColumns": "95,101,98,96,105,104,125,100",
+                        "endOffsets": "146,248,347,444,550,655,781,882"
+                    }
+                }
+            ]
+        },
+        {
+            "outputFile": "com.kvideo.tv.app-merged_res-21:/values-te_values-te.arsc.flat",
+            "map": [
+                {
+                    "source": "/Users/haoyangkuek/.gradle/caches/transforms-3/a325e913df52f42e28c65f4f8e03b4c0/transformed/core-1.13.1/res/values-te/values-te.xml",
+                    "from": {
+                        "startLines": "2,3,4,5,6,7,8,9",
+                        "startColumns": "4,4,4,4,4,4,4,4",
+                        "startOffsets": "55,157,265,367,468,574,681,805",
+                        "endColumns": "101,107,101,100,105,106,123,100",
+                        "endOffsets": "152,260,362,463,569,676,800,901"
+                    }
+                }
+            ]
+        },
+        {
+            "outputFile": "com.kvideo.tv.app-merged_res-21:/values-km_values-km.arsc.flat",
+            "map": [
+                {
+                    "source": "/Users/haoyangkuek/.gradle/caches/transforms-3/a325e913df52f42e28c65f4f8e03b4c0/transformed/core-1.13.1/res/values-km/values-km.xml",
+                    "from": {
+                        "startLines": "2,3,4,5,6,7,8,9",
+                        "startColumns": "4,4,4,4,4,4,4,4",
+                        "startOffsets": "55,150,253,351,451,552,664,776",
+                        "endColumns": "94,102,97,99,100,111,111,100",
+                        "endOffsets": "145,248,346,446,547,659,771,872"
+                    }
+                }
+            ]
+        },
+        {
+            "outputFile": "com.kvideo.tv.app-merged_res-21:/values-mr_values-mr.arsc.flat",
+            "map": [
+                {
+                    "source": "/Users/haoyangkuek/.gradle/caches/transforms-3/a325e913df52f42e28c65f4f8e03b4c0/transformed/core-1.13.1/res/values-mr/values-mr.xml",
+                    "from": {
+                        "startLines": "2,3,4,5,6,7,8,9",
+                        "startColumns": "4,4,4,4,4,4,4,4",
+                        "startOffsets": "55,155,259,360,463,565,670,787",
+                        "endColumns": "99,103,100,102,101,104,116,100",
+                        "endOffsets": "150,254,355,458,560,665,782,883"
+                    }
+                }
+            ]
+        },
+        {
+            "outputFile": "com.kvideo.tv.app-merged_res-21:/values-is_values-is.arsc.flat",
+            "map": [
+                {
+                    "source": "/Users/haoyangkuek/.gradle/caches/transforms-3/a325e913df52f42e28c65f4f8e03b4c0/transformed/core-1.13.1/res/values-is/values-is.xml",
+                    "from": {
+                        "startLines": "2,3,4,5,6,7,8,9",
+                        "startColumns": "4,4,4,4,4,4,4,4",
+                        "startOffsets": "55,150,257,354,454,557,661,772",
+                        "endColumns": "94,106,96,99,102,103,110,100",
+                        "endOffsets": "145,252,349,449,552,656,767,868"
+                    }
+                }
+            ]
+        },
+        {
+            "outputFile": "com.kvideo.tv.app-merged_res-21:/values-v21_values-v21.arsc.flat",
+            "map": [
+                {
+                    "source": "/Users/haoyangkuek/.gradle/caches/transforms-3/a325e913df52f42e28c65f4f8e03b4c0/transformed/core-1.13.1/res/values-v21/values-v21.xml",
+                    "from": {
+                        "startLines": "2,3,4,5,6,7,8,9,10,13",
+                        "startColumns": "4,4,4,4,4,4,4,4,4,4",
+                        "startOffsets": "55,173,237,304,368,484,610,736,864,1036",
+                        "endLines": "2,3,4,5,6,7,8,9,12,17",
+                        "endColumns": "117,63,66,63,115,125,125,127,12,12",
+                        "endOffsets": "168,232,299,363,479,605,731,859,1031,1383"
+                    }
+                }
+            ]
+        },
+        {
+            "outputFile": "com.kvideo.tv.app-merged_res-21:/values-gu_values-gu.arsc.flat",
+            "map": [
+                {
+                    "source": "/Users/haoyangkuek/.gradle/caches/transforms-3/a325e913df52f42e28c65f4f8e03b4c0/transformed/core-1.13.1/res/values-gu/values-gu.xml",
+                    "from": {
+                        "startLines": "2,3,4,5,6,7,8,9",
+                        "startColumns": "4,4,4,4,4,4,4,4",
+                        "startOffsets": "55,149,252,349,451,553,651,773",
+                        "endColumns": "93,102,96,101,101,97,121,100",
+                        "endOffsets": "144,247,344,446,548,646,768,869"
+                    }
+                }
+            ]
+        },
+        {
+            "outputFile": "com.kvideo.tv.app-merged_res-21:/values-lv_values-lv.arsc.flat",
+            "map": [
+                {
+                    "source": "/Users/haoyangkuek/.gradle/caches/transforms-3/a325e913df52f42e28c65f4f8e03b4c0/transformed/core-1.13.1/res/values-lv/values-lv.xml",
+                    "from": {
+                        "startLines": "2,3,4,5,6,7,8,9",
+                        "startColumns": "4,4,4,4,4,4,4,4",
+                        "startOffsets": "55,153,255,355,456,563,671,786",
+                        "endColumns": "97,101,99,100,106,107,114,100",
+                        "endOffsets": "148,250,350,451,558,666,781,882"
+                    }
+                }
+            ]
+        },
+        {
+            "outputFile": "com.kvideo.tv.app-merged_res-21:/values-pt-rBR_values-pt-rBR.arsc.flat",
+            "map": [
+                {
+                    "source": "/Users/haoyangkuek/.gradle/caches/transforms-3/a325e913df52f42e28c65f4f8e03b4c0/transformed/core-1.13.1/res/values-pt-rBR/values-pt-rBR.xml",
+                    "from": {
+                        "startLines": "2,3,4,5,6,7,8,9",
+                        "startColumns": "4,4,4,4,4,4,4,4",
+                        "startOffsets": "55,152,254,353,453,560,670,790",
+                        "endColumns": "96,101,98,99,106,109,119,100",
+                        "endOffsets": "147,249,348,448,555,665,785,886"
+                    }
+                }
+            ]
+        },
+        {
+            "outputFile": "com.kvideo.tv.app-merged_res-21:/values-ru_values-ru.arsc.flat",
+            "map": [
+                {
+                    "source": "/Users/haoyangkuek/.gradle/caches/transforms-3/a325e913df52f42e28c65f4f8e03b4c0/transformed/core-1.13.1/res/values-ru/values-ru.xml",
+                    "from": {
+                        "startLines": "2,3,4,5,6,7,8,9",
+                        "startColumns": "4,4,4,4,4,4,4,4",
+                        "startOffsets": "55,153,255,356,457,562,665,782",
+                        "endColumns": "97,101,100,100,104,102,116,100",
+                        "endOffsets": "148,250,351,452,557,660,777,878"
+                    }
+                }
+            ]
+        },
+        {
+            "outputFile": "com.kvideo.tv.app-merged_res-21:/values-si_values-si.arsc.flat",
+            "map": [
+                {
+                    "source": "/Users/haoyangkuek/.gradle/caches/transforms-3/a325e913df52f42e28c65f4f8e03b4c0/transformed/core-1.13.1/res/values-si/values-si.xml",
+                    "from": {
+                        "startLines": "2,3,4,5,6,7,8,9",
+                        "startColumns": "4,4,4,4,4,4,4,4",
+                        "startOffsets": "55,157,260,365,470,569,673,787",
+                        "endColumns": "101,102,104,104,98,103,113,100",
+                        "endOffsets": "152,255,360,465,564,668,782,883"
+                    }
+                }
+            ]
+        },
+        {
+            "outputFile": "com.kvideo.tv.app-merged_res-21:/values-am_values-am.arsc.flat",
+            "map": [
+                {
+                    "source": "/Users/haoyangkuek/.gradle/caches/transforms-3/a325e913df52f42e28c65f4f8e03b4c0/transformed/core-1.13.1/res/values-am/values-am.xml",
+                    "from": {
+                        "startLines": "2,3,4,5,6,7,8,9",
+                        "startColumns": "4,4,4,4,4,4,4,4",
+                        "startOffsets": "55,148,248,345,444,540,642,742",
+                        "endColumns": "92,99,96,98,95,101,99,100",
+                        "endOffsets": "143,243,340,439,535,637,737,838"
+                    }
+                }
+            ]
+        },
+        {
+            "outputFile": "com.kvideo.tv.app-merged_res-21:/values-af_values-af.arsc.flat",
+            "map": [
+                {
+                    "source": "/Users/haoyangkuek/.gradle/caches/transforms-3/a325e913df52f42e28c65f4f8e03b4c0/transformed/core-1.13.1/res/values-af/values-af.xml",
+                    "from": {
+                        "startLines": "2,3,4,5,6,7,8,9",
+                        "startColumns": "4,4,4,4,4,4,4,4",
+                        "startOffsets": "55,153,255,353,451,558,667,787",
+                        "endColumns": "97,101,97,97,106,108,119,100",
+                        "endOffsets": "148,250,348,446,553,662,782,883"
+                    }
+                }
+            ]
+        },
+        {
+            "outputFile": "com.kvideo.tv.app-merged_res-21:/values-lt_values-lt.arsc.flat",
+            "map": [
+                {
+                    "source": "/Users/haoyangkuek/.gradle/caches/transforms-3/a325e913df52f42e28c65f4f8e03b4c0/transformed/core-1.13.1/res/values-lt/values-lt.xml",
+                    "from": {
+                        "startLines": "2,3,4,5,6,7,8,9",
+                        "startColumns": "4,4,4,4,4,4,4,4",
+                        "startOffsets": "55,153,263,362,465,576,686,806",
+                        "endColumns": "97,109,98,102,110,109,119,100",
+                        "endOffsets": "148,258,357,460,571,681,801,902"
+                    }
+                }
+            ]
+        },
+        {
+            "outputFile": "com.kvideo.tv.app-merged_res-21:/values-ko_values-ko.arsc.flat",
+            "map": [
+                {
+                    "source": "/Users/haoyangkuek/.gradle/caches/transforms-3/a325e913df52f42e28c65f4f8e03b4c0/transformed/core-1.13.1/res/values-ko/values-ko.xml",
+                    "from": {
+                        "startLines": "2,3,4,5,6,7,8,9",
+                        "startColumns": "4,4,4,4,4,4,4,4",
+                        "startOffsets": "55,147,247,341,438,534,632,732",
+                        "endColumns": "91,99,93,96,95,97,99,100",
+                        "endOffsets": "142,242,336,433,529,627,727,828"
+                    }
+                }
+            ]
+        },
+        {
+            "outputFile": "com.kvideo.tv.app-merged_res-21:/values-ar_values-ar.arsc.flat",
+            "map": [
+                {
+                    "source": "/Users/haoyangkuek/.gradle/caches/transforms-3/a325e913df52f42e28c65f4f8e03b4c0/transformed/core-1.13.1/res/values-ar/values-ar.xml",
+                    "from": {
+                        "startLines": "2,3,4,5,6,7,8,9",
+                        "startColumns": "4,4,4,4,4,4,4,4",
+                        "startOffsets": "55,148,250,345,448,551,653,767",
+                        "endColumns": "92,101,94,102,102,101,113,100",
+                        "endOffsets": "143,245,340,443,546,648,762,863"
+                    }
+                }
+            ]
+        },
+        {
+            "outputFile": "com.kvideo.tv.app-merged_res-21:/values-lo_values-lo.arsc.flat",
+            "map": [
+                {
+                    "source": "/Users/haoyangkuek/.gradle/caches/transforms-3/a325e913df52f42e28c65f4f8e03b4c0/transformed/core-1.13.1/res/values-lo/values-lo.xml",
+                    "from": {
+                        "startLines": "2,3,4,5,6,7,8,9",
+                        "startColumns": "4,4,4,4,4,4,4,4",
+                        "startOffsets": "55,151,254,353,451,552,650,761",
+                        "endColumns": "95,102,98,97,100,97,110,100",
+                        "endOffsets": "146,249,348,446,547,645,756,857"
+                    }
+                }
+            ]
+        },
+        {
+            "outputFile": "com.kvideo.tv.app-merged_res-21:/values-or_values-or.arsc.flat",
+            "map": [
+                {
+                    "source": "/Users/haoyangkuek/.gradle/caches/transforms-3/a325e913df52f42e28c65f4f8e03b4c0/transformed/core-1.13.1/res/values-or/values-or.xml",
+                    "from": {
+                        "startLines": "2,3,4,5,6,7,8,9",
+                        "startColumns": "4,4,4,4,4,4,4,4",
+                        "startOffsets": "55,158,260,363,468,569,671,790",
+                        "endColumns": "102,101,102,104,100,101,118,100",
+                        "endOffsets": "153,255,358,463,564,666,785,886"
+                    }
+                }
+            ]
+        }
+    ]
+}

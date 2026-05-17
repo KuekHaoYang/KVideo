@@ -10,12 +10,14 @@ export function useHomePage() {
     useSubscriptionSync();
     const router = useRouter();
     const searchParams = useSearchParams();
+    const initialUrlQuery = searchParams.get('q') ?? '';
     const { loadFromCache, saveToCache } = useSearchCache();
     const hasLoadedCache = useRef(false);
     const hasSearchedWithSourcesRef = useRef(false);
     const isInitialCacheLoad = useRef(false);
+    const initialUrlQueryRef = useRef(initialUrlQuery);
 
-    const [query, setQuery] = useState('');
+    const [query, setQuery] = useState(initialUrlQuery);
     const [hasSearched, setHasSearched] = useState(false);
     const [currentSortBy, setCurrentSortBy] = useState<SortOption>('default');
 
@@ -130,21 +132,22 @@ export function useHomePage() {
         if (hasLoadedCache.current) return;
         hasLoadedCache.current = true;
 
-        const urlQuery = searchParams.get('q');
+        const urlQuery = initialUrlQueryRef.current;
         const cached = loadFromCache();
 
         if (urlQuery) {
-            setQuery(urlQuery);
-            if (cached && cached.query === urlQuery && cached.results.length > 0) {
-                isInitialCacheLoad.current = true;
-                setHasSearched(true);
-                loadCachedResults(cached.results, cached.availableSources);
-                hasSearchedWithSourcesRef.current = true;
-            } else {
-                handleSearch(urlQuery);
-            }
+            queueMicrotask(() => {
+                if (cached && cached.query === urlQuery && cached.results.length > 0) {
+                    isInitialCacheLoad.current = true;
+                    setHasSearched(true);
+                    loadCachedResults(cached.results, cached.availableSources);
+                    hasSearchedWithSourcesRef.current = true;
+                } else {
+                    handleSearch(urlQuery);
+                }
+            });
         }
-    }, [searchParams, loadFromCache, loadCachedResults, handleSearch]);
+    }, [loadFromCache, loadCachedResults, handleSearch]);
 
 
 

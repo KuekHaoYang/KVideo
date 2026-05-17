@@ -1,0 +1,253 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<incidents format="6" by="lint 8.2.0" type="incidents">
+
+    <incident
+        id="ScrollViewSize"
+        severity="warning"
+        message="This FrameLayout should use `android:layout_height=&quot;wrap_content&quot;`">
+        <location
+            file="${:app*debug*MAIN*sourceProvider*0*resDir*0}/layout/activity_main.xml"
+            line="21"
+            column="13"
+            startOffset="672"
+            endLine="21"
+            endColumn="49"
+            endOffset="708"/>
+    </incident>
+
+    <incident
+        id="UselessParent"
+        severity="warning"
+        message="This `LinearLayout` layout or its `FrameLayout` parent is unnecessary; transfer the `background` attribute to the other view">
+        <location
+            file="${:app*debug*MAIN*sourceProvider*0*resDir*0}/layout/activity_main.xml"
+            line="24"
+            column="14"
+            startOffset="759"
+            endLine="24"
+            endColumn="26"
+            endOffset="771"/>
+    </incident>
+
+    <incident
+        id="ButtonStyle"
+        severity="warning"
+        message="Buttons in button bars should be borderless; use `style=&quot;?android:attr/buttonBarButtonStyle&quot;` (and `?android:attr/buttonBarStyle` on the parent)">
+        <fix-composite
+            description="Make borderless">
+            <fix-attribute
+                description="Set style=&quot;?android:attr/buttonBarStyle&quot;"
+                attribute="style"
+                value="?android:attr/buttonBarStyle">
+                <range
+                    file="${:app*debug*MAIN*sourceProvider*0*resDir*0}/layout/activity_main.xml"
+                    startOffset="3425"
+                    endOffset="4605"/>
+            </fix-attribute>
+            <fix-attribute
+                description="Set style=&quot;?android:attr/buttonBarButtonStyle&quot;"
+                attribute="style"
+                value="?android:attr/buttonBarButtonStyle">
+                <range
+                    file="${:app*debug*MAIN*sourceProvider*0*resDir*0}/layout/activity_main.xml"
+                    startOffset="3733"
+                    endOffset="4116"/>
+            </fix-attribute>
+            <fix-attribute
+                description="Set style=&quot;?android:attr/buttonBarButtonStyle&quot;"
+                attribute="style"
+                value="?android:attr/buttonBarButtonStyle">
+                <range
+                    file="${:app*debug*MAIN*sourceProvider*0*resDir*0}/layout/activity_main.xml"
+                    startOffset="4138"
+                    endOffset="4573"/>
+            </fix-attribute>
+        </fix-composite>
+        <location
+            file="${:app*debug*MAIN*sourceProvider*0*resDir*0}/layout/activity_main.xml"
+            line="92"
+            column="22"
+            startOffset="3734"
+            endLine="92"
+            endColumn="28"
+            endOffset="3740"/>
+    </incident>
+
+    <incident
+        id="ButtonStyle"
+        severity="warning"
+        message="Buttons in button bars should be borderless; use `style=&quot;?android:attr/buttonBarButtonStyle&quot;` (and `?android:attr/buttonBarStyle` on the parent)">
+        <fix-composite
+            description="Make borderless">
+            <fix-attribute
+                description="Set style=&quot;?android:attr/buttonBarStyle&quot;"
+                attribute="style"
+                value="?android:attr/buttonBarStyle">
+                <range
+                    file="${:app*debug*MAIN*sourceProvider*0*resDir*0}/layout/activity_main.xml"
+                    startOffset="3425"
+                    endOffset="4605"/>
+            </fix-attribute>
+            <fix-attribute
+                description="Set style=&quot;?android:attr/buttonBarButtonStyle&quot;"
+                attribute="style"
+                value="?android:attr/buttonBarButtonStyle">
+                <range
+                    file="${:app*debug*MAIN*sourceProvider*0*resDir*0}/layout/activity_main.xml"
+                    startOffset="3733"
+                    endOffset="4116"/>
+            </fix-attribute>
+            <fix-attribute
+                description="Set style=&quot;?android:attr/buttonBarButtonStyle&quot;"
+                attribute="style"
+                value="?android:attr/buttonBarButtonStyle">
+                <range
+                    file="${:app*debug*MAIN*sourceProvider*0*resDir*0}/layout/activity_main.xml"
+                    startOffset="4138"
+                    endOffset="4573"/>
+            </fix-attribute>
+        </fix-composite>
+        <location
+            file="${:app*debug*MAIN*sourceProvider*0*resDir*0}/layout/activity_main.xml"
+            line="101"
+            column="22"
+            startOffset="4139"
+            endLine="101"
+            endColumn="28"
+            endOffset="4145"/>
+    </incident>
+
+    <incident
+        id="ObsoleteSdkInt"
+        severity="warning"
+        message="Unnecessary; SDK_INT is always >= 26">
+        <fix-data conditional="true"/>
+        <location
+            file="${:app*debug*MAIN*sourceProvider*0*javaDir*0}/com/kvideo/tv/MainActivity.kt"
+            line="111"
+            column="21"
+            startOffset="4197"
+            endLine="111"
+            endColumn="67"
+            endOffset="4243"/>
+    </incident>
+
+    <incident
+        id="ObsoleteSdkInt"
+        severity="warning"
+        message="Unnecessary; SDK_INT is never &lt; 26">
+        <fix-data conditional="false"/>
+        <location
+            file="${:app*debug*MAIN*sourceProvider*0*javaDir*0}/com/kvideo/tv/MainActivity.kt"
+            line="437"
+            column="13"
+            startOffset="14953"
+            endLine="437"
+            endColumn="58"
+            endOffset="14998"/>
+    </incident>
+
+    <incident
+        id="GradleDependency"
+        severity="warning"
+        message="A newer version of androidx.core:core-ktx than 1.13.1 is available: 1.18.0">
+        <fix-replace
+            description="Change to 1.18.0"
+            family="Update versions"
+            oldString="1.13.1"
+            replacement="1.18.0"/>
+        <location
+            file="${:app*projectDir}/build.gradle.kts"
+            line="59"
+            column="21"
+            startOffset="1475"
+            endLine="59"
+            endColumn="50"
+            endOffset="1504"/>
+    </incident>
+
+    <incident
+        id="GradleDependency"
+        severity="warning"
+        message="A newer version of androidx.activity:activity-ktx than 1.9.3 is available: 1.13.0">
+        <fix-replace
+            description="Change to 1.13.0"
+            family="Update versions"
+            oldString="1.9.3"
+            replacement="1.13.0"/>
+        <location
+            file="${:app*projectDir}/build.gradle.kts"
+            line="60"
+            column="21"
+            startOffset="1527"
+            endLine="60"
+            endColumn="57"
+            endOffset="1563"/>
+    </incident>
+
+    <incident
+        id="GradleDependency"
+        severity="warning"
+        message="A newer version of androidx.webkit:webkit than 1.14.0 is available: 1.15.0">
+        <fix-replace
+            description="Change to 1.15.0"
+            family="Update versions"
+            oldString="1.14.0"
+            replacement="1.15.0"/>
+        <location
+            file="${:app*projectDir}/build.gradle.kts"
+            line="61"
+            column="21"
+            startOffset="1586"
+            endLine="61"
+            endColumn="50"
+            endOffset="1615"/>
+    </incident>
+
+    <incident
+        id="IconLauncherShape"
+        severity="warning"
+        message="Launcher icon used as round icon did not have a circular shape">
+        <location
+            file="${:app*debug*MAIN*sourceProvider*0*resDir*0}/mipmap-hdpi/ic_launcher.png"/>
+    </incident>
+
+    <incident
+        id="IconLauncherShape"
+        severity="warning"
+        message="Launcher icon used as round icon did not have a circular shape">
+        <location
+            file="${:app*debug*MAIN*sourceProvider*0*resDir*0}/mipmap-xxxhdpi/ic_launcher.png"/>
+    </incident>
+
+    <incident
+        id="IconLauncherShape"
+        severity="warning"
+        message="Launcher icon used as round icon did not have a circular shape">
+        <location
+            file="${:app*debug*MAIN*sourceProvider*0*resDir*0}/mipmap-xxhdpi/ic_launcher.png"/>
+    </incident>
+
+    <incident
+        id="IconLauncherShape"
+        severity="warning"
+        message="Launcher icon used as round icon did not have a circular shape">
+        <location
+            file="${:app*debug*MAIN*sourceProvider*0*resDir*0}/mipmap-xhdpi/ic_launcher.png"/>
+    </incident>
+
+    <incident
+        id="Overdraw"
+        severity="warning"
+        message="Possible overdraw: Root element paints background `#000000` with a theme that also paints a background (inferred theme is `@style/AppTheme`)">
+        <location
+            file="${:app*debug*MAIN*sourceProvider*0*resDir*0}/layout/activity_main.xml"
+            line="5"
+            column="5"
+            startOffset="196"
+            endLine="5"
+            endColumn="33"
+            endOffset="224"/>
+    </incident>
+
+</incidents>

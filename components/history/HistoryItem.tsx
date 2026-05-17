@@ -3,7 +3,6 @@
  * Displays video thumbnail, title, episode, progress, and delete button
  */
 
-import Image from 'next/image';
 import { Icons } from '@/components/ui/Icon';
 import { formatTime, formatDate } from '@/lib/utils/format-utils';
 import { PosterImage } from './PosterImage';
@@ -45,7 +44,7 @@ export function HistoryItem({ item, onRemove, isPremium = false }: HistoryItemPr
     return `/player?${params.toString()}`;
   };
 
-  const handleClick = (event: React.MouseEvent) => {
+  const handleClick = (event: React.MouseEvent<HTMLAnchorElement>) => {
     // Middle mouse or Ctrl/Cmd+click opens in new tab
     if (event.button === 1 || event.ctrlKey || event.metaKey) {
       event.preventDefault();
@@ -65,12 +64,12 @@ export function HistoryItem({ item, onRemove, isPremium = false }: HistoryItemPr
         href={getVideoUrl()}
         onClick={(e) => {
           e.preventDefault();
-          handleClick(e as any);
+          handleClick(e);
           if (!e.ctrlKey && !e.metaKey) {
             window.location.href = getVideoUrl();
           }
         }}
-        onAuxClick={(e) => handleClick(e as any)}
+        onAuxClick={handleClick}
         className="block"
       >
         <div className="flex gap-3">

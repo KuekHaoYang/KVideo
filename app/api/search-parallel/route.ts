@@ -1,200 +1,185 @@
-/**
- * Parallel Streaming Search API Route
- * Searches all sources in parallel and streams results immediately as they arrive.
- * Supports abort via request.signal when clients disconnect.
- * Caps results per source and total to prevent OOM.
- */
-
 import { NextRequest } from 'next/server';
 import { searchVideos } from '@/lib/api/client';
 import { getSourceName } from '@/lib/utils/source-names';
 import { traditionalToSimplified } from '@/lib/utils/chinese-convert';
+import { requireAuthenticatedRequestIfConfigured } from '@/lib/server/api-access';
+import { normalizeSourceConfigList } from '@/lib/server/source-validation';
+import type { VideoItem, VideoSource } from '@/lib/types';
 
-export const runtime = 'edge';
+export const runtime = 'nodejs';
 
 const MAX_TOTAL_VIDEOS = 2000;
 const MAX_PAGES_PER_SOURCE = 3;
 const PER_SOURCE_TIMEOUT_MS = 20000;
 
+interface SearchRequestBody {
+  query?: unknown;
+  sources?: unknown;
+}
+
+function withPresentationFields(videos: VideoItem[], source: VideoSource, latency: number) {
+  return videos.map((video) => ({
+    ...video,
+    sourceDisplayName: getSourceName(source.id),
+    latency,
+  }));
+}
+
 export async function POST(request: NextRequest) {
+  const access = await requireAuthenticatedRequestIfConfigured(request);
+  if (access.error) {
+    return access.error;
+  }
+
+  const body = (await request.json()) as SearchRequestBody;
+  const query = typeof body.query === 'string' ? body.query.trim() : '';
+  const sources = await normalizeSourceConfigList(body.sources, 50);
+
+  if (!query) {
+    return Response.json({ error: 'Invalid query' }, { status: 400 });
+  }
+
+  if (sources.length === 0) {
+    return Response.json({ error: 'No valid sources provided' }, { status: 400 });
+  }
+
+  const normalizedQuery = traditionalToSimplified(query);
   const encoder = new TextEncoder();
 
   const stream = new ReadableStream({
     async start(controller) {
-      // Use the request signal for abort detection
       const signal = request.signal;
 
       const safeSend = (data: object) => {
-        if (signal.aborted) return;
+        if (signal.aborted) {
+          return;
+        }
+
         try {
           controller.enqueue(encoder.encode(`data: ${JSON.stringify(data)}\n\n`));
         } catch {
-          // Controller may be closed
+          // Ignore closed controller errors.
         }
       };
 
-      try {
-        const body = await request.json();
-        const { query, sources: sourceConfigs } = body;
+      safeSend({ type: 'start', totalSources: sources.length });
 
-        if (!query || typeof query !== 'string' || query.trim().length === 0) {
-          safeSend({ type: 'error', message: 'Invalid query' });
-          controller.close();
+      let completedSources = 0;
+      let totalVideosFound = 0;
+
+      const searchPromises = sources.map(async (source) => {
+        if (signal.aborted) {
           return;
         }
 
-        const normalizedQuery = traditionalToSimplified(query.trim());
-        const sources = Array.isArray(sourceConfigs) && sourceConfigs.length > 0
-          ? sourceConfigs
-          : [];
+        const startTime = performance.now();
+        const sourceController = new AbortController();
+        const sourceTimeout = setTimeout(() => sourceController.abort(), PER_SOURCE_TIMEOUT_MS);
+        const onRequestAbort = () => sourceController.abort();
+        signal.addEventListener('abort', onRequestAbort, { once: true });
 
-        if (sources.length === 0) {
-          safeSend({ type: 'error', message: 'No valid sources provided' });
-          controller.close();
-          return;
-        }
-
-        safeSend({ type: 'start', totalSources: sources.length });
-
-        let completedSources = 0;
-        let totalVideosFound = 0;
-
-        const searchPromises = sources.map(async (source: any) => {
-          if (signal.aborted) return;
-
-          const startTime = performance.now();
-
-          // Per-source timeout via AbortController
-          const sourceController = new AbortController();
-          const sourceTimeout = setTimeout(
-            () => sourceController.abort(),
-            PER_SOURCE_TIMEOUT_MS
+        try {
+          const [initialResult] = await searchVideos(
+            normalizedQuery,
+            [source],
+            1,
+            sourceController.signal,
           );
 
-          // Cascade request abort to source controller
-          const onRequestAbort = () => sourceController.abort();
-          signal.addEventListener('abort', onRequestAbort, { once: true });
+          const latency = Math.round(performance.now() - startTime);
+          const videos = initialResult?.results || [];
+          const pagecount = initialResult?.pagecount ?? 1;
 
-          try {
-            const result = await searchVideos(
-              normalizedQuery, [source], 1, sourceController.signal
-            );
-            const endTime = performance.now();
-            const latency = Math.round(endTime - startTime);
-            const videos = result[0]?.results || [];
-            const pagecount = result[0]?.pagecount ?? 1;
+          completedSources += 1;
+          totalVideosFound += videos.length;
 
-            completedSources++;
-            totalVideosFound += videos.length;
-
-            if (videos.length > 0 && !signal.aborted) {
-              safeSend({
-                type: 'videos',
-                videos: videos.map((video: any) => ({
-                  ...video,
-                  sourceDisplayName: getSourceName(source.id),
-                  latency,
-                })),
-                source: source.id,
-                completedSources,
-                totalSources: sources.length,
-                latency,
-              });
-            }
-
+          if (videos.length > 0 && !signal.aborted) {
             safeSend({
-              type: 'progress',
+              type: 'videos',
+              videos: withPresentationFields(videos, source, latency),
+              source: source.id,
               completedSources,
               totalSources: sources.length,
-              totalVideosFound,
+              latency,
             });
+          }
 
-            // Auto-fetch remaining pages (capped)
-            if (pagecount > 1 && totalVideosFound < MAX_TOTAL_VIDEOS && !signal.aborted) {
-              const maxPages = Math.min(pagecount, MAX_PAGES_PER_SOURCE);
-              const remainingPages = Array.from(
-                { length: maxPages - 1 }, (_, i) => i + 2
-              );
+          safeSend({
+            type: 'progress',
+            completedSources,
+            totalSources: sources.length,
+            totalVideosFound,
+          });
 
-              for (const pg of remainingPages) {
-                if (signal.aborted || totalVideosFound >= MAX_TOTAL_VIDEOS) break;
+          if (pagecount > 1 && totalVideosFound < MAX_TOTAL_VIDEOS && !signal.aborted) {
+            const maxPages = Math.min(pagecount, MAX_PAGES_PER_SOURCE);
 
-                try {
-                  const pageResult = await searchVideos(
-                    normalizedQuery, [source], pg, sourceController.signal
-                  );
-                  const pageVideos = pageResult[0]?.results || [];
-                  totalVideosFound += pageVideos.length;
+            for (let page = 2; page <= maxPages; page += 1) {
+              if (signal.aborted || totalVideosFound >= MAX_TOTAL_VIDEOS) {
+                break;
+              }
 
-                  if (pageVideos.length > 0 && !signal.aborted) {
-                    safeSend({
-                      type: 'videos',
-                      videos: pageVideos.map((video: any) => ({
-                        ...video,
-                        sourceDisplayName: getSourceName(source.id),
-                        latency,
-                      })),
-                      source: source.id,
-                      completedSources,
-                      totalSources: sources.length,
-                      latency,
-                    });
-                  }
+              try {
+                const [pageResult] = await searchVideos(
+                  normalizedQuery,
+                  [source],
+                  page,
+                  sourceController.signal,
+                );
+                const pageVideos = pageResult?.results || [];
+                totalVideosFound += pageVideos.length;
 
+                if (pageVideos.length > 0 && !signal.aborted) {
                   safeSend({
-                    type: 'progress',
+                    type: 'videos',
+                    videos: withPresentationFields(pageVideos, source, latency),
+                    source: source.id,
                     completedSources,
                     totalSources: sources.length,
-                    totalVideosFound,
+                    latency,
                   });
-                } catch {
-                  // Page fetch failed, continue
                 }
+
+                safeSend({
+                  type: 'progress',
+                  completedSources,
+                  totalSources: sources.length,
+                  totalVideosFound,
+                });
+              } catch {
+                // Ignore failed page fetches and continue.
               }
             }
-          } catch (error) {
-            const endTime = performance.now();
-            const latency = Math.round(endTime - startTime);
-            console.error(
-              `[Search] Source ${source.id} failed after ${latency}ms:`,
-              error
-            );
-            completedSources++;
-
-            safeSend({
-              type: 'progress',
-              completedSources,
-              totalSources: sources.length,
-              totalVideosFound,
-            });
-          } finally {
-            clearTimeout(sourceTimeout);
-            signal.removeEventListener('abort', onRequestAbort);
           }
-        });
+        } catch (error) {
+          const latency = Math.round(performance.now() - startTime);
+          console.error(`[Search] Source ${source.id} failed after ${latency}ms:`, error);
+          completedSources += 1;
 
-        await Promise.all(searchPromises);
-
-        if (!signal.aborted) {
           safeSend({
-            type: 'complete',
-            totalVideosFound,
+            type: 'progress',
+            completedSources,
             totalSources: sources.length,
-            maxPageCount: MAX_PAGES_PER_SOURCE,
+            totalVideosFound,
           });
+        } finally {
+          clearTimeout(sourceTimeout);
+          signal.removeEventListener('abort', onRequestAbort);
         }
+      });
 
-        controller.close();
-      } catch (error) {
-        if (!signal.aborted) {
-          console.error('Search error:', error);
-          safeSend({
-            type: 'error',
-            message: error instanceof Error ? error.message : 'Unknown error',
-          });
-        }
-        controller.close();
+      await Promise.all(searchPromises);
+
+      if (!signal.aborted) {
+        safeSend({
+          type: 'complete',
+          totalVideosFound,
+          totalSources: sources.length,
+          maxPageCount: MAX_PAGES_PER_SOURCE,
+        });
       }
+
+      controller.close();
     },
   });
 
@@ -202,7 +187,7 @@ export async function POST(request: NextRequest) {
     headers: {
       'Content-Type': 'text/event-stream',
       'Cache-Control': 'no-cache',
-      'Connection': 'keep-alive',
+      Connection: 'keep-alive',
     },
   });
 }

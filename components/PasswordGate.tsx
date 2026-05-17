@@ -117,6 +117,7 @@ export function PasswordGate({
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [authError, setAuthError] = useState('');
   const [isClient, setIsClient] = useState(false);
   const [persistSession, setPersistSession] = useState(true);
   const [isValidating, setIsValidating] = useState(false);
@@ -145,6 +146,7 @@ export function PasswordGate({
 
         setPersistSession(config.persistSession);
         setLoginMode(config.loginMode || 'none');
+        setAuthError(typeof config.authError === 'string' ? config.authError : '');
         applyRuntimeConfig(config);
 
         if (sessionStatus.authenticated && sessionStatus.session) {
@@ -171,6 +173,13 @@ export function PasswordGate({
           return;
         }
 
+        if (config.authError) {
+          setError(config.authError);
+          setIsLocked(true);
+          setIsClient(true);
+          return;
+        }
+
         setIsLocked(!!config.hasAuth);
         setIsClient(true);
       } catch {
@@ -189,8 +198,14 @@ export function PasswordGate({
 
   const handleUnlock = async (event: React.FormEvent) => {
     event.preventDefault();
+    if (authError) {
+      setError(authError);
+      return;
+    }
+
     setIsValidating(true);
     setError('');
+    let nextError = '';
 
     try {
       const response = await fetch('/api/auth', {
@@ -208,11 +223,15 @@ export function PasswordGate({
         window.location.reload();
         return;
       }
+
+      if (typeof data.message === 'string' && data.message) {
+        nextError = data.message;
+      }
     } catch {
       // Ignore network errors and show the same message as invalid credentials.
     }
 
-    setError(loginMode === 'managed' ? '用户名或密码错误' : '密码错误');
+    setError(nextError || (loginMode === 'managed' ? '用户名或密码错误' : '密码错误'));
     setIsValidating(false);
     const form = document.getElementById('password-form');
     form?.classList.add('animate-shake');
@@ -256,7 +275,9 @@ export function PasswordGate({
                     value={username}
                     onChange={(event) => {
                       setUsername(event.target.value);
-                      setError('');
+                      if (!authError) {
+                        setError('');
+                      }
                     }}
                     placeholder="输入用户名..."
                     className="w-full pl-11 pr-4 py-3 rounded-[var(--radius-2xl)] bg-[var(--glass-bg)] border border-[var(--glass-border)] focus:outline-none focus:border-[var(--accent-color)] focus:shadow-[0_0_0_3px_color-mix(in_srgb,var(--accent-color)_30%,transparent)] transition-all duration-[0.4s] cubic-bezier(0.2,0.8,0.2,1) text-[var(--text-color)] placeholder-[var(--text-color-secondary)]"
@@ -273,7 +294,9 @@ export function PasswordGate({
                 value={password}
                 onChange={(event) => {
                   setPassword(event.target.value);
-                  setError('');
+                  if (!authError) {
+                    setError('');
+                  }
                 }}
                 placeholder={showManagedFields ? '输入密码...' : '输入密码...'}
                 className={`w-full px-4 py-3 rounded-[var(--radius-2xl)] bg-[var(--glass-bg)] border ${error ? 'border-red-500' : 'border-[var(--glass-border)]'} focus:outline-none focus:border-[var(--accent-color)] focus:shadow-[0_0_0_3px_color-mix(in_srgb,var(--accent-color)_30%,transparent)] transition-all duration-[0.4s] cubic-bezier(0.2,0.8,0.2,1) text-[var(--text-color)] placeholder-[var(--text-color-secondary)]`}
@@ -289,10 +312,10 @@ export function PasswordGate({
 
             <button
               type="submit"
-              disabled={isValidating}
+              disabled={isValidating || !!authError}
               className="w-full py-3 px-4 bg-[var(--accent-color)] text-white font-bold rounded-[var(--radius-2xl)] hover:translate-y-[-2px] hover:brightness-110 shadow-[var(--shadow-sm)] hover:shadow-[0_4px_8px_var(--shadow-color)] active:translate-y-0 active:scale-[0.98] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {isValidating ? '验证中...' : '登录'}
+              {authError ? '配置错误' : isValidating ? '验证中...' : '登录'}
             </button>
           </div>
         </form>

@@ -13,6 +13,34 @@ interface UseHlsPlayerProps {
     onError?: (message: string) => void;
 }
 
+interface PlaylistLoaderContext {
+    type: string;
+    url: string;
+}
+
+interface PlaylistLoaderResponse {
+    data?: string;
+}
+
+interface PlaylistLoaderCallbacks {
+    onSuccess: (
+        response: PlaylistLoaderResponse,
+        stats: unknown,
+        context: PlaylistLoaderContext,
+        networkDetails: unknown
+    ) => void;
+}
+
+interface PlaylistLoaderInstance {
+    load(
+        context: PlaylistLoaderContext,
+        config: unknown,
+        callbacks: PlaylistLoaderCallbacks
+    ): void;
+}
+
+type PlaylistLoaderConstructor = new (config: unknown) => PlaylistLoaderInstance;
+
 export function useHlsPlayer({
     videoRef,
     src,
@@ -48,23 +76,22 @@ export function useHlsPlayer({
         if (isMSESupported) {
 
             // Define custom loader class to intercept manifest loading
-            // We use 'any' cast because default loader type might not be strictly exposed in all typings
-            const DefaultLoader = (Hls as any).DefaultConfig.loader;
+            const DefaultLoader = Hls.DefaultConfig.loader as unknown as PlaylistLoaderConstructor;
 
             class AdFilterLoader extends DefaultLoader {
-                load(context: any, config: any, callbacks: any) {
+                load(context: PlaylistLoaderContext, config: unknown, callbacks: PlaylistLoaderCallbacks) {
                     if (isAdFilterEnabled && (context.type === 'manifest' || context.type === 'level')) {
                         const originalOnSuccess = callbacks.onSuccess;
-                        callbacks.onSuccess = (response: any, stats: any, context: any, networkDetails: any) => {
+                        callbacks.onSuccess = (response, stats, requestContext, networkDetails) => {
                             if (typeof response.data === 'string') {
                                 try {
                                     // Filter the content
-                                    response.data = filterM3u8Ad(response.data, context.url, adFilterMode, adKeywords);
+                                    response.data = filterM3u8Ad(response.data, requestContext.url, adFilterMode, adKeywords);
                                 } catch (e) {
                                     console.warn('[HLS] Ad filter error:', e);
                                 }
                             }
-                            originalOnSuccess(response, stats, context, networkDetails);
+                            originalOnSuccess(response, stats, requestContext, networkDetails);
                         };
                     }
                     super.load(context, config, callbacks);
@@ -76,7 +103,7 @@ export function useHlsPlayer({
                 // Exceptions might exist for iOS where MSE is strictly not available, check Hls.isSupported() result carefully.
                 // Hls.isSupported() is false on iOS Safari usually, so this block won't run there.
 
-                const config: any = {
+                const config: Partial<Hls['config']> = {
                     // Worker & Performance
                     enableWorker: true,
                     lowLatencyMode: false,
@@ -121,7 +148,7 @@ export function useHlsPlayer({
 
                 // Use custom loader if ad filtering is enabled
                 if (isAdFilterEnabled) {
-                    config.loader = AdFilterLoader;
+                    config.loader = AdFilterLoader as unknown as typeof Hls.DefaultConfig.loader;
                 }
 
                 hls = new Hls(config);

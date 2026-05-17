@@ -13,6 +13,15 @@ interface DesktopSpeedMenuProps {
     isRotated?: boolean;
 }
 
+interface MenuPositionState {
+    top: number;
+    left: number;
+    maxHeight: string;
+    openUpward: boolean;
+    align: 'left' | 'right';
+    triggerWidth: number;
+}
+
 export function DesktopSpeedMenu({
     showSpeedMenu,
     playbackRate,
@@ -26,7 +35,15 @@ export function DesktopSpeedMenu({
 }: DesktopSpeedMenuProps) {
     const buttonRef = React.useRef<HTMLButtonElement>(null);
     const menuRef = React.useRef<HTMLDivElement>(null);
-    const [menuPosition, setMenuPosition] = React.useState({ top: 0, left: 0, maxHeight: 'none', openUpward: false, align: 'right' as 'left' | 'right' });
+    const [menuPosition, setMenuPosition] = React.useState<MenuPositionState>({
+        top: 0,
+        left: 0,
+        maxHeight: 'none',
+        openUpward: false,
+        align: 'right',
+        triggerWidth: 0,
+    });
+    const [portalTarget, setPortalTarget] = React.useState<HTMLElement | null>(null);
 
     const [isFullscreen, setIsFullscreen] = React.useState(false);
 
@@ -46,6 +63,17 @@ export function DesktopSpeedMenu({
             clearInterval(interval);
         };
     }, [containerRef]);
+
+    React.useEffect(() => {
+        if (typeof document === 'undefined') {
+            return;
+        }
+
+        const nextPortalTarget = ((isRotated || isFullscreen) && containerRef.current)
+            ? containerRef.current
+            : document.body;
+        setPortalTarget(nextPortalTarget);
+    }, [containerRef, isRotated, isFullscreen, showSpeedMenu]);
 
     // Dual Positioning Strategy
     const calculateMenuPosition = React.useCallback(() => {
@@ -92,7 +120,8 @@ export function DesktopSpeedMenu({
                 left: left,
                 maxHeight: `${maxHeight}px`,
                 openUpward: openUpward,
-                align: align
+                align: align,
+                triggerWidth: buttonRect.width,
             });
         } else if (isFullscreen && !isRotated) {
             // Fullscreen Mode (not rotated): Use container-relative coordinates
@@ -132,7 +161,8 @@ export function DesktopSpeedMenu({
                 left: isLeftHalf ? left : left + buttonWidth,
                 maxHeight: `${maxHeight}px`,
                 openUpward: openUpward,
-                align: align
+                align: align,
+                triggerWidth: buttonWidth,
             });
         } else {
             // Rotated Mode: Fullscreen/Landscape forced
@@ -183,7 +213,8 @@ export function DesktopSpeedMenu({
                 left: left, // Fixed vertical container coordinate
                 maxHeight: `${maxHeight}px`,
                 openUpward: openUpward,
-                align: align
+                align: align,
+                triggerWidth: buttonWidth,
             });
         }
     }, [containerRef, isRotated, isFullscreen]);
@@ -232,7 +263,7 @@ export function DesktopSpeedMenu({
                         right: `calc(100% - ${menuPosition.left}px + 10px)`,
                         left: 'auto'
                     } : {
-                        left: `${menuPosition.left + buttonRef.current?.offsetWidth! + 10}px`,
+                        left: `${menuPosition.left + menuPosition.triggerWidth + 10}px`,
                         right: 'auto'
                     }),
 
@@ -295,7 +326,7 @@ export function DesktopSpeedMenu({
                 So portaling to containerRef is SAFE and CORRECT.
             */}
             {/* Speed Menu (Portal) */}
-            {showSpeedMenu && typeof document !== 'undefined' && createPortal(MenuContent, ((isRotated || isFullscreen) && containerRef.current) ? containerRef.current : document.body)}
+            {showSpeedMenu && portalTarget && createPortal(MenuContent, portalTarget)}
         </div>
     );
 }

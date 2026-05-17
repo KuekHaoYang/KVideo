@@ -146,11 +146,11 @@ function PlayerContent() {
     let sources: SourceInfo[] = [];
 
     if (gsKey) {
-      const cached = retrieveGroupedSources(gsKey);
+      const cached = retrieveGroupedSources<SourceInfo[]>(gsKey);
       if (cached) sources = cached;
     } else if (groupedSourcesParam) {
       try {
-        sources = JSON.parse(groupedSourcesParam);
+        sources = JSON.parse(groupedSourcesParam) as SourceInfo[];
       } catch {
         sources = [];
       }
@@ -200,7 +200,7 @@ function PlayerContent() {
     // Check if existing grouped sources already have full info (pic + latency)
     let existingSources: SourceInfo[] = [];
     if (gsKey) {
-      const cached = retrieveGroupedSources(gsKey);
+      const cached = retrieveGroupedSources<SourceInfo[]>(gsKey);
       if (cached) existingSources = cached;
     } else if (groupedSourcesParam) {
       try { existingSources = JSON.parse(groupedSourcesParam); } catch {}

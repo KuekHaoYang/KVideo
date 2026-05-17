@@ -28,10 +28,19 @@ export function DataSettings({ onExport, onImport, onReset }: DataSettingsProps)
                         <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12" />
                     </svg>
                 </button>
+            </div>
+
+            <div className="mt-6 rounded-[var(--radius-2xl)] border border-red-200/80 bg-red-50/80 p-4 dark:border-red-900/60 dark:bg-red-950/20">
+                <div className="mb-3">
+                    <h3 className="text-sm font-semibold text-red-700 dark:text-red-300">危险操作</h3>
+                    <p className="mt-1 text-sm text-red-700/80 dark:text-red-300/80">
+                        这会删除本地设置、历史、收藏，并同时请求服务端清除当前登录会话。
+                    </p>
+                </div>
 
                 <button
                     onClick={onReset}
-                    className="w-full px-6 py-4 rounded-[var(--radius-2xl)] bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 font-medium hover:bg-red-100 dark:hover:bg-red-900/30 transition-all duration-200 flex items-center justify-between cursor-pointer"
+                    className="w-full px-6 py-4 rounded-[var(--radius-2xl)] bg-red-600 border border-red-700 text-white font-medium hover:bg-red-700 transition-all duration-200 flex items-center justify-between cursor-pointer"
                 >
                     <span>清除所有数据</span>
                     <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">

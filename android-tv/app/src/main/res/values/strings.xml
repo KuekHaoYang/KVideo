@@ -1,14 +1,18 @@
 <resources>
-    <string name="app_name">KVideo</string>
+    <string name="app_name">KVideo TV</string>
     <string name="setup_title">连接你的 KVideo</string>
-    <string name="setup_description">首次使用时输入你的 KVideo 部署地址。保存后，APK 会记住这个地址，后续可直接打开。</string>
+    <string name="setup_description">这是一个仅面向 Android TV 的轻量 WebView 壳。首次使用时输入你的 KVideo 部署地址，保存后可直接从电视主页打开。</string>
+    <string name="setup_security_note">发布版默认只接受 HTTPS，并且应用只会继续停留在你配置的同一站点域名内。</string>
     <string name="setup_hint">https://example.com</string>
-    <string name="setup_footer">提示：如果 APK 已打开站点，按返回直到页面根目录即可回到这里；部分遥控器也可直接按菜单键打开此设置页。</string>
+    <string name="setup_footer">提示：如果 APK 已打开站点，按菜单键可随时返回这个设置页；发布版不会加载 HTTP 地址或跳转到其他域名。</string>
     <string name="button_open_saved">打开已保存地址</string>
-    <string name="button_save">保存并重载</string>
+    <string name="button_save">保存并打开</string>
     <string name="button_exit">退出</string>
     <string name="status_ready">已准备就绪</string>
     <string name="status_first_launch">首次使用请先填写可访问的 KVideo 地址</string>
-    <string name="status_invalid_url">地址无效。请输入完整的 http:// 或 https:// 地址，或输入域名后让应用自动补全为 https://。</string>
+    <string name="status_invalid_url">地址无效。发布版仅允许 HTTPS；调试版可选 HTTP 或 HTTPS。输入域名时应用会自动补全为 https://。</string>
     <string name="status_settings_hint">你可以在这里修改服务器地址，然后重新打开 KVideo。</string>
+    <string name="status_blocked_navigation">已拦截跨站跳转。Android TV 壳仅允许当前已配置站点继续导航。</string>
+    <string name="status_ssl_error">TLS 证书校验失败，已阻止当前加载。</string>
+    <string name="status_load_failed">页面加载失败，请检查地址、证书和网络连通性后重试。</string>
 </resources>

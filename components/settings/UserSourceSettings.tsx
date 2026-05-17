@@ -1,24 +1,21 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useSyncExternalStore } from 'react';
 import { SettingsSection } from './SettingsSection';
 import { Icons } from '@/components/ui/Icon';
 import { userSourcesStore } from '@/lib/store/user-sources-store';
 import type { VideoSource } from '@/lib/types';
 
 export function UserSourceSettings() {
-  const [sources, setSources] = useState<VideoSource[]>([]);
+  const sourcesSnapshot = useSyncExternalStore(
+    (listener) => userSourcesStore.subscribe(listener),
+    () => JSON.stringify(userSourcesStore.getSources()),
+    () => '[]',
+  );
+  const sources = JSON.parse(sourcesSnapshot) as VideoSource[];
   const [name, setName] = useState('');
   const [baseUrl, setBaseUrl] = useState('');
   const [error, setError] = useState('');
-
-  useEffect(() => {
-    setSources(userSourcesStore.getSources());
-    const unsub = userSourcesStore.subscribe(() => {
-      setSources(userSourcesStore.getSources());
-    });
-    return unsub;
-  }, []);
 
   const handleAdd = (e: React.FormEvent) => {
     e.preventDefault();

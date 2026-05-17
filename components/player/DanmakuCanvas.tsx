@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useRef, useEffect, useCallback } from 'react';
+import React, { useRef, useEffect, useCallback, useSyncExternalStore } from 'react';
 import type { DanmakuComment } from '@/lib/types/danmaku';
 import { settingsStore } from '@/lib/store/settings-store';
 
@@ -18,6 +18,7 @@ interface ActiveDanmaku {
   speed: number;
   width: number;
   lane: number;
+  expiresAt?: number;
 }
 
 const SCROLL_DURATION = 8; // seconds for a comment to cross the screen
@@ -34,24 +35,14 @@ export function DanmakuCanvas({ comments, currentTime, isPlaying, duration }: Da
   const lastSpawnTimeRef = useRef(-1);
   const laneSlotsRef = useRef<number[]>(new Array(MAX_LANES).fill(0)); // tracks when each lane becomes free
 
-  // Settings (read reactively)
-  const [opacity, setOpacity] = React.useState(0.7);
-  const [fontSize, setFontSize] = React.useState(20);
-  const [displayArea, setDisplayArea] = React.useState(0.5);
-
-  useEffect(() => {
-    const s = settingsStore.getSettings();
-    setOpacity(s.danmakuOpacity);
-    setFontSize(s.danmakuFontSize);
-    setDisplayArea(s.danmakuDisplayArea);
-    const unsub = settingsStore.subscribe(() => {
-      const ns = settingsStore.getSettings();
-      setOpacity(ns.danmakuOpacity);
-      setFontSize(ns.danmakuFontSize);
-      setDisplayArea(ns.danmakuDisplayArea);
-    });
-    return unsub;
-  }, []);
+  const settings = useSyncExternalStore(
+    settingsStore.subscribe,
+    settingsStore.getSettings,
+    settingsStore.getSettings
+  );
+  const opacity = settings.danmakuOpacity;
+  const fontSize = settings.danmakuFontSize;
+  const displayArea = settings.danmakuDisplayArea;
 
   // Handle canvas resize
   useEffect(() => {
@@ -164,12 +155,13 @@ export function DanmakuCanvas({ comments, currentTime, isPlaying, duration }: Da
           : effectiveHeight - bestLane * laneHeight - fontSize * 0.4;
 
         activeRef.current.push({
-          comment: { ...c, _expiry: time + TOP_BOTTOM_DURATION } as any,
+          comment: c,
           x: (canvasWidth - textWidth) / 2,
           y,
           speed: 0,
           width: textWidth,
           lane: bestLane,
+          expiresAt: time + TOP_BOTTOM_DURATION,
         });
       }
     }
@@ -235,7 +227,7 @@ export function DanmakuCanvas({ comments, currentTime, isPlaying, duration }: Da
           }
         } else {
           // Top/bottom: remove when expired
-          const expiry = (d.comment as any)._expiry || 0;
+          const expiry = d.expiresAt ?? 0;
           if (currentTime < expiry) {
             newActive.push(d);
           }

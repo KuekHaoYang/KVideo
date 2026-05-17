@@ -3,7 +3,7 @@
  * Periodically pings video sources when enabled
  */
 
-import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
+import { useState, useEffect, useCallback, useRef, useSyncExternalStore } from 'react';
 import { settingsStore } from '@/lib/store/settings-store';
 
 interface LatencyState {
@@ -25,30 +25,11 @@ export function useLatencyPing({
     const [isLoading, setIsLoading] = useState(false);
     const intervalRef = useRef<NodeJS.Timeout | null>(null);
     const mountedRef = useRef(true);
-
-    // Check if real-time latency is enabled in settings
-    const [realtimeEnabled, setRealtimeEnabled] = useState(false);
-
-    // Stabilize sourceUrls to prevent unnecessary effect re-runs if parent passes new array
-    const stableSourceUrls = useMemo(() => sourceUrls, [
-        // Create a unique key for the sources array
-        sourceUrls.map(s => `${s.id}|${s.baseUrl}`).join(',')
-    ]);
-
-    useEffect(() => {
-        const settings = settingsStore.getSettings();
-        setRealtimeEnabled(settings.realtimeLatency);
-
-        // Subscribe to settings changes
-        const unsubscribe = settingsStore.subscribe(() => {
-            const newSettings = settingsStore.getSettings();
-            setRealtimeEnabled(newSettings.realtimeLatency);
-        });
-
-        return () => {
-            unsubscribe();
-        };
-    }, []);
+    const realtimeEnabled = useSyncExternalStore(
+        (listener) => settingsStore.subscribe(listener),
+        () => settingsStore.getSettings().realtimeLatency,
+        () => false,
+    );
 
     const pingSource = useCallback(async (sourceId: string, baseUrl: string): Promise<number | null> => {
         try {
@@ -69,12 +50,12 @@ export function useLatencyPing({
     }, []);
 
     const pingAllSources = useCallback(async () => {
-        if (!mountedRef.current || stableSourceUrls.length === 0) return;
+        if (!mountedRef.current || sourceUrls.length === 0) return;
 
         setIsLoading(true);
 
         const results = await Promise.all(
-            stableSourceUrls.map(async ({ id, baseUrl }) => {
+            sourceUrls.map(async ({ id, baseUrl }) => {
                 const latency = await pingSource(id, baseUrl);
                 return { id, latency };
             })
@@ -92,33 +73,39 @@ export function useLatencyPing({
             });
             setIsLoading(false);
         }
-    }, [stableSourceUrls, pingSource]);
+    }, [sourceUrls, pingSource]);
 
     // Start/stop polling based on enabled state
     useEffect(() => {
         mountedRef.current = true;
+        let initialTimeout: NodeJS.Timeout | null = null;
 
-        const shouldPoll = enabled && realtimeEnabled && stableSourceUrls.length > 0;
+        const shouldPoll = enabled && realtimeEnabled && sourceUrls.length > 0;
 
         if (shouldPoll) {
-            // Initial ping
-            pingAllSources();
+            initialTimeout = setTimeout(() => {
+                void pingAllSources();
+            }, 0);
 
-            // Set up interval
-            intervalRef.current = setInterval(pingAllSources, intervalMs);
+            intervalRef.current = setInterval(() => {
+                void pingAllSources();
+            }, intervalMs);
         }
 
         return () => {
             mountedRef.current = false;
+            if (initialTimeout) {
+                clearTimeout(initialTimeout);
+            }
             if (intervalRef.current) {
                 clearInterval(intervalRef.current);
                 intervalRef.current = null;
             }
         };
-    }, [enabled, realtimeEnabled, stableSourceUrls, intervalMs, pingAllSources]);
+    }, [enabled, realtimeEnabled, sourceUrls, intervalMs, pingAllSources]);
 
     const refreshLatency = useCallback((sourceId: string) => {
-        const source = stableSourceUrls.find(s => s.id === sourceId);
+        const source = sourceUrls.find(s => s.id === sourceId);
         if (source) {
             pingSource(sourceId, source.baseUrl).then(latency => {
                 if (latency !== null && mountedRef.current) {
@@ -126,7 +113,7 @@ export function useLatencyPing({
                 }
             });
         }
-    }, [stableSourceUrls, pingSource]);
+    }, [sourceUrls, pingSource]);
 
     const refreshAll = useCallback(() => {
         pingAllSources();

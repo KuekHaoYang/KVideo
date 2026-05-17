@@ -1,0 +1,107 @@
+/Users/haoyangkuek/development/KVideo/android-tv/app/src/main/res/layout/activity_main.xml:21: Warning: This FrameLayout should use android:layout_height="wrap_content" [ScrollViewSize]
+            android:layout_height="match_parent"
+            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+   Explanation for issues of type "ScrollViewSize":
+   ScrollView children must set their layout_width or layout_height attributes
+   to wrap_content rather than fill_parent or match_parent in the scrolling
+   dimension
+
+/Users/haoyangkuek/development/KVideo/android-tv/app/build.gradle.kts:59: Warning: A newer version of androidx.core:core-ktx than 1.13.1 is available: 1.18.0 [GradleDependency]
+    implementation("androidx.core:core-ktx:1.13.1")
+                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/Users/haoyangkuek/development/KVideo/android-tv/app/build.gradle.kts:60: Warning: A newer version of androidx.activity:activity-ktx than 1.9.3 is available: 1.13.0 [GradleDependency]
+    implementation("androidx.activity:activity-ktx:1.9.3")
+                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/Users/haoyangkuek/development/KVideo/android-tv/app/build.gradle.kts:61: Warning: A newer version of androidx.webkit:webkit than 1.14.0 is available: 1.15.0 [GradleDependency]
+    implementation("androidx.webkit:webkit:1.14.0")
+                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+   Explanation for issues of type "GradleDependency":
+   This detector looks for usages of libraries where the version you are using
+   is not the current stable release. Using older versions is fine, and there
+   are cases where you deliberately want to stick with an older version.
+   However, you may simply not be aware that a more recent version is
+   available, and that is what this lint check helps find.
+
+/Users/haoyangkuek/development/KVideo/android-tv/app/src/main/java/com/kvideo/tv/MainActivity.kt:111: Warning: Unnecessary; SDK_INT is always >= 26 [ObsoleteSdkInt]
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/Users/haoyangkuek/development/KVideo/android-tv/app/src/main/java/com/kvideo/tv/MainActivity.kt:437: Warning: Unnecessary; SDK_INT is never < 26 [ObsoleteSdkInt]
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
+            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+   Explanation for issues of type "ObsoleteSdkInt":
+   This check flags version checks that are not necessary, because the
+   minSdkVersion (or surrounding known API level) is already at least as high
+   as the version checked for.
+
+   Similarly, it also looks for resources in -vNN folders, such as values-v14
+   where the version qualifier is less than or equal to the minSdkVersion,
+   where the contents should be merged into the best folder.
+
+/Users/haoyangkuek/development/KVideo/android-tv/app/src/main/res/layout/activity_main.xml:5: Warning: Possible overdraw: Root element paints background #000000 with a theme that also paints a background (inferred theme is @style/AppTheme) [Overdraw]
+    android:background="#000000">
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+   Explanation for issues of type "Overdraw":
+   If you set a background drawable on a root view, then you should use a
+   custom theme where the theme background is null. Otherwise, the theme
+   background will be painted first, only to have your custom background
+   completely cover it; this is called "overdraw".
+
+   NOTE: This detector relies on figuring out which layouts are associated
+   with which activities based on scanning the Java code, and it's currently
+   doing that using an inexact pattern matching algorithm. Therefore, it can
+   incorrectly conclude which activity the layout is associated with and then
+   wrongly complain that a background-theme is hidden.
+
+   If you want your custom background on multiple pages, then you should
+   consider making a custom theme with your custom background and just using
+   that theme instead of a root element background.
+
+   Of course it's possible that your custom drawable is translucent and you
+   want it to be mixed with the background. However, you will get better
+   performance if you pre-mix the background with your drawable and use that
+   resulting image or color as a custom theme background instead.
+
+/Users/haoyangkuek/development/KVideo/android-tv/app/src/main/res/layout/activity_main.xml:24: Warning: This LinearLayout layout or its FrameLayout parent is unnecessary; transfer the background attribute to the other view [UselessParent]
+            <LinearLayout
+             ~~~~~~~~~~~~
+
+   Explanation for issues of type "UselessParent":
+   A layout with children that has no siblings, is not a scrollview or a root
+   layout, and does not have a background, can be removed and have its
+   children moved directly into the parent for a flatter and more efficient
+   layout hierarchy.
+
+/Users/haoyangkuek/development/KVideo/android-tv/app/src/main/res/mipmap-hdpi/ic_launcher.png: Warning: Launcher icon used as round icon did not have a circular shape [IconLauncherShape]
+/Users/haoyangkuek/development/KVideo/android-tv/app/src/main/res/mipmap-xhdpi/ic_launcher.png: Warning: Launcher icon used as round icon did not have a circular shape [IconLauncherShape]
+/Users/haoyangkuek/development/KVideo/android-tv/app/src/main/res/mipmap-xxhdpi/ic_launcher.png: Warning: Launcher icon used as round icon did not have a circular shape [IconLauncherShape]
+/Users/haoyangkuek/development/KVideo/android-tv/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png: Warning: Launcher icon used as round icon did not have a circular shape [IconLauncherShape]
+
+   Explanation for issues of type "IconLauncherShape":
+   According to the Android Design Guide
+   (https://d.android.com/r/studio-ui/designer/material/iconography) your
+   launcher icons should "use a distinct silhouette", a "three-dimensional,
+   front view, with a slight perspective as if viewed from above, so that
+   users perceive some depth."
+
+   The unique silhouette implies that your launcher icon should not be a
+   filled square.
+
+/Users/haoyangkuek/development/KVideo/android-tv/app/src/main/res/layout/activity_main.xml:92: Warning: Buttons in button bars should be borderless; use style="?android:attr/buttonBarButtonStyle" (and ?android:attr/buttonBarStyle on the parent) [ButtonStyle]
+                    <Button
+                     ~~~~~~
+/Users/haoyangkuek/development/KVideo/android-tv/app/src/main/res/layout/activity_main.xml:101: Warning: Buttons in button bars should be borderless; use style="?android:attr/buttonBarButtonStyle" (and ?android:attr/buttonBarStyle on the parent) [ButtonStyle]
+                    <Button
+                     ~~~~~~
+
+   Explanation for issues of type "ButtonStyle":
+   Button bars typically use a borderless style for the buttons. Set the
+   style="?android:attr/buttonBarButtonStyle" attribute on each of the
+   buttons, and set style="?android:attr/buttonBarStyle" on the parent layout
+
+   https://d.android.com/r/studio-ui/designer/material/dialogs
+
+0 errors, 14 warnings
