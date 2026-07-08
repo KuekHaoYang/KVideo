@@ -89,20 +89,12 @@ export const VideoCard = memo<VideoCardProps>(({
                         <div className="absolute top-2 left-2 right-2 z-10 flex items-center justify-between gap-1">
                             <div className="flex items-center gap-1 min-w-0">
                                 {video.sourceName && (
-                                    <Badge variant="primary" className="bg-[var(--accent-color)] flex-shrink-0 max-w-[50%] truncate">
+                                    <Badge variant="primary" className="bg-[var(--accent-color)] flex-shrink-0 max-w-[100%] truncate">
                                         {video.sourceName}
-                                    </Badge>
-                                )}
-                                {video.type_name && (
-                                    <Badge variant="secondary" className="flex-shrink-0 max-w-[40%] truncate text-[10px]">
-                                        {video.type_name}
                                     </Badge>
                                 )}
                             </div>
 
-                            {displayLatency !== undefined && (
-                                <LatencyBadge latency={displayLatency} className="flex-shrink-0" />
-                            )}
                         </div>
 
                         {/* Favorite Button - Top Right */}
@@ -171,6 +163,9 @@ export const VideoCard = memo<VideoCardProps>(({
                                                 ...
                                             </span>
                                         ) : null}
+                                        {displayLatency !== undefined && (
+                                            <LatencyBadge latency={displayLatency} className="flex-shrink-0" />
+                                        )}
                                     </div>
                                     {video.vod_lang && (
                                         <p className="text-xs text-[var(--text-color-secondary)] mt-1">
