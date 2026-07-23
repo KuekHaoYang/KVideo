@@ -104,29 +104,11 @@ export function parseBlocks(lines: string[]): Block[] {
 }
 
 /**
- * Unwrap proxied URL to get original URL
- */
-function unwrapProxyUrl(url: string): string {
-    if (url.includes('/api/proxy?url=')) {
-        try {
-            const match = url.match(/[?&]url=([^&]+)/);
-            if (match && match[1]) {
-                return decodeURIComponent(match[1]);
-            }
-        } catch {
-            return url;
-        }
-    }
-    return url;
-}
-
-/**
  * Extract filename from URL (handles both relative and absolute URLs)
  */
 function extractFilename(url: string): string {
     try {
-        const unwrappedUrl = unwrapProxyUrl(url);
-        const path = unwrappedUrl.includes('://') ? new URL(unwrappedUrl).pathname : unwrappedUrl;
+        const path = url.includes('://') ? new URL(url).pathname : url;
         const parts = path.split('/');
         return parts[parts.length - 1] || '';
     } catch {
@@ -161,8 +143,7 @@ function findCommonPrefix(strings: string[]): string {
  */
 function extractPathPrefix(url: string): string {
     try {
-        const unwrappedUrl = unwrapProxyUrl(url);
-        const path = unwrappedUrl.includes('://') ? new URL(unwrappedUrl).pathname : unwrappedUrl;
+        const path = url.includes('://') ? new URL(url).pathname : url;
         const lastSlash = path.lastIndexOf('/');
         return lastSlash >= 0 ? path.substring(0, lastSlash + 1) : '';
     } catch {
@@ -212,14 +193,71 @@ export function learnMainPattern(blocks: Block[]): MainPattern {
 }
 
 /**
+ * Find blocks that share an identical sequence of segment durations (fingerprint)
+ * with another block in the playlist.
+ * 
+ * If a block (with >= 3 segments) has an identical duration signature
+ * as another block in the playlist, and it is not the main content block,
+ * it is extremely likely to be a repeated inserted ad block.
+ */
+export function findDuplicateSignatureBlockIndices(blocks: Block[]): Set<number> {
+    const duplicateIndices = new Set<number>();
+    if (!blocks || blocks.length < 2) return duplicateIndices;
+
+    // Find the largest block (assumed main content block)
+    let mainBlockIndex = -1;
+    let maxSegments = 0;
+    blocks.forEach((block, idx) => {
+        if (block.segments.length > maxSegments) {
+            maxSegments = block.segments.length;
+            mainBlockIndex = idx;
+        }
+    });
+
+    // Map signature -> array of block indices
+    const signatureMap = new Map<string, number[]>();
+
+    blocks.forEach((block, idx) => {
+        // Require at least 3 segments to form a signature to prevent accidental single-segment collisions
+        if (block.segments.length < 3) return;
+
+        // Signature based on segment durations rounded to 3 decimal places (milliseconds precision)
+        const signature = block.segments.map(s => s.duration.toFixed(3)).join(',');
+
+        const existing = signatureMap.get(signature) || [];
+        existing.push(idx);
+        signatureMap.set(signature, existing);
+    });
+
+    // Flag blocks whose signatures appear 2 or more times
+    signatureMap.forEach((indices) => {
+        if (indices.length >= 2) {
+            indices.forEach(idx => {
+                // Ensure we don't accidentally flag the main content block
+                if (idx !== mainBlockIndex && blocks[idx].segments.length < maxSegments * 0.8) {
+                    duplicateIndices.add(idx);
+                }
+            });
+        }
+    });
+
+    return duplicateIndices;
+}
+
+/**
  * Score a block for ad likelihood based on heuristics
  * Returns a score where higher = more likely to be an ad
  */
-export function scoreBlock(block: Block, mainPattern: MainPattern, extraKeywords: string[] = []): number {
+export function scoreBlock(
+    block: Block,
+    mainPattern: MainPattern,
+    extraKeywords: string[] = [],
+    isDuplicateSignature: boolean = false
+): number {
     let score = 0;
 
-    // If block has CUE tag, it's definitely an ad
-    if (block.hasCueTag) {
+    // If block has CUE tag or matches a duplicate signature, it's definitely an ad
+    if (block.hasCueTag || isDuplicateSignature) {
         return 10; // Max score
     }
 
@@ -253,7 +291,7 @@ export function scoreBlock(block: Block, mainPattern: MainPattern, extraKeywords
 
     // **KEY FEATURE**: Check path prefix mismatch (e.g., different date/folder/bitrate)
     // This is the most reliable indicator for ads that come from different CDN paths
-    if (mainPattern.pathPrefix !== undefined && block.segments.length > 0) {
+    if (mainPattern.pathPrefix && block.segments.length > 0) {
         const pathMismatchCount = block.segments.filter(s => {
             const segmentPathPrefix = extractPathPrefix(s.url);
             return segmentPathPrefix !== mainPattern.pathPrefix;
