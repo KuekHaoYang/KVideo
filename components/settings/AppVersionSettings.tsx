@@ -7,11 +7,11 @@ import { SettingsSection } from './SettingsSection';
 import type { AppReleaseEntry, AppUpdateResponse } from '@/lib/types/app-update';
 
 const DEFAULT_SOURCE = {
-  repository: 'KuekHaoYang/KVideo',
+  repository: 'Justspeak27/KVideo',
   branch: 'main',
-  manifestUrl: 'https://raw.githubusercontent.com/KuekHaoYang/KVideo/main/app-release.json',
-  changelogUrl: 'https://github.com/KuekHaoYang/KVideo/blob/main/CHANGELOG.md',
-  repositoryUrl: 'https://github.com/KuekHaoYang/KVideo',
+  manifestUrl: 'https://raw.githubusercontent.com/Justspeak27/KVideo/main/app-release.json',
+  changelogUrl: 'https://github.com/Justspeak27/KVideo/blob/main/CHANGELOG.md',
+  repositoryUrl: 'https://github.com/Justspeak27/KVideo',
 };
 
 function formatDateLabel(value?: string) {
@@ -205,10 +205,10 @@ export function AppVersionSettings() {
 
         <div className="flex flex-wrap items-center gap-3 text-xs text-[var(--text-color-secondary)]">
           <span>
-            检查来源：{data?.source.repository || 'KuekHaoYang/KVideo'} · {data?.source.branch || 'main'}
+            检查来源：{data?.source.repository || 'Justspeak27/KVideo'} · {data?.source.branch || 'main'}
           </span>
           <Link
-            href={data?.source.changelogUrl || 'https://github.com/KuekHaoYang/KVideo/blob/main/CHANGELOG.md'}
+            href={data?.source.changelogUrl || 'https://github.com/Justspeak27/KVideo/blob/main/CHANGELOG.md'}
             target="_blank"
             rel="noreferrer"
             className="inline-flex items-center gap-1 text-[var(--accent-color)] hover:underline"
@@ -217,7 +217,7 @@ export function AppVersionSettings() {
             <ExternalLink size={12} />
           </Link>
           <Link
-            href={data?.source.repositoryUrl || 'https://github.com/KuekHaoYang/KVideo'}
+            href={data?.source.repositoryUrl || 'https://github.com/Justspeak27/KVideo'}
             target="_blank"
             rel="noreferrer"
             className="inline-flex items-center gap-1 text-[var(--accent-color)] hover:underline"
