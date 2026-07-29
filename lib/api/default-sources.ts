@@ -84,6 +84,122 @@ const rawSources = [
   {
     "name": "新浪资源",
     "url": "https://api.xinlangapi.com/api.php/provide/vod/"
+  },
+  {
+    "name": "360资源",
+    "url": "https://360zy.com/api.php/provide/vod/"
+  },
+  {
+    "name": "非凡资源",
+    "url": "https://ffzyapi.com/api.php/provide/vod/"
+  },
+  {
+    "name": "光速资源",
+    "url": "https://api.guangsuapi.com/api.php/provide/vod/"
+  },
+  {
+    "name": "飞速资源",
+    "url": "https://www.feisuzy.com/api.php/provide/vod/"
+  },
+  {
+    "name": "优酷资源",
+    "url": "https://api.youkuapi.com/api.php/provide/vod/"
+  },
+  {
+    "name": "腾讯资源",
+    "url": "https://api.tencentyun.com/api.php/provide/vod/"
+  },
+  {
+    "name": "芒果资源",
+    "url": "https://api.mgtv.com/api.php/provide/vod/"
+  },
+  {
+    "name": "快车资源",
+    "url": "https://caiji.kuaichezy.com/api.php/provide/vod/"
+  },
+  {
+    "name": "百度资源",
+    "url": "https://api.apibdzy.com/api.php/provide/vod/"
+  },
+  {
+    "name": "樱花资源",
+    "url": "https://m3u8.apiyhzy.com/api.php/provide/vod/"
+  },
+  {
+    "name": "精品资源",
+    "url": "https://www.jingpinzy.com/api.php/provide/vod/"
+  },
+  {
+    "name": "神马资源",
+    "url": "https://img.smdy.cc/api.php/provide/vod/"
+  },
+  {
+    "name": "天空资源",
+    "url": "https://api.tiankongapi.com/api.php/provide/vod/"
+  },
+  {
+    "name": "星辰资源",
+    "url": "https://api.xingchenzy.com/api.php/provide/vod/"
+  },
+  {
+    "name": "飘零资源",
+    "url": "https://p2100.net/api.php/provide/vod/"
+  },
+  {
+    "name": "1080P资源",
+    "url": "https://api.1080zy.com/api.php/provide/vod/"
+  },
+  {
+    "name": "黑木耳资源",
+    "url": "https://json.heimuer.tv/api.php/provide/vod/"
+  },
+  {
+    "name": "旺旺资源",
+    "url": "https://api.wwzy.com/api.php/provide/vod/"
+  },
+  {
+    "name": "金鹰资源",
+    "url": "https://jyzyapi.com/api.php/provide/vod/"
+  },
+  {
+    "name": "阳光资源",
+    "url": "https://api.yangguang.com/api.php/provide/vod/"
+  },
+  {
+    "name": "酷点资源",
+    "url": "https://kudianzy.com/api.php/provide/vod/"
+  },
+  {
+    "name": "风暴资源",
+    "url": "https://fengbao.com/api.php/provide/vod/"
+  },
+  {
+    "name": "人人资源",
+    "url": "https://renrenzy.com/api.php/provide/vod/"
+  },
+  {
+    "name": "美剧资源",
+    "url": "https://meijuzy.com/api.php/provide/vod/"
+  },
+  {
+    "name": "韩剧资源",
+    "url": "https://hanjuzy.com/api.php/provide/vod/"
+  },
+  {
+    "name": "日剧资源",
+    "url": "https://rijuzy.com/api.php/provide/vod/"
+  },
+  {
+    "name": "动漫资源",
+    "url": "https://dmzy.com/api.php/provide/vod/"
+  },
+  {
+    "name": "4K资源",
+    "url": "https://4kzy.com/api.php/provide/vod/"
+  },
+  {
+    "name": "纪录片资源",
+    "url": "https://jlpzy.com/api.php/provide/vod/"
   }
 ];
 
