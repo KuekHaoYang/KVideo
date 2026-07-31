@@ -1,6 +1,7 @@
 import { useState, useCallback } from 'react';
 import { useHistoryStore, usePremiumHistoryStore } from '@/lib/store/history-store';
 import { useFavoritesStore, usePremiumFavoritesStore } from '@/lib/store/favorites-store';
+import { keepRenderableFavorites, keepRenderableHistory } from '@/lib/utils/sync-records';
 import { getProfileId } from '@/lib/store/auth-store';
 
 export function useCloudSync(isPremium = false) {
@@ -19,11 +20,14 @@ export function useCloudSync(isPremium = false) {
       const result = await response.json();
 
       if (result.success && result.data) {
-        if (result.data.history?.length > 0) {
-          historyStore.getState().importHistory(result.data.history);
+        const history = keepRenderableHistory(result.data.history);
+        const favorites = keepRenderableFavorites(result.data.favorites);
+
+        if (history.length > 0) {
+          historyStore.getState().importHistory(history);
         }
-        if (result.data.favorites?.length > 0) {
-          favoritesStore.getState().importFavorites(result.data.favorites);
+        if (favorites.length > 0) {
+          favoritesStore.getState().importFavorites(favorites);
         }
       }
     } catch (error) {

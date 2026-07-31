@@ -4,8 +4,19 @@
     "name": "KVideo",
     "branch": "main"
   },
-  "currentVersion": "4.9.18",
+  "currentVersion": "4.9.19",
   "releases": [
+    {
+      "version": "4.9.19",
+      "publishedAt": "2026-07-31",
+      "title": "修复自托管同步与豆瓣海报回退",
+      "notes": [
+        "修复 Docker / Node 自托管下用户同步与配置接口无法从 process.env 读取 Upstash 凭据、持续返回 500 的问题（#226 / PR #227）。",
+        "云端恢复与列表渲染会丢弃缺少 videoId、source、title 或有效 episodeIndex 的损坏记录，避免账户首页被永久崩溃数据锁死（#228 / PR #229）。",
+        "豆瓣图片代理会在 imgN.doubanio.com 线路不可达时按镜像回退，并保留上游最终状态码，修复境外部署海报批量 500（PR #230）。",
+        "新增同步记录与豆瓣镜像回退回归测试，并通过真实 Next.js standalone + Upstash REST 兼容环境的登录、同步和配置读写验证。"
+      ]
+    },
     {
       "version": "4.9.18",
       "publishedAt": "2026-07-29",
