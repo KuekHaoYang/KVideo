@@ -1127,4 +1127,4 @@ KVideo v4.5.0+ 已增加多级回退机制，会依次尝试 HLS.js、原生 HLS
 
 ## Star History
 
-[![Star History Chart](https://api.star-history.com/svg?repos=KuekHaoYang/KVideo&type=date&legend=top-left)](https://www.star-history.com/#KuekHaoYang/KVideo&type=date&legend=top-left)
+[![Star History Chart](https://star-history.dera.page/svg?repos=KuekHaoYang/KVideo&type=date&legend=top-left)](https://star-history.dera.page/#KuekHaoYang/KVideo&type=date&legend=top-left)
