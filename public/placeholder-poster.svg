@@ -1,42 +1,59 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 450" fill="none">
   <defs>
     <linearGradient id="bg-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#f0f2f5;stop-opacity:1" />
-      <stop offset="100%" style="stop-color:#e0e4e8;stop-opacity:1" />
+      <stop class="poster-bg-start" offset="0%" stop-opacity="1" />
+      <stop class="poster-bg-end" offset="100%" stop-opacity="1" />
     </linearGradient>
+    <style>
+      .poster-bg-start { stop-color: #f0f2f5; }
+      .poster-bg-end { stop-color: #e0e4e8; }
+      .poster-overlay { fill: #ffffff; fill-opacity: 0.5; }
+      .poster-frame { fill: none; stroke: #6e6e73; }
+      .poster-icon { fill: #6e6e73; }
+      .poster-label { fill: #6e6e73; }
+
+      @media (prefers-color-scheme: dark) {
+        .poster-bg-start { stop-color: #1c1c1e; }
+        .poster-bg-end { stop-color: #2c2c2e; }
+        .poster-overlay { fill: #ffffff; fill-opacity: 0.06; }
+        .poster-frame { stroke: #aeaeb2; }
+        .poster-icon { fill: #aeaeb2; }
+        .poster-label { fill: #aeaeb2; }
+      }
+    </style>
   </defs>
   
   <!-- Background -->
   <rect width="300" height="450" fill="url(#bg-gradient)" rx="24"/>
   
   <!-- Glass effect overlay -->
-  <rect width="300" height="450" fill="rgba(255, 255, 255, 0.5)" rx="24"/>
+  <rect class="poster-overlay" width="300" height="450" rx="24"/>
   
   <!-- Film icon -->
   <g transform="translate(150, 225)">
     <!-- Film reel -->
-    <rect x="-60" y="-80" width="120" height="160" rx="8" fill="none" stroke="#6e6e73" stroke-width="4"/>
+    <rect class="poster-frame" x="-60" y="-80" width="120" height="160" rx="8" stroke-width="4"/>
     
     <!-- Film strip holes -->
-    <rect x="-60" y="-70" width="15" height="15" rx="3" fill="#6e6e73"/>
-    <rect x="-60" y="-40" width="15" height="15" rx="3" fill="#6e6e73"/>
-    <rect x="-60" y="-10" width="15" height="15" rx="3" fill="#6e6e73"/>
-    <rect x="-60" y="20" width="15" height="15" rx="3" fill="#6e6e73"/>
-    <rect x="-60" y="50" width="15" height="15" rx="3" fill="#6e6e73"/>
+    <rect class="poster-icon" x="-60" y="-70" width="15" height="15" rx="3"/>
+    <rect class="poster-icon" x="-60" y="-40" width="15" height="15" rx="3"/>
+    <rect class="poster-icon" x="-60" y="-10" width="15" height="15" rx="3"/>
+    <rect class="poster-icon" x="-60" y="20" width="15" height="15" rx="3"/>
+    <rect class="poster-icon" x="-60" y="50" width="15" height="15" rx="3"/>
     
-    <rect x="45" y="-70" width="15" height="15" rx="3" fill="#6e6e73"/>
-    <rect x="45" y="-40" width="15" height="15" rx="3" fill="#6e6e73"/>
-    <rect x="45" y="-10" width="15" height="15" rx="3" fill="#6e6e73"/>
-    <rect x="45" y="20" width="15" height="15" rx="3" fill="#6e6e73"/>
-    <rect x="45" y="50" width="15" height="15" rx="3" fill="#6e6e73"/>
+    <rect class="poster-icon" x="45" y="-70" width="15" height="15" rx="3"/>
+    <rect class="poster-icon" x="45" y="-40" width="15" height="15" rx="3"/>
+    <rect class="poster-icon" x="45" y="-10" width="15" height="15" rx="3"/>
+    <rect class="poster-icon" x="45" y="20" width="15" height="15" rx="3"/>
+    <rect class="poster-icon" x="45" y="50" width="15" height="15" rx="3"/>
     
     <!-- Play icon in center -->
-    <circle cx="0" cy="0" r="35" fill="#007aff" opacity="0.9"/>
+    <circle class="poster-play" cx="0" cy="0" r="35" fill="#007aff" opacity="0.9"/>
     <path d="M -10,-15 L -10,15 L 15,0 Z" fill="white"/>
   </g>
   
   <!-- "Image Not Available" text -->
-  <text x="150" y="330" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="16" font-weight="600" fill="#6e6e73" text-anchor="middle">
+  <text class="poster-label" x="150" y="330" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="16" font-weight="600" text-anchor="middle">
     Image Not Available
   </text>
 </svg>

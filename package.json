@@ -1,6 +1,6 @@
 {
   "name": "kvideo",
-  "version": "4.9.19",
+  "version": "4.9.20",
   "private": true,
   "scripts": {
     "dev": "node scripts/next-with-lan-access.mjs dev",
