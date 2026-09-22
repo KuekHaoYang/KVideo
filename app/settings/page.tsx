@@ -73,6 +73,8 @@ export default function SettingsPage() {
     handleDanmakuDisplayAreaChange,
     blockedCategories,
     handleBlockedCategoriesChange,
+    episodeLayout,
+    handleEpisodeLayoutChange,
   } = useSettingsPage();
 
   return (
@@ -106,6 +108,8 @@ export default function SettingsPage() {
             danmakuDisplayArea={danmakuDisplayArea}
             onDanmakuDisplayAreaChange={handleDanmakuDisplayAreaChange}
             showDanmakuApi={hasPermission('danmaku_api')}
+            episodeLayout={episodeLayout}
+            onEpisodeLayoutChange={handleEpisodeLayoutChange}
           />
         </PermissionGate>
 

@@ -4,6 +4,7 @@ import {
     getDefaultPremiumSources,
     type SearchDisplayMode,
     type ProxyMode,
+    type EpisodeLayout,
     type LocaleOption,
     DEFAULT_SEEK_STEP_SECONDS,
     normalizeSeekStepSeconds,
@@ -34,6 +35,7 @@ export function usePremiumSettingsPage() {
 
     // Content filter
     const [blockedCategories, setBlockedCategories] = useState<string[]>([]);
+    const [episodeLayout, setEpisodeLayout] = useState<EpisodeLayout>('list');
 
     useEffect(() => {
         const syncFromStores = () => {
@@ -43,6 +45,7 @@ export function usePremiumSettingsPage() {
             setPremiumSources(settings.premiumSources || []);
             setLocale(settings.locale);
             setBlockedCategories(settings.blockedCategories || []);
+            setEpisodeLayout(settings.episodeLayout);
 
             setRealtimeLatency(modeSettings.realtimeLatency);
             setSearchDisplayMode(modeSettings.searchDisplayMode);
@@ -173,6 +176,12 @@ export function usePremiumSettingsPage() {
         settingsStore.saveSettings({ ...currentSettings, blockedCategories: categories });
     };
 
+    const handleEpisodeLayoutChange = (layout: EpisodeLayout) => {
+        setEpisodeLayout(layout);
+        const currentSettings = settingsStore.getSettings();
+        settingsStore.saveSettings({ ...currentSettings, episodeLayout: layout });
+    };
+
     return {
         premiumSources,
         isAddModalOpen,
@@ -211,5 +220,7 @@ export function usePremiumSettingsPage() {
         handleDanmakuDisplayAreaChange,
         blockedCategories,
         handleBlockedCategoriesChange,
+        episodeLayout,
+        handleEpisodeLayoutChange,
     };
 }

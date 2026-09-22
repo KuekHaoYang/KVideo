@@ -22,6 +22,7 @@ export type SortOption =
 export type SearchDisplayMode = 'normal' | 'grouped';
 export type AdFilterMode = 'off' | 'keyword' | 'heuristic' | 'aggressive';
 export type ProxyMode = 'retry' | 'none' | 'always';
+export type EpisodeLayout = 'list' | 'grid';
 
 export const DEFAULT_SEEK_STEP_SECONDS = 10;
 export const MIN_SEEK_STEP_SECONDS = 1;
@@ -57,6 +58,7 @@ export interface AppSettings {
   realtimeLatency: boolean; // Enable real-time latency ping updates
   searchDisplayMode: SearchDisplayMode; // 'normal' = individual cards, 'grouped' = group same-name videos
   episodeReverseOrder: boolean; // Persist episode list reverse state
+  episodeLayout: EpisodeLayout; // 'list' = single-column (default), 'grid' = multi-column with pagination
   fullscreenType: 'auto' | 'native' | 'window'; // Fullscreen mode preference: 'auto' (native on desktop, window on mobile) | 'native' | 'window'
   proxyMode: ProxyMode; // Proxy behavior: 'retry' | 'none' | 'always'
   rememberScrollPosition: boolean; // Remember scroll position when navigating back or refreshing
@@ -140,6 +142,7 @@ function getDefaultAppSettings(): AppSettings {
     realtimeLatency: false,
     searchDisplayMode: 'normal',
     episodeReverseOrder: false,
+    episodeLayout: 'list',
     fullscreenType: 'auto',
     proxyMode: 'retry',
     rememberScrollPosition: true,
@@ -244,6 +247,7 @@ export const settingsStore = {
         realtimeLatency: parsed.realtimeLatency !== undefined ? parsed.realtimeLatency : false,
         searchDisplayMode: parsed.searchDisplayMode === 'grouped' ? 'grouped' : 'normal',
         episodeReverseOrder: parsed.episodeReverseOrder !== undefined ? parsed.episodeReverseOrder : false,
+        episodeLayout: parsed.episodeLayout === 'grid' ? 'grid' : 'list',
         fullscreenType: (parsed.fullscreenType === 'window' || parsed.fullscreenType === 'native' || parsed.fullscreenType === 'auto') ? parsed.fullscreenType : 'auto',
         proxyMode: (parsed.proxyMode === 'retry' || parsed.proxyMode === 'none' || parsed.proxyMode === 'always') ? parsed.proxyMode : 'retry',
         rememberScrollPosition: parsed.rememberScrollPosition !== undefined ? parsed.rememberScrollPosition : true,
