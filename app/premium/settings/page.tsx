@@ -50,6 +50,8 @@ export default function PremiumSettingsPage() {
         handleDanmakuDisplayAreaChange,
         blockedCategories,
         handleBlockedCategoriesChange,
+        episodeLayout,
+        handleEpisodeLayoutChange,
     } = usePremiumSettingsPage();
 
     return (
@@ -98,6 +100,8 @@ export default function PremiumSettingsPage() {
                     onDanmakuFontSizeChange={handleDanmakuFontSizeChange}
                     danmakuDisplayArea={danmakuDisplayArea}
                     onDanmakuDisplayAreaChange={handleDanmakuDisplayAreaChange}
+                    episodeLayout={episodeLayout}
+                    onEpisodeLayoutChange={handleEpisodeLayoutChange}
                 />
 
                 {/* Display Settings */}

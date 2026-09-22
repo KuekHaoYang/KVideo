@@ -10,6 +10,7 @@ import { useRuntimeFeatures } from '@/components/RuntimeFeaturesProvider';
 import { Switch } from '@/components/ui/Switch';
 import {
     type ProxyMode,
+    type EpisodeLayout,
     DEFAULT_SEEK_STEP_SECONDS,
     MIN_SEEK_STEP_SECONDS,
     MAX_SEEK_STEP_SECONDS,
@@ -33,6 +34,8 @@ interface PlayerSettingsProps {
     danmakuDisplayArea: number;
     onDanmakuDisplayAreaChange: (value: number) => void;
     showDanmakuApi?: boolean;
+    episodeLayout: EpisodeLayout;
+    onEpisodeLayoutChange: (layout: EpisodeLayout) => void;
 }
 
 const DANMAKU_FONT_SIZES = [14, 18, 20, 24, 28];
@@ -62,6 +65,8 @@ export function PlayerSettings({
     danmakuDisplayArea,
     onDanmakuDisplayAreaChange,
     showDanmakuApi = true,
+    episodeLayout,
+    onEpisodeLayoutChange,
 }: PlayerSettingsProps) {
     const { mediaProxyEnabled, restrictionSummary } = useRuntimeFeatures();
     const effectiveProxyMode = mediaProxyEnabled ? proxyMode : 'none';
@@ -224,6 +229,41 @@ export function PlayerSettings({
                             </div>
                         </div>
                     )}
+                </div>
+
+                <div className="border-t border-[var(--glass-border)]" />
+
+                {/* Episode Layout */}
+                <div>
+                    <h3 className="font-medium text-[var(--text-color)] mb-2 inline-flex items-center gap-2">
+                        <Icons.List size={18} className="text-[var(--accent-color)]" />
+                        选集布局
+                    </h3>
+                    <p className="text-sm text-[var(--text-color-secondary)] mb-4">
+                        选择播放器侧边栏中选集的显示方式；多列网格会在剧集较多时自动按页分组
+                    </p>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <button
+                            onClick={() => onEpisodeLayoutChange('list')}
+                            className={`px-4 py-3 rounded-[var(--radius-2xl)] border text-left font-medium transition-all duration-200 cursor-pointer ${episodeLayout === 'list'
+                                ? 'bg-[var(--accent-color)] border-[var(--accent-color)] text-white shadow-[0_4px_12px_rgba(var(--accent-color-rgb),0.3)]'
+                                : 'bg-[var(--glass-bg)] border-[var(--glass-border)] text-[var(--text-color)] hover:bg-[color-mix(in_srgb,var(--accent-color)_10%,transparent)]'
+                                }`}
+                        >
+                            <div className="font-semibold">列表</div>
+                            <div className="text-sm opacity-80 mt-1">单列展示，沿用旧版布局</div>
+                        </button>
+                        <button
+                            onClick={() => onEpisodeLayoutChange('grid')}
+                            className={`px-4 py-3 rounded-[var(--radius-2xl)] border text-left font-medium transition-all duration-200 cursor-pointer ${episodeLayout === 'grid'
+                                ? 'bg-[var(--accent-color)] border-[var(--accent-color)] text-white shadow-[0_4px_12px_rgba(var(--accent-color-rgb),0.3)]'
+                                : 'bg-[var(--glass-bg)] border-[var(--glass-border)] text-[var(--text-color)] hover:bg-[color-mix(in_srgb,var(--accent-color)_10%,transparent)]'
+                                }`}
+                        >
+                            <div className="font-semibold">网格</div>
+                            <div className="text-sm opacity-80 mt-1">多列网格，长剧集自动分页</div>
+                        </button>
+                    </div>
                 </div>
 
                 <div className="border-t border-[var(--glass-border)]" />

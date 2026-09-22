@@ -5,6 +5,7 @@ import {
     type SortOption,
     type SearchDisplayMode,
     type ProxyMode,
+    type EpisodeLayout,
     type LocaleOption,
     DEFAULT_SEEK_STEP_SECONDS,
     normalizeSeekStepSeconds,
@@ -37,6 +38,7 @@ export function useSettingsPage() {
     const [rememberScrollPosition, setRememberScrollPosition] = useState(true);
     const [locale, setLocale] = useState<LocaleOption>('zh-CN');
     const [videoTogetherEnabled, setVideoTogetherEnabled] = useState(false);
+    const [episodeLayout, setEpisodeLayout] = useState<EpisodeLayout>('list');
 
     // Danmaku settings
     const [danmakuApiUrl, setDanmakuApiUrl] = useState('');
@@ -61,6 +63,7 @@ export function useSettingsPage() {
             setRememberScrollPosition(settings.rememberScrollPosition);
             setLocale(settings.locale);
             setVideoTogetherEnabled(settings.videoTogetherEnabled);
+            setEpisodeLayout(settings.episodeLayout);
             setDanmakuApiUrl(settings.danmakuApiUrl);
             setDanmakuOpacity(settings.danmakuOpacity);
             setDanmakuFontSize(settings.danmakuFontSize);
@@ -299,6 +302,15 @@ export function useSettingsPage() {
         });
     };
 
+    const handleEpisodeLayoutChange = (layout: EpisodeLayout) => {
+        setEpisodeLayout(layout);
+        const currentSettings = settingsStore.getSettings();
+        settingsStore.saveSettings({
+            ...currentSettings,
+            episodeLayout: layout,
+        });
+    };
+
     const handleLocaleChange = (newLocale: LocaleOption) => {
         setLocale(newLocale);
         const currentSettings = settingsStore.getSettings();
@@ -410,6 +422,8 @@ export function useSettingsPage() {
         handleLocaleChange,
         videoTogetherEnabled,
         handleVideoTogetherEnabledChange,
+        episodeLayout,
+        handleEpisodeLayoutChange,
         danmakuApiUrl,
         handleDanmakuApiUrlChange,
         danmakuOpacity,

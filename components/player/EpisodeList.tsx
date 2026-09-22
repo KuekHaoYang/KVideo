@@ -8,11 +8,86 @@ import { Icons } from '@/components/ui/Icon';
 import { LatencyBadge } from '@/components/ui/LatencyBadge';
 import { Button } from '@/components/ui/Button';
 import { useKeyboardNavigation } from '@/lib/hooks/useKeyboardNavigation';
-import { settingsStore } from '@/lib/store/settings-store';
+import { settingsStore, type EpisodeLayout } from '@/lib/store/settings-store';
 import type { VideoResolutionInfo } from './hooks/useVideoResolution';
 import type { ResolutionInfo } from '@/lib/hooks/useResolutionProbe';
 import { getCachedResolution } from '@/lib/player/resolution-cache';
 import { getSourceResolutionBadge, shouldExpandForCurrentSource } from '@/lib/player/source-list-utils';
+
+/**
+ * Number of episodes per page when the multi-column grid paginates.
+ * Spec: paginate only when episodes exceed EPISODE_PAGINATION_THRESHOLD.
+ */
+export const EPISODES_PER_PAGE = 50;
+
+/**
+ * Episode lists shorter than this render without pagination chips, even
+ * when grid layout is selected. Defaults to the spec value (100); can be
+ * tightened in dev to exercise the UI without thousands of fixtures.
+ */
+export const EPISODE_PAGINATION_THRESHOLD = 100;
+
+export interface EpisodePagination {
+  /** Total number of pages (>=1) for the current episode list. */
+  totalPages: number;
+  /** Episodes visible on the requested page (after slicing). */
+  pageItems: number[];
+  /** Total number of episodes across all pages. */
+  total: number;
+  /** Whether pagination UI (prev/next + indicator) should be shown. */
+  shouldPaginate: boolean;
+}
+
+/**
+ * Pure pagination logic for the episode grid. Extracted so unit tests can
+ * exercise page boundaries without spinning up React/DOM. Mirrors the
+ * invariants used inside EpisodeList:
+ *   - `layout === 'list'` never paginates.
+ *   - `total <= threshold` never paginates, regardless of layout.
+ *   - Otherwise, slice [page*size, page*size + size) and clamp page.
+ */
+export function computeEpisodePagination(
+  total: number,
+  layout: EpisodeLayout,
+  page: number,
+  pageSize: number = EPISODES_PER_PAGE,
+  threshold: number = EPISODE_PAGINATION_THRESHOLD,
+): EpisodePagination {
+  const safeTotal = Math.max(0, Math.floor(total));
+  const safePageSize = Math.max(1, Math.floor(pageSize));
+  const safeThreshold = Math.max(0, Math.floor(threshold));
+
+  if (layout === 'list' || safeTotal === 0) {
+    return {
+      totalPages: 1,
+      pageItems: Array.from({ length: safeTotal }, (_, i) => i),
+      total: safeTotal,
+      shouldPaginate: false,
+    };
+  }
+
+  if (safeTotal <= safeThreshold) {
+    return {
+      totalPages: 1,
+      pageItems: Array.from({ length: safeTotal }, (_, i) => i),
+      total: safeTotal,
+      shouldPaginate: false,
+    };
+  }
+
+  const totalPages = Math.max(1, Math.ceil(safeTotal / safePageSize));
+  const safePage = Math.min(Math.max(0, Math.floor(page)), totalPages - 1);
+  const start = safePage * safePageSize;
+  const end = Math.min(safeTotal, start + safePageSize);
+  const pageItems = Array.from({ length: Math.max(0, end - start) }, (_, offset) => start + offset);
+
+  return {
+    totalPages,
+    pageItems,
+    total: safeTotal,
+    shouldPaginate: totalPages > 1,
+  };
+}
 
 interface Episode {
   name?: string;
@@ -70,11 +145,29 @@ export function EpisodeList({
   const sourceItemRefs = useRef<Record<string, HTMLButtonElement | null>>({});
   const [sourceExpanded, setSourceExpanded] = useState(false);
   const [showAllSources, setShowAllSources] = useState(false);
-  // list = classic vertical list; grid = multi-column with section pages
-  const [episodeLayout, setEpisodeLayout] = useState<'list' | 'grid'>('grid');
-  const [episodePage, setEpisodePage] = useState(0);
+  // Episode layout is a global preference (settings page). We subscribe to
+  // settingsStore directly here so flipping it in PlayerSettings re-renders
+  // the sidebar without touching the HLS player. This mirrors the pattern
+  // used for episodeReverseOrder and deliberately stays outside the
+  // PlayerSettingsSnapshot equality check.
+  const [episodeLayout, setEpisodeLayoutState] = useState<EpisodeLayout>(() =>
+    settingsStore.getSettings().episodeLayout
+  );
 
-  const EPISODES_PER_PAGE = 50;
+  useEffect(() => {
+    const syncEpisodeLayout = () => {
+      setEpisodeLayoutState(settingsStore.getSettings().episodeLayout);
+    };
+    syncEpisodeLayout();
+    return settingsStore.subscribe(syncEpisodeLayout);
+  }, []);
+
+  const setEpisodeLayout = useCallback((next: EpisodeLayout) => {
+    const current = settingsStore.getSettings();
+    settingsStore.saveSettings({ ...current, episodeLayout: next });
+  }, []);
+
+  const [episodePage, setEpisodePage] = useState(0);
 
   // Source latency state
   const [latencies, setLatencies] = useState<Record<string, number>>({});
@@ -234,45 +327,58 @@ export function EpisodeList({
     return isReversed ? [...episodes].reverse() : episodes;
   }, [episodes, isReversed]);
 
-  const totalEpisodePages = useMemo(() => {
-    if (!displayEpisodes || displayEpisodes.length === 0) return 1;
-    return Math.max(1, Math.ceil(displayEpisodes.length / EPISODES_PER_PAGE));
-  }, [displayEpisodes]);
+  // Pagination derived via the pure helper. The grid only paginates when
+  // there are more than EPISODE_PAGINATION_THRESHOLD episodes (defaults to
+  // 100 per the issue #218 #4 spec). Below that the grid renders flat and
+  // no prev/next controls are shown.
+  const pagination = useMemo(
+    () =>
+      computeEpisodePagination(
+        displayEpisodes?.length ?? 0,
+        episodeLayout,
+        episodePage,
+      ),
+    [displayEpisodes, episodeLayout, episodePage],
+  );
 
-  // Keep the current episode's page visible when order/layout changes
+  // Keep the current episode's page visible when order/layout changes.
+  // In list layout, or when no pagination is in play, we always pin to 0.
   useEffect(() => {
     if (!episodes || episodes.length === 0) {
+      setEpisodePage(0);
+      return;
+    }
+    if (episodeLayout === 'list' || episodes.length <= EPISODE_PAGINATION_THRESHOLD) {
       setEpisodePage(0);
       return;
     }
     const displayIndex = isReversed
       ? episodes.length - 1 - currentEpisode
       : currentEpisode;
+    const totalPages = Math.max(1, Math.ceil(episodes.length / EPISODES_PER_PAGE));
     const page = Math.floor(displayIndex / EPISODES_PER_PAGE);
-    setEpisodePage(Math.min(Math.max(0, page), Math.max(0, Math.ceil(episodes.length / EPISODES_PER_PAGE) - 1)));
+    setEpisodePage(Math.min(Math.max(0, page), totalPages - 1));
   }, [currentEpisode, episodes, isReversed, episodeLayout]);
 
   const pagedEpisodes = useMemo(() => {
     if (!displayEpisodes) return null;
-    if (episodeLayout === 'list' || displayEpisodes.length <= EPISODES_PER_PAGE) {
-      return displayEpisodes.map((episode, displayIndex) => ({ episode, displayIndex }));
-    }
-    const start = episodePage * EPISODES_PER_PAGE;
-    return displayEpisodes
-      .slice(start, start + EPISODES_PER_PAGE)
-      .map((episode, offset) => ({ episode, displayIndex: start + offset }));
-  }, [displayEpisodes, episodeLayout, episodePage]);
+    return pagination.pageItems.map((displayIndex) => ({
+      episode: displayEpisodes[displayIndex],
+      displayIndex,
+    }));
+  }, [displayEpisodes, pagination.pageItems]);
 
   const pageRangeLabels = useMemo(() => {
     if (!displayEpisodes) return [] as string[];
+    if (!pagination.shouldPaginate) return [];
     const labels: string[] = [];
-    for (let page = 0; page < totalEpisodePages; page++) {
+    for (let page = 0; page < pagination.totalPages; page++) {
       const start = page * EPISODES_PER_PAGE + 1;
       const end = Math.min((page + 1) * EPISODES_PER_PAGE, displayEpisodes.length);
       labels.push(`${start}-${end}`);
     }
     return labels;
-  }, [displayEpisodes, totalEpisodePages]);
+  }, [displayEpisodes, pagination.shouldPaginate, pagination.totalPages]);
 
   // Map display index to original index
   const getOriginalIndex = useCallback((displayIndex: number) => {
@@ -608,7 +714,7 @@ export function EpisodeList({
           {/* Layout toggle */}
           {showReverseToggle && !episodeSectionCollapsed && (
             <button
-              onClick={() => setEpisodeLayout((current) => (current === 'grid' ? 'list' : 'grid'))}
+              onClick={() => setEpisodeLayout(episodeLayout === 'grid' ? 'list' : 'grid')}
               className={`
                 p-1.5 rounded-[var(--radius-2xl)] transition-all duration-200 cursor-pointer
                 ${episodeLayout === 'grid'
@@ -664,25 +770,36 @@ export function EpisodeList({
         </div>
       ) : (
         <div className="space-y-3">
-          {/* Section page chips for long episode lists */}
-          {episodeLayout === 'grid' && totalEpisodePages > 1 && (
-            <div className="flex flex-wrap gap-1.5">
-              {pageRangeLabels.map((label, page) => (
-                <button
-                  key={label}
-                  onClick={() => setEpisodePage(page)}
-                  className={`
-                    px-2.5 py-1 rounded-[var(--radius-2xl)] text-xs font-medium transition-all duration-200 cursor-pointer
-                    ${episodePage === page
-                      ? 'bg-[var(--accent-color)] text-white'
-                      : 'bg-[var(--glass-bg)] text-[var(--text-color-secondary)] hover:bg-[var(--glass-hover)] border border-[var(--glass-border)]'
-                    }
-                  `}
-                  aria-current={episodePage === page ? 'true' : undefined}
-                >
-                  {label}
-                </button>
-              ))}
+          {/* Pagination header for long episode lists in grid mode */}
+          {pagination.shouldPaginate && (
+            <div
+              className="flex items-center justify-between gap-2 rounded-[var(--radius-2xl)] border border-[var(--glass-border)] bg-[var(--glass-bg)] px-3 py-2 text-xs"
+              role="navigation"
+              aria-label="分页导航"
+            >
+              <button
+                onClick={() => setEpisodePage((current) => Math.max(0, current - 1))}
+                disabled={episodePage === 0}
+                className="p-1 rounded-[var(--radius-2xl)] text-[var(--text-color-secondary)] hover:bg-[var(--glass-hover)] disabled:opacity-40 disabled:cursor-not-allowed transition-colors cursor-pointer"
+                aria-label="上一页"
+                title="上一页"
+              >
+                <Icons.ChevronLeft size={16} />
+              </button>
+              <span className="flex-1 text-center font-medium text-[var(--text-color)] tabular-nums" aria-live="polite">
+                {pageRangeLabels[episodePage] || ''}
+                <span className="mx-1.5 text-[var(--text-color-secondary)]">/</span>
+                <span className="text-[var(--text-color-secondary)]">共 {pagination.total} 集</span>
+              </span>
+              <button
+                onClick={() => setEpisodePage((current) => Math.min(pagination.totalPages - 1, current + 1))}
+                disabled={episodePage >= pagination.totalPages - 1}
+                className="p-1 rounded-[var(--radius-2xl)] text-[var(--text-color-secondary)] hover:bg-[var(--glass-hover)] disabled:opacity-40 disabled:cursor-not-allowed transition-colors cursor-pointer rotate-180"
+                aria-label="下一页"
+                title="下一页"
+              >
+                <Icons.ChevronLeft size={16} />
+              </button>
             </div>
           )}
 
@@ -690,7 +807,7 @@ export function EpisodeList({
             ref={listRef}
             className={`max-h-[400px] sm:max-h-[600px] overflow-y-auto pr-1 ${
               episodeLayout === 'grid'
-                ? 'grid grid-cols-3 sm:grid-cols-4 gap-2'
+                ? 'grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-2'
                 : 'space-y-2'
             }`}
             role="radiogroup"
